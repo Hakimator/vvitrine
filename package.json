@@ -18,9 +18,13 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "boundaries": "depcruise packages themes site --config .dependency-cruiser.cjs"
+    "boundaries": "depcruise packages themes site --config .dependency-cruiser.cjs",
+    "changeset": "changeset"
   },
   "devDependencies": {
+    "@changesets/cli": "3.0.3",
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
     "@eslint/js": "10.0.1",
     "@types/node": "22.20.5",
     "@vitest/coverage-v8": "5.1.0",
