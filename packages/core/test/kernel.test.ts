@@ -1,0 +1,378 @@
+import { describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
+import {
+  ContentOwnershipError,
+  createKernel,
+  defineSection,
+  DuplicatePluginError,
+  DuplicateSectionError,
+  IncompatiblePluginError,
+  InvalidConfigError,
+  InvalidContentError,
+  InvalidPluginOptionsError,
+  MissingCapabilityError,
+  MissingRendererError,
+  RouteConflictError,
+  ThemeCountError,
+  UnknownSectionError,
+  type Plugin,
+  type VVitrineConfig,
+} from '../src/index.ts';
+import { memorySource, stringTheme } from '../src/testing.ts';
+
+const silent = { info: () => {}, warn: () => {} };
+
+const Jobs = z.array(z.object({ name: z.string(), startDate: z.string() })).default([]);
+
+const work = defineSection({
+  name: 'section-work',
+  kind: 'section',
+  apiVersion: 1,
+  id: 'work',
+  content: { key: 'work', schema: Jobs },
+  optionsSchema: z.object({ limit: z.number().int().positive().default(10) }),
+  messages: { en: { 'section.work.title': 'Experience' }, fr: { 'section.work.title': 'Expérience' } },
+  present: ({ content }, { limit }, { t }) =>
+    content.length ? { title: t('section.work.title'), items: content.slice(0, limit) } : null,
+});
+
+const hero = defineSection({
+  name: 'section-hero',
+  kind: 'section',
+  apiVersion: 1,
+  id: 'hero',
+  present: ({ basics }) => ({ name: basics.name }),
+});
+
+const content = {
+  en: {
+    basics: { name: 'Jane Doe' },
+    work: [
+      { name: 'ACME', startDate: '2025-06' },
+      { name: 'Old', startDate: '2020' },
+    ],
+  },
+  fr: { basics: { name: 'Jeanne Doe' }, work: [{ name: 'ACME', startDate: '2025-06' }] },
+};
+
+const theme = stringTheme({ hero: 'Hero', work: 'Work' });
+
+function config(overrides: Partial<VVitrineConfig> = {}): VVitrineConfig {
+  return {
+    site: { defaultLocale: 'en', locales: ['en', 'fr'] },
+    plugins: [memorySource(content), theme, hero, work],
+    pages: [{ path: '/', sections: ['hero', { id: 'work', options: { limit: 1 } }] }],
+    ...overrides,
+  };
+}
+
+const build = (c: VVitrineConfig, opts = {}) => createKernel(c, { root: '/', logger: silent, ...opts }).build();
+
+describe('pages and sections', () => {
+  it('renders the configured sections in order, with validated options and translated titles', async () => {
+    const site = await build(config());
+    const en = site.routes.find((r) => r.key === 'en:/')!;
+    expect(en.sections.map((s) => s.id)).toEqual(['hero', 'work']);
+    expect(en.sections[1]!.view).toEqual({ title: 'Experience', items: [{ name: 'ACME', startDate: '2025-06' }] });
+    const fr = site.routes.find((r) => r.key === 'fr:/')!;
+    expect((fr.sections[1]!.view as { title: string }).title).toBe('Expérience');
+  });
+
+  it('prefixes non-default locales and keeps the default locale at the root', async () => {
+    const site = await build(config());
+    expect(site.routes.map((r) => r.path)).toEqual(['/', '/fr/']);
+  });
+
+  it('defaults to one home page with every section when no pages are configured', async () => {
+    const site = await build(config({ pages: undefined }));
+    expect(site.routes[0]!.sections.map((s) => s.id)).toEqual(['hero', 'work']);
+  });
+
+  it('supports several pages and rejects duplicated paths', async () => {
+    const twoPages = config({
+      pages: [
+        { path: '/', sections: ['hero'] },
+        { path: '/cv', title: 'CV', sections: ['work'] },
+      ],
+    });
+    const site = await build(twoPages);
+    expect(site.routes.filter((r) => r.locale === 'en').map((r) => [r.path, r.title])).toEqual([
+      ['/', 'Jane Doe'],
+      ['/cv', 'CV'],
+    ]);
+    const duplicated = config({
+      pages: [
+        { path: '/', sections: [] },
+        { path: '/', sections: [] },
+      ],
+    });
+    await expect(build(duplicated)).rejects.toThrow(RouteConflictError);
+  });
+
+  it('skips a section with nothing to show', async () => {
+    const empty = config({ plugins: [memorySource({ en: { basics: { name: 'X' } } }), theme, hero, work] });
+    const site = await build({ ...empty, site: { defaultLocale: 'en' } });
+    expect(site.routes[0]!.sections.map((s) => s.id)).toEqual(['hero']);
+  });
+
+  it('fails with the available ids when a section is unknown', async () => {
+    await expect(build(config({ pages: [{ path: '/', sections: ['talks'] }] }))).rejects.toThrow(UnknownSectionError);
+    await expect(build(config({ pages: [{ path: '/', sections: ['talks'] }] }))).rejects.toThrow(
+      /Available sections: hero, work/,
+    );
+  });
+
+  it('rejects invalid section options', async () => {
+    const bad = config({ pages: [{ path: '/', sections: [{ id: 'work', options: { limit: 0 } }] }] });
+    await expect(build(bad)).rejects.toThrow(InvalidPluginOptionsError);
+  });
+});
+
+describe('content ownership (ADR-008)', () => {
+  it('validates each key with the schema of its owner and reports every problem', async () => {
+    const broken = memorySource({ en: { basics: { name: '' }, work: [{ name: 'ACME' }] } });
+    const error = await build(config({ plugins: [broken, theme, hero, work], site: { defaultLocale: 'en' } })).catch(
+      (e) => e,
+    );
+    expect(error).toBeInstanceOf(InvalidContentError);
+    expect((error as InvalidContentError).issues.map((i) => i.path)).toEqual(['basics.name', 'work[0].startDate']);
+  });
+
+  it('refuses two owners for the same key and points to "reads"', () => {
+    const twin = { ...work, name: 'other-work', id: 'work2' };
+    expect(() => createKernel(config({ plugins: [memorySource(content), theme, work, twin] }), { root: '/' })).toThrow(
+      ContentOwnershipError,
+    );
+  });
+
+  it('gives a section read-only access to keys it declared, and nothing else', async () => {
+    const timeline = defineSection({
+      name: 'section-timeline',
+      kind: 'section',
+      apiVersion: 1,
+      id: 'timeline',
+      reads: ['work'],
+      present: ({ reads, content: own }) => ({ count: (reads.work as unknown[]).length, own }),
+    });
+    const site = await build(
+      config({
+        plugins: [memorySource(content), stringTheme({}, 'F'), work, timeline],
+        pages: [{ path: '/', sections: ['timeline'] }],
+        site: { defaultLocale: 'en' },
+      }),
+    );
+    expect(site.routes[0]!.sections[0]!.view).toEqual({ count: 2, own: undefined });
+  });
+
+  it('warns about content keys no plugin uses', async () => {
+    const warn = vi.fn();
+    const extra = memorySource({ en: { basics: { name: 'X' }, awards: [] } });
+    await createKernel({ plugins: [extra, theme, hero] }, { root: '/', logger: { info: () => {}, warn } }).build();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('"awards"'));
+  });
+
+  it('lets hooks transform raw content before validation', async () => {
+    const migrate: Plugin = {
+      name: 'migrate',
+      kind: 'service',
+      apiVersion: 1,
+      hooks: {
+        contentLoaded: (raw) => {
+          (raw.basics as { name: string }).name = 'Renamed';
+        },
+      },
+    };
+    const site = await build(
+      config({ plugins: [memorySource(content), theme, hero, migrate], pages: [{ path: '/', sections: ['hero'] }] }),
+    );
+    expect(site.routes[0]!.sections[0]!.view).toEqual({ name: 'Renamed' });
+  });
+});
+
+describe('plugin contract', () => {
+  it('rejects unsupported API versions, duplicate names and duplicate section ids', () => {
+    const k = (plugins: Plugin[]) => createKernel({ plugins: [theme, ...plugins] }, { root: '/' });
+    expect(() => k([{ ...hero, apiVersion: 2 }])).toThrow(IncompatiblePluginError);
+    expect(() => k([hero, hero])).toThrow(DuplicatePluginError);
+    expect(() => k([hero, { ...hero, name: 'hero-2' }])).toThrow(DuplicateSectionError);
+  });
+
+  it('requires exactly one theme', () => {
+    expect(() => createKernel({ plugins: [hero] }, { root: '/' })).toThrow(ThemeCountError);
+    expect(() => createKernel({ plugins: [theme, { ...theme, name: 't2' }] }, { root: '/' })).toThrow(/found 2/);
+  });
+
+  it('checks required capabilities', () => {
+    const ga: Plugin = { name: 'ga4', kind: 'service', apiVersion: 1, requires: ['consent'] };
+    const consent: Plugin = { name: 'consent', kind: 'service', apiVersion: 1, provides: ['consent'] };
+    expect(() => createKernel({ plugins: [theme, ga] }, { root: '/' })).toThrow(MissingCapabilityError);
+    expect(() => createKernel({ plugins: [theme, ga, consent] }, { root: '/' })).not.toThrow();
+  });
+
+  it('validates the config itself', () => {
+    expect(() =>
+      createKernel({ site: { defaultLocale: 'de', locales: ['fr'] }, plugins: [theme] }, { root: '/' }),
+    ).toThrow(InvalidConfigError);
+    // a factory that was not called is a common mistake
+    expect(() => createKernel({ plugins: [theme, (() => hero) as unknown as Plugin] }, { root: '/' })).toThrow(
+      /plugin factory/,
+    );
+  });
+
+  it('refuses reads of keys nobody owns', () => {
+    const reader = defineSection({
+      name: 'r',
+      kind: 'section',
+      apiVersion: 1,
+      id: 'r',
+      reads: ['nothing'],
+      present: () => ({}),
+    });
+    expect(() => createKernel({ plugins: [theme, reader] }, { root: '/' })).toThrow(/no plugin owns it/);
+  });
+});
+
+describe('component resolution', () => {
+  it('prefers the theme, then the plugin default component, then the theme fallback', async () => {
+    const talks = defineSection({
+      name: 'talks',
+      kind: 'section',
+      apiVersion: 1,
+      id: 'talks',
+      present: () => ({}),
+      defaultComponents: { talks: 'TalksDefault' },
+    });
+    const bare = defineSection({ name: 'bare', kind: 'section', apiVersion: 1, id: 'bare', present: () => ({}) });
+    const page = { pages: [{ path: '/', sections: ['hero', 'talks', 'bare'] }], site: { defaultLocale: 'en' } };
+    const withFallback = await build(
+      config({
+        plugins: [memorySource(content), stringTheme({ hero: 'Hero' }, 'Fallback'), hero, talks, bare],
+        ...page,
+      }),
+    );
+    expect(withFallback.routes[0]!.sections.map((s) => s.component)).toEqual(['Hero', 'TalksDefault', 'Fallback']);
+    await expect(
+      build(config({ plugins: [memorySource(content), stringTheme({ hero: 'Hero' }), hero, talks, bare], ...page })),
+    ).rejects.toThrow(MissingRendererError);
+  });
+});
+
+describe('contributed routes, hooks and generators', () => {
+  const projects = defineSection({
+    name: 'section-projects',
+    kind: 'section',
+    apiVersion: 1,
+    id: 'projects',
+    content: { key: 'projects', schema: z.array(z.object({ slug: z.string(), name: z.string() })).default([]) },
+    present: ({ content }, _o, { url }) => ({
+      items: content.map((p) => ({ name: p.name, href: url(`/projects/${p.slug}`) })),
+    }),
+    routes: ({ content }) =>
+      content.map((p) => ({ path: `/projects/${p.slug}`, title: p.name, component: 'projects:detail', view: p })),
+  });
+  const data = {
+    en: { basics: { name: 'J' }, projects: [{ slug: 'app', name: 'App' }] },
+    fr: { basics: { name: 'J' }, projects: [{ slug: 'app', name: 'Appli' }] },
+  };
+  const t = stringTheme({ projects: 'List', 'projects:detail': 'Detail' });
+  const base = { site: { defaultLocale: 'en', locales: ['en', 'fr'] }, pages: [{ path: '/', sections: ['projects'] }] };
+
+  it('adds the pages a section contributes, with locale prefixes, alternates and base path', async () => {
+    const site = await build({ ...base, plugins: [memorySource(data), t, projects] }, { base: '/vvitrine/' });
+    const detail = site.routes.find((r) => r.key === 'fr:/projects/app')!;
+    expect(detail.path).toBe('/fr/projects/app');
+    expect(detail.title).toBe('Appli');
+    expect(detail.sections[0]!.component).toBe('Detail');
+    expect(detail.context.alternates).toEqual([
+      { locale: 'en', href: '/vvitrine/projects/app/' },
+      { locale: 'fr', href: '/vvitrine/fr/projects/app/' },
+    ]);
+    const home = site.routes.find((r) => r.key === 'en:/')!;
+    expect(home.sections[0]!.view).toEqual({ items: [{ name: 'App', href: '/vvitrine/projects/app/' }] });
+  });
+
+  it('does not contribute pages for sections that are not placed on any page', async () => {
+    const site = await build({
+      ...base,
+      pages: [{ path: '/', sections: [] }],
+      plugins: [memorySource(data), t, projects],
+    });
+    expect(site.routes.map((r) => r.key)).toEqual(['en:/', 'fr:/']);
+  });
+
+  it('collects head tags and body-end components from every plugin', async () => {
+    const seo: Plugin = {
+      name: 'seo',
+      kind: 'service',
+      apiVersion: 1,
+      hooks: {
+        head: (ctx) => [{ tag: 'meta', attrs: { name: 'description', content: `${ctx.basics.name} ${ctx.locale}` } }],
+        bodyEnd: () => [{ component: 'Banner', props: { x: 1 } }],
+      },
+    };
+    const site = await build(
+      { ...base, plugins: [memorySource(data), t, projects, seo] },
+      { siteUrl: 'https://jane.dev/' },
+    );
+    const home = site.routes[0]!;
+    expect(home.head).toEqual([{ tag: 'meta', attrs: { name: 'description', content: 'J en' } }]);
+    expect(home.bodyEnd).toEqual([{ component: 'Banner', props: { x: 1 } }]);
+    expect(home.context.siteUrl).toBe('https://jane.dev');
+  });
+
+  it('runs generators with every route and rejects two generators writing the same file', async () => {
+    const gen = (name: string): Plugin => ({
+      name,
+      kind: 'generator',
+      apiVersion: 1,
+      generate: async ({ routes }) => [{ path: '/routes.txt', contents: routes.map((r) => r.path).join('\n') }],
+    });
+    const site = await build({ ...base, plugins: [memorySource(data), t, projects, gen('g1')] });
+    expect(site.files).toEqual([{ path: '/routes.txt', contents: '/\n/projects/app\n/fr/\n/fr/projects/app' }]);
+    await expect(build({ ...base, plugins: [memorySource(data), t, projects, gen('g1'), gen('g2')] })).rejects.toThrow(
+      /same file/,
+    );
+  });
+
+  it('resolves the favicon with the base path, and allows disabling it', async () => {
+    expect((await build({ ...base, plugins: [memorySource(data), t, projects] }, { base: '/demo/' })).favicon).toBe(
+      '/demo/favicon.svg',
+    );
+    const off = await build({
+      ...base,
+      site: { ...base.site, favicon: false },
+      plugins: [memorySource(data), t, projects],
+    });
+    expect(off.favicon).toBeNull();
+  });
+
+  it('exposes theme tokens as CSS custom properties', async () => {
+    const site = await build({ ...base, plugins: [memorySource(data), t, projects] });
+    expect(site.tokensCss).toBe(':root{--vv-color-primary:#000000}');
+  });
+});
+
+describe('messages', () => {
+  it('lets the user override any plugin string and warns once about missing keys', async () => {
+    const warn = vi.fn();
+    const missing = defineSection({
+      name: 'm',
+      kind: 'section',
+      apiVersion: 1,
+      id: 'm',
+      present: (_i, _o, { t }) => ({ a: t('nope'), b: t('nope') }),
+    });
+    const site = await createKernel(
+      config({
+        messages: { en: { 'section.work.title': 'Career' } },
+        plugins: [memorySource(content), stringTheme({}, 'F'), work, missing],
+        pages: [{ path: '/', sections: ['work', 'm'] }],
+      }),
+      { root: '/', logger: { info: () => {}, warn } },
+    ).build();
+    const en = site.routes.find((r) => r.key === 'en:/')!;
+    expect((en.sections[0]!.view as { title: string }).title).toBe('Career');
+    expect(en.sections[1]!.view).toEqual({ a: 'nope', b: 'nope' });
+    expect(warn.mock.calls.filter(([m]) => String(m).includes('"nope"') && String(m).includes('"en"'))).toHaveLength(1);
+  });
+});
