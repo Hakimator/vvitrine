@@ -1,0 +1,53 @@
+---
+import type { HeroView } from '@vvitrine/sections';
+type Props = HeroView & { sectionId: string };
+const { name, label, summary, location, availability, email, links, sectionId } = Astro.props;
+---
+
+<header id={sectionId} class="hero">
+  <h1>{name}</h1>
+  {label && <p class="label">{label}</p>}
+  {location && <p class="muted">{location}</p>}
+  {availability && <p class="availability">{availability}</p>}
+  {summary && <p>{summary}</p>}
+  {(links.length > 0 || email) && (
+    <ul class="links">
+      {email && (
+        <li>
+          <a href={`mailto:${email}`}>{email}</a>
+        </li>
+      )}
+      {links.map((l) => (
+        <li>
+          <a href={l.url} rel="me noopener">
+            {l.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+</header>
+<style>
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.6rem);
+    margin: 0;
+  }
+  .label {
+    font-size: 1.2rem;
+    margin: 0.25rem 0;
+  }
+  .availability {
+    display: inline-block;
+    border-left: 3px solid var(--vv-color-accent);
+    padding-left: 0.6rem;
+    margin: 0.5rem 0;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    list-style: none;
+    padding: 0;
+    font-family: var(--vv-font-heading);
+  }
+</style>
