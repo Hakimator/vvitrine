@@ -1,0 +1,52 @@
+---
+/** Renders both `work` and `education` views (same timeline layout). */
+import type { EducationView, WorkView } from '@vvitrine/sections';
+type Props = (WorkView | EducationView) & { sectionId: string };
+const { title, items, sectionId } = Astro.props;
+type Item = Record<string, any>;
+const heading = (i: Item) => ('position' in i ? `${i.position} · ${i.organization}` : i.institution);
+const sub = (i: Item) => ('degree' in i ? i.degree : i.location);
+const notes = (i: Item): readonly string[] => i.highlights ?? i.courses ?? [];
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  <ol class="timeline">
+    {items.map((item) => (
+      <li>
+        <h3>{item.url ? <a href={item.url}>{heading(item)}</a> : heading(item)}</h3>
+        <p class="muted meta">{[item.period, sub(item)].filter(Boolean).join(' · ')}</p>
+        {'summary' in item && item.summary && <p>{item.summary}</p>}
+        {notes(item).length > 0 && (
+          <ul>
+            {notes(item).map((n) => (
+              <li>{n}</li>
+            ))}
+          </ul>
+        )}
+      </li>
+    ))}
+  </ol>
+</section>
+<style>
+  .timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .timeline > li {
+    margin-bottom: 1.4rem;
+  }
+  h3 {
+    font-size: 1.05rem;
+    margin: 0;
+  }
+  .meta {
+    margin: 0.1rem 0 0.3rem;
+    font-size: 0.95rem;
+  }
+  ul {
+    margin: 0.3rem 0 0;
+    padding-left: 1.2rem;
+  }
+</style>

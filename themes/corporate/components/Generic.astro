@@ -1,0 +1,24 @@
+---
+/**
+ * Fallback renderer for sections this theme has no dedicated component for.
+ * Shows `title` and, if present, a list of `items` (strings or objects with readable fields).
+ */
+const { sectionId, title, items } = Astro.props as { sectionId: string; title?: string; items?: unknown[] };
+const text = (item: unknown): string =>
+  typeof item === 'string'
+    ? item
+    : Object.values(item as Record<string, unknown>)
+        .filter((v) => typeof v === 'string' || typeof v === 'number')
+        .join(' · ');
+---
+
+<section id={sectionId} aria-labelledby={title ? `${sectionId}-title` : undefined}>
+  {title && <h2 id={`${sectionId}-title`}>{title}</h2>}
+  {Array.isArray(items) && (
+    <ul>
+      {items.map((item) => (
+        <li>{text(item)}</li>
+      ))}
+    </ul>
+  )}
+</section>

@@ -1,0 +1,62 @@
+---
+import type { ProjectsView } from '@vvitrine/sections';
+type Props = ProjectsView & { sectionId: string };
+const { title, items, moreLabel, sectionId } = Astro.props;
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  <ul class="projects">
+    {items.map((p) => (
+      <li>
+        <article>
+          {p.image && <img src={p.image.src} alt={p.image.alt} loading="lazy" decoding="async" />}
+          <h3>
+            <a href={p.href}>{p.name}</a>
+          </h3>
+          {p.period && <p class="muted meta">{p.period}</p>}
+          {p.description && <p>{p.description}</p>}
+          {p.keywords.length > 0 && <p class="muted tags">{p.keywords.join(' · ')}</p>}
+          <a class="more" href={p.href} aria-label={`${moreLabel}: ${p.name}`}>
+            {moreLabel} →
+          </a>
+        </article>
+      </li>
+    ))}
+  </ul>
+</section>
+<style>
+  .projects {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  }
+  article {
+    border: 1px solid var(--vv-color-border);
+    border-radius: var(--vv-radius);
+    padding: 1rem 1.25rem;
+    height: 100%;
+    background: var(--vv-color-surface);
+  }
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--vv-radius);
+  }
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  .meta,
+  .tags {
+    font-size: 0.9rem;
+    margin: 0.2rem 0;
+  }
+  .more {
+    font-family: var(--vv-font-heading);
+    font-size: 0.9rem;
+  }
+</style>
