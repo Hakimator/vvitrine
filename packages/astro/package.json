@@ -1,0 +1,28 @@
+{
+  "name": "@vvitrine/astro",
+  "version": "0.1.0",
+  "description": "Astro integration for VVitrine: composition root. Loads vvitrine.config.ts, injects every route, renders what the kernel returns.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./runtime": "./src/runtime.ts",
+    "./routes/page.astro": "./src/routes/page.astro",
+    "./routes/file.ts": "./src/routes/file.ts",
+    "./client": {
+      "types": "./client.d.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "astro": "^7.4.0"
+  },
+  "dependencies": {
+    "@vvitrine/core": "workspace:*"
+  },
+  "devDependencies": {
+    "astro": "7.4.7"
+  }
+}
