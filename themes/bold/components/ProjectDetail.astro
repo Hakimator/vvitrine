@@ -1,0 +1,69 @@
+---
+import type { ProjectDetailView } from '@vvitrine/sections';
+type Props = ProjectDetailView & { sectionId: string };
+const { name, description, period, keywords, highlights, roles, url, repository, image, labels, backHref } =
+  Astro.props;
+---
+
+<article class="detail">
+  <p>
+    <a href={backHref}>← {labels.back}</a>
+  </p>
+  <h1>{name}</h1>
+  {period && <p class="muted">{period}</p>}
+  {image && <img src={image.src} alt={image.alt} decoding="async" />}
+  {description && <p class="lead">{description}</p>}
+  {roles.length > 0 && (
+    <>
+      <h2>{labels.role}</h2>
+      <p>{roles.join(', ')}</p>
+    </>
+  )}
+  {highlights.length > 0 && (
+    <ul>
+      {highlights.map((h) => (
+        <li>{h}</li>
+      ))}
+    </ul>
+  )}
+  {keywords.length > 0 && (
+    <>
+      <h2>{labels.stack}</h2>
+      <p>{keywords.join(' · ')}</p>
+    </>
+  )}
+  {(url || repository) && (
+    <p class="actions">
+      {url && <a href={url}>{labels.demo}</a>}
+      {repository && <a href={repository}>{labels.code}</a>}
+    </p>
+  )}
+</article>
+<style>
+  h1 {
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    font-weight: 900;
+    margin: 0.5rem 0 0.25rem;
+    color: var(--vv-color-primary);
+  }
+  .lead {
+    font-size: 1.3rem;
+  }
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--vv-radius);
+    margin: 1rem 0;
+  }
+  .actions {
+    display: flex;
+    gap: 1rem;
+  }
+  .actions a {
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+    padding: 0.7rem 1.3rem;
+    border-radius: 999px;
+    text-decoration: none;
+  }
+</style>

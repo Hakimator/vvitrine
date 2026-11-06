@@ -1,0 +1,95 @@
+---
+import type { HeroView } from '@vvitrine/sections';
+type Props = HeroView & { sectionId: string };
+const { name, label, summary, location, availability, email, links, sectionId } = Astro.props;
+---
+
+<header id={sectionId} class="hero">
+  {label && <p class="label">{label}</p>}
+  <h1>{name}</h1>
+  {summary && <p class="summary">{summary}</p>}
+  <p class="meta">
+    {location && <span class="muted">{location}</span>}
+    {availability && <span class="badge">{availability}</span>}
+  </p>
+  {(links.length > 0 || email) && (
+    <ul class="links">
+      {email && (
+        <li>
+          <a class="primary" href={`mailto:${email}`}>
+            {email}
+          </a>
+        </li>
+      )}
+      {links.map((l) => (
+        <li>
+          <a href={l.url} rel="me noopener">
+            {l.label} →
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+</header>
+<style>
+  .hero {
+    padding: 4rem 0 1rem;
+  }
+  .label {
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+    color: var(--vv-color-muted);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  h1 {
+    font-size: clamp(2.6rem, 9vw, 5.25rem);
+    font-weight: 900;
+    margin: 0.4rem 0 1.25rem;
+    color: var(--vv-color-primary);
+    letter-spacing: -0.02em;
+  }
+  @supports (background-clip: text) {
+    h1 {
+      background: linear-gradient(90deg, var(--vv-color-primary), var(--vv-color-accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+  }
+  .summary {
+    font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+    max-width: 42rem;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .badge {
+    background: var(--vv-color-surface);
+    border: 2px solid var(--vv-color-accent);
+    border-radius: 999px;
+    padding: 0.25rem 0.85rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    list-style: none;
+    padding: 0;
+    margin-top: 1.5rem;
+  }
+  .primary {
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+    padding: 0.7rem 1.3rem;
+    border-radius: 999px;
+    text-decoration: none;
+  }
+</style>
