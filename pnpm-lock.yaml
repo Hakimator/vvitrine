@@ -67,6 +67,19 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
 
+  themes/corporate:
+    dependencies:
+      '@vvitrine/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@vvitrine/sections':
+        specifier: workspace:*
+        version: link:../../packages/sections
+    devDependencies:
+      astro:
+        specifier: 7.4.7
+        version: 7.4.7(@types/node@22.20.5)(jiti@2.7.0)(yaml@2.9.1)
+
 packages:
 
   '@astrojs/compiler-binding-android-arm64@0.5.2':
