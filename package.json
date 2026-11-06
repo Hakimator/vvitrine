@@ -21,9 +21,11 @@
     "format:check": "prettier --check .",
     "boundaries": "depcruise packages themes site --config .dependency-cruiser.cjs",
     "e2e": "playwright test",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm boundaries && pnpm test:coverage && pnpm build:all && pnpm e2e && pnpm e2e:dev",
     "changeset": "changeset",
     "build:base": "cross-env BASE_PATH=/demo SITE_URL=https://example.github.io pnpm --filter site exec astro build --outDir dist-base",
-    "build:all": "pnpm build && pnpm build:bold && pnpm build:base"
+    "build:all": "pnpm build && pnpm build:bold && pnpm build:base",
+    "e2e:dev": "node e2e/dev-smoke.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
