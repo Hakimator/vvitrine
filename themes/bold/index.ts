@@ -1,0 +1,66 @@
+import { mergeTokens, type ThemePlugin, type ThemeTokens } from '@vvitrine/core';
+import Layout from './components/Layout.astro';
+import Hero from './components/Hero.astro';
+import Timeline from './components/Timeline.astro';
+import Skills from './components/Skills.astro';
+import Languages from './components/Languages.astro';
+import Projects from './components/Projects.astro';
+import ProjectDetail from './components/ProjectDetail.astro';
+import Generic from './components/Generic.astro';
+
+const defaults: ThemeTokens = {
+  light: {
+    colorPrimary: '#6d28d9',
+    colorAccent: '#be185d',
+    colorText: '#0f0f14',
+    colorMuted: '#4a4a5a',
+    colorBackground: '#ffffff',
+    colorSurface: '#f4f1fb',
+    colorBorder: '#e4def3',
+    colorOnPrimary: '#ffffff',
+    fontBody: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+    fontHeading: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+    radius: '1rem',
+    contentWidth: '64rem',
+  },
+  dark: {
+    colorPrimary: '#c4b5fd',
+    colorAccent: '#f9a8d4',
+    colorText: '#f5f5fa',
+    colorMuted: '#b8b8c8',
+    colorBackground: '#0b0a10',
+    colorSurface: '#1c1a26',
+    colorBorder: '#2e2a3d',
+    colorOnPrimary: '#0b0a10',
+  },
+};
+
+export interface BoldOptions {
+  /** Override any design token, e.g. { light: { colorPrimary: '#0b5' } }. */
+  readonly tokens?: Partial<ThemeTokens>;
+}
+
+/** Modern theme with strong colours and large type. */
+export default function bold(options: BoldOptions = {}): ThemePlugin {
+  return {
+    name: '@vvitrine/theme-bold',
+    kind: 'theme',
+    apiVersion: 1,
+    layout: Layout,
+    components: {
+      hero: Hero,
+      work: Timeline,
+      education: Timeline,
+      skills: Skills,
+      languages: Languages,
+      projects: Projects,
+      'projects:detail': ProjectDetail,
+    },
+    fallback: Generic,
+    tokens: mergeTokens(defaults, options.tokens),
+    messages: {
+      fr: { 'theme.builtWith': 'Site réalisé avec {name}' },
+      en: { 'theme.builtWith': 'Built with {name}' },
+    },
+  };
+}

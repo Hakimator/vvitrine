@@ -1,0 +1,143 @@
+---
+import type { Translate } from '@vvitrine/core';
+interface Props {
+  lang: string;
+  title: string;
+  path: string;
+  t: Translate;
+  url: (path: string, locale?: string) => string;
+  alternates: readonly { locale: string; href: string }[];
+  locales: readonly string[];
+}
+const { lang, title, t, alternates } = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip" href="#main">
+      {t('common.skipToContent')}
+    </a>
+    {alternates.length > 1 && (
+      <nav class="locales" aria-label={t('common.language')}>
+        <ul>
+          {alternates.map((a) => (
+            <li>
+              <a
+                href={a.href}
+                hreflang={a.locale}
+                lang={a.locale}
+                aria-current={a.locale === lang ? 'page' : undefined}
+              >
+                {t(`locale.${a.locale}`)}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+    <main id="main">
+      <slot />
+    </main>
+    <footer>{t('theme.builtWith', { name: 'VVitrine' })}</footer>
+    <slot name="body-end" />
+  </body>
+</html>
+<style is:global>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  html {
+    color-scheme: light dark;
+  }
+  body {
+    margin: 0;
+    background: var(--vv-color-background);
+    color: var(--vv-color-text);
+    font: 1.0625rem/1.6 var(--vv-font-body);
+  }
+  main,
+  .locales,
+  footer {
+    max-width: var(--vv-content-width);
+    margin: 0 auto;
+    padding: 0 1.25rem;
+  }
+  main {
+    padding-block: 1rem 4rem;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--vv-font-heading);
+    line-height: 1.15;
+  }
+  h2 {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+    margin: 4rem 0 1.25rem;
+  }
+  a {
+    color: var(--vv-color-primary);
+    font-weight: 600;
+    text-underline-offset: 0.2em;
+  }
+  a:focus-visible {
+    outline: 3px solid var(--vv-color-accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  .skip {
+    position: absolute;
+    left: -999px;
+    top: 0.5rem;
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+    padding: 0.6rem 1rem;
+    border-radius: var(--vv-radius);
+  }
+  .skip:focus {
+    left: 1rem;
+  }
+  .locales ul {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 1rem 0 0;
+  }
+  .locales a {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    border: 2px solid var(--vv-color-primary);
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+  .locales a[aria-current='page'] {
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+  }
+  footer {
+    color: var(--vv-color-muted);
+    font-size: 0.85rem;
+    padding-block: 2rem;
+  }
+  .muted {
+    color: var(--vv-color-muted);
+  }
+  .card {
+    background: var(--vv-color-surface);
+    border-radius: var(--vv-radius);
+    padding: 1.5rem;
+  }
+</style>

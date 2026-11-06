@@ -1,0 +1,32 @@
+---
+import type { LanguagesView } from '@vvitrine/sections';
+type Props = LanguagesView & { sectionId: string };
+const { title, items, sectionId } = Astro.props;
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  <ul class="langs">
+    {items.map((l) => (
+      <li>
+        <strong>{l.language}</strong>
+        {l.fluency && <span class="muted"> · {l.fluency}</span>}
+      </li>
+    ))}
+  </ul>
+</section>
+<style>
+  .langs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .langs li {
+    background: var(--vv-color-surface);
+    border-radius: var(--vv-radius);
+    padding: 0.75rem 1.25rem;
+  }
+</style>

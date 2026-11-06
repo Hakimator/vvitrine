@@ -1,0 +1,30 @@
+name: Feature request (user story)
+description: Suggest a capability, written as a user story.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      value: |
+        As a <portfolio owner / visitor / plugin author>,
+        I want <capability>
+        so that <benefit>.
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - Given ... When ... Then ...
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Could this be a plugin?
+      description: Most features can live in a plugin without changing the core.
+      options:
+        - Yes, a new plugin
+        - It needs a change to an existing plugin
+        - It needs a change to the core
+        - Not sure

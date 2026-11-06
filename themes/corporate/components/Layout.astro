@@ -1,0 +1,134 @@
+---
+import type { Translate } from '@vvitrine/core';
+interface Props {
+  lang: string;
+  title: string;
+  path: string;
+  t: Translate;
+  url: (path: string, locale?: string) => string;
+  alternates: readonly { locale: string; href: string }[];
+  locales: readonly string[];
+}
+const { lang, title, t, alternates } = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip" href="#main">
+      {t('common.skipToContent')}
+    </a>
+    {alternates.length > 1 && (
+      <nav class="locales" aria-label={t('common.language')}>
+        <ul>
+          {alternates.map((a) => (
+            <li>
+              <a
+                href={a.href}
+                hreflang={a.locale}
+                lang={a.locale}
+                aria-current={a.locale === lang ? 'page' : undefined}
+              >
+                {t(`locale.${a.locale}`)}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+    <main id="main">
+      <slot />
+    </main>
+    <footer>{t('theme.builtWith', { name: 'VVitrine' })}</footer>
+    <slot name="body-end" />
+  </body>
+</html>
+<style is:global>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  html {
+    color-scheme: light dark;
+  }
+  body {
+    margin: 0;
+    background: var(--vv-color-background);
+    color: var(--vv-color-text);
+    font: 1.0625rem/1.65 var(--vv-font-body);
+  }
+  main,
+  .locales,
+  footer {
+    max-width: var(--vv-content-width);
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  main {
+    padding-block: 2.5rem 3rem;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--vv-font-heading);
+    color: var(--vv-color-primary);
+    line-height: 1.25;
+  }
+  h2 {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--vv-color-border);
+    padding-bottom: 0.4rem;
+    margin: 2.75rem 0 1rem;
+  }
+  a {
+    color: var(--vv-color-primary);
+    text-underline-offset: 0.15em;
+  }
+  a:focus-visible {
+    outline: 3px solid var(--vv-color-accent);
+    outline-offset: 2px;
+  }
+  .skip {
+    position: absolute;
+    left: -999px;
+    top: 0.5rem;
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+    padding: 0.5rem 1rem;
+  }
+  .skip:focus {
+    left: 1rem;
+  }
+  .locales ul {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 1rem 0 0;
+    font-family: var(--vv-font-heading);
+    font-size: 0.9rem;
+  }
+  .locales a[aria-current='page'] {
+    font-weight: 700;
+    text-decoration: none;
+  }
+  footer {
+    border-top: 1px solid var(--vv-color-border);
+    color: var(--vv-color-muted);
+    font-size: 0.85rem;
+    padding-block: 1.5rem;
+  }
+  .muted {
+    color: var(--vv-color-muted);
+  }
+</style>

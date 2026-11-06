@@ -1,0 +1,48 @@
+---
+/// <reference path="../virtual.d.ts" />
+import config from 'virtual:vvitrine/config';
+import { renderHeadTags } from '@vvitrine/core';
+import { getSite, toParam } from '../runtime.ts';
+
+export async function getStaticPaths() {
+  const site = await getSite(config);
+  return site.routes.map((route) => ({ params: { path: toParam(route.path) }, props: { key: route.key } }));
+}
+
+const site = await getSite(config);
+const route = site.routes.find((r) => r.key === Astro.props.key);
+if (!route) throw new Error(`VVitrine: no route for ${Astro.url.pathname}`);
+
+const Layout = site.theme.layout as any;
+const icon = site.favicon
+  ? renderHeadTags([
+      {
+        tag: 'link',
+        attrs: { rel: 'icon', href: site.favicon, type: site.favicon.endsWith('.svg') ? 'image/svg+xml' : false },
+      },
+    ])
+  : '';
+const head = [`<style>${site.tokensCss}</style>`, icon, renderHeadTags(route.head)].filter(Boolean).join('\n');
+---
+
+<Layout
+  lang={route.locale}
+  title={route.title}
+  path={route.path}
+  t={route.context.t}
+  url={route.context.url}
+  alternates={route.context.alternates}
+  locales={site.locales}
+>
+  <Fragment slot="head" set:html={head} />
+  {route.sections.map(({ id, component, view }) => {
+    const Section = component as any;
+    return <Section {...(view as object)} sectionId={id} t={route.context.t} />;
+  })}
+  <Fragment slot="body-end">
+    {route.bodyEnd.map(({ component, props }) => {
+      const Component = component as any;
+      return <Component {...props} />;
+    })}
+  </Fragment>
+</Layout>

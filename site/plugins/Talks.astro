@@ -1,0 +1,19 @@
+---
+interface Props {
+  sectionId: string;
+  title: string;
+  items: { title: string; event: string; date: string; url?: string }[];
+}
+const { sectionId, title, items } = Astro.props;
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  <ul>
+    {items.map((talk) => (
+      <li>
+        <strong>{talk.url ? <a href={talk.url}>{talk.title}</a> : talk.title}</strong> · {talk.event} ({talk.date})
+      </li>
+    ))}
+  </ul>
+</section>

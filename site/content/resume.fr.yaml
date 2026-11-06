@@ -1,0 +1,68 @@
+# Contenu fictif de démonstration. Remplacez ce fichier par le vôtre : aucun code à modifier.
+# Format compatible JSON Resume (https://jsonresume.org/schema). Champs VVitrine : "x-vvitrine".
+$schemaVersion: 1
+basics:
+  name: Jeanne Martin
+  label: Élève ingénieure en informatique
+  email: jeanne.martin@example.dev
+  summary: >-
+    Passionnée par l'architecture logicielle et l'accessibilité web, je conçois des applications
+    maintenables et testées.
+  location: { city: Lyon, countryCode: FR }
+  profiles:
+    - { network: GitHub, username: example, url: https://github.com/example }
+    - { network: LinkedIn, url: https://www.linkedin.com/in/example }
+  x-vvitrine:
+    availability: Recherche un stage de 6 mois à partir de février 2027
+
+projects:
+  - name: Gestionnaire de bibliothèque
+    description: Application web de prêt de livres pour une association, avec réservation en ligne.
+    startDate: 2025-10
+    endDate: 2026-01
+    keywords: [TypeScript, Astro, PostgreSQL]
+    roles: [Développeuse principale (équipe de 4)]
+    highlights:
+      - Architecture hexagonale, 85 % de couverture de tests
+      - Conforme RGAA niveau AA
+    x-vvitrine: { featured: true, slug: bibliotheque, repository: https://github.com/example/library }
+  - name: Tableau de bord météo
+    description: Visualisation de données météo ouvertes en temps réel.
+    startDate: 2025-03
+    keywords: [Python, FastAPI, D3.js]
+    x-vvitrine: { slug: meteo }
+
+work:
+  - name: Entreprise Fictive
+    position: Stagiaire développeuse
+    location: Lyon
+    startDate: 2025-06
+    endDate: 2025-09
+    highlights:
+      - Mise en place d'une chaîne CI réduisant le temps de build de 40 %
+      - Tests de bout en bout avec Playwright
+  - name: Association Exemple
+    position: Développeuse bénévole
+    startDate: 2024-01
+    endDate: 2024-12
+    highlights:
+      - Refonte du site en Astro
+
+education:
+  - institution: École d'Ingénieurs Exemple
+    area: Informatique
+    studyType: Diplôme d'ingénieur
+    startDate: 2023-09
+
+skills:
+  - name: Langages
+    keywords: [TypeScript, Python, Java, SQL]
+  - name: Outils
+    keywords: [Git, Docker, GitHub Actions, Astro]
+
+languages:
+  - { language: Français, fluency: Langue maternelle }
+  - { language: Anglais, fluency: C1 }
+
+talks:
+  - { title: Clean Architecture en pratique, event: Meetup Fictif Lyon, date: 2026-10 }

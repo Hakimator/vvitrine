@@ -1,0 +1,10 @@
+dist
+dist-*
+.astro
+coverage
+pnpm-lock.yaml
+playwright-report
+test-results
+.lighthouseci
+CHANGELOG.md
+packages/source-yaml/test/fixtures/broken.yaml
