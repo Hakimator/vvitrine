@@ -39,8 +39,15 @@ builds and the end-to-end tests (including accessibility). CI runs the same step
 
 ## Workflow
 
-GitHub Flow: branch from `main` (`feat/<issue>-short-name`), open a pull request, get one review, squash-merge.
-`main` is always deployable.
+GitHub Flow: `main` is always deployable and protected.
+
+1. Branch from `main`: `<type>/<short-topic>`, e.g. `feat/blog`, `fix/sitemap-base-path`.
+2. Commit in **atomic** steps: one logical change per commit, each leaving the project working. Use
+   `git add -p` to stage one change at a time, and `git rebase -i` to clean up the branch before review.
+3. Open a pull request, link the user story, and wait for green CI and a review.
+4. Merge with **Create a merge commit**, so every atomic commit stays visible in the history. Delete the branch.
+
+Never rewrite `main` (no force-push).
 
 ## Reporting a security problem
 
