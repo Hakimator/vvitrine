@@ -67,6 +67,36 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
 
+  site:
+    dependencies:
+      '@vvitrine/astro':
+        specifier: workspace:*
+        version: link:../packages/astro
+      '@vvitrine/core':
+        specifier: workspace:*
+        version: link:../packages/core
+      '@vvitrine/sections':
+        specifier: workspace:*
+        version: link:../packages/sections
+      '@vvitrine/seo':
+        specifier: workspace:*
+        version: link:../packages/service-seo
+      '@vvitrine/source-yaml':
+        specifier: workspace:*
+        version: link:../packages/source-yaml
+      '@vvitrine/theme-bold':
+        specifier: workspace:*
+        version: link:../themes/bold
+      '@vvitrine/theme-corporate':
+        specifier: workspace:*
+        version: link:../themes/corporate
+      astro:
+        specifier: 7.4.7
+        version: 7.4.7(@types/node@22.20.5)(jiti@2.7.0)(yaml@2.9.1)
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+
   themes/bold:
     dependencies:
       '@vvitrine/core':

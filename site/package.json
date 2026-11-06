@@ -1,0 +1,23 @@
+{
+  "name": "site",
+  "private": true,
+  "type": "module",
+  "description": "Your portfolio. You only edit vvitrine.config.ts, content/, plugins/ and public/.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro sync && tsc --noEmit"
+  },
+  "dependencies": {
+    "@vvitrine/astro": "workspace:*",
+    "@vvitrine/core": "workspace:*",
+    "@vvitrine/sections": "workspace:*",
+    "@vvitrine/seo": "workspace:*",
+    "@vvitrine/source-yaml": "workspace:*",
+    "@vvitrine/theme-bold": "workspace:*",
+    "@vvitrine/theme-corporate": "workspace:*",
+    "astro": "7.4.7",
+    "zod": "4.6.7"
+  }
+}
