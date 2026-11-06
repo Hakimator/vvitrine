@@ -1,0 +1,22 @@
+name: Plugin proposal
+description: Propose a new source, section, theme, service or generator plugin.
+labels: [plugin]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Plugin kind
+      options: [source, section, theme, service, generator]
+    validations:
+      required: true
+  - type: textarea
+    id: purpose
+    attributes:
+      label: What does it do and for whom?
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Content key, options and capabilities
+      description: Which content key it owns or reads, its options, what it provides or requires.
