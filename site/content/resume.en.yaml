@@ -1,0 +1,68 @@
+# Fictional demo content. Replace this file with yours: no code to change.
+# JSON Resume compatible (https://jsonresume.org/schema). VVitrine-only fields: "x-vvitrine".
+$schemaVersion: 1
+basics:
+  name: Jeanne Martin
+  label: Computer engineering student
+  email: jeanne.martin@example.dev
+  summary: >-
+    Passionate about software architecture and web accessibility, I build maintainable,
+    well-tested applications.
+  location: { city: Lyon, countryCode: FR }
+  profiles:
+    - { network: GitHub, username: example, url: https://github.com/example }
+    - { network: LinkedIn, url: https://www.linkedin.com/in/example }
+  x-vvitrine:
+    availability: Looking for a 6-month internship from February 2027
+
+projects:
+  - name: Library manager
+    description: Book lending web app for a non-profit, with online booking.
+    startDate: 2025-10
+    endDate: 2026-01
+    keywords: [TypeScript, Astro, PostgreSQL]
+    roles: [Lead developer (team of 4)]
+    highlights:
+      - Hexagonal architecture, 85% test coverage
+      - WCAG 2.2 AA compliant
+    x-vvitrine: { featured: true, slug: bibliotheque, repository: https://github.com/example/library }
+  - name: Weather dashboard
+    description: Real-time visualisation of open weather data.
+    startDate: 2025-03
+    keywords: [Python, FastAPI, D3.js]
+    x-vvitrine: { slug: meteo }
+
+work:
+  - name: Fictional Company
+    position: Software engineering intern
+    location: Lyon
+    startDate: 2025-06
+    endDate: 2025-09
+    highlights:
+      - Built a CI pipeline that cut build time by 40%
+      - End-to-end tests with Playwright
+  - name: Example Non-profit
+    position: Volunteer developer
+    startDate: 2024-01
+    endDate: 2024-12
+    highlights:
+      - Rebuilt the website with Astro
+
+education:
+  - institution: Example Engineering School
+    area: Computer Science
+    studyType: Engineering degree
+    startDate: 2023-09
+
+skills:
+  - name: Languages
+    keywords: [TypeScript, Python, Java, SQL]
+  - name: Tools
+    keywords: [Git, Docker, GitHub Actions, Astro]
+
+languages:
+  - { language: French, fluency: Native }
+  - { language: English, fluency: C1 }
+
+talks:
+  - { title: Clean Architecture in practice, event: Fictional Meetup Lyon, date: 2026-10 }
