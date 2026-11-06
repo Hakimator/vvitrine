@@ -1,0 +1,45 @@
+---
+import type { SkillsView } from '@vvitrine/sections';
+type Props = SkillsView & { sectionId: string };
+const { title, groups, sectionId } = Astro.props;
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  {groups.map((g) => (
+    <div class="group">
+      <h3>
+        {g.name}
+        {g.level && <span class="muted"> · {g.level}</span>}
+      </h3>
+      <ul class="chips">
+        {g.keywords.map((k) => (
+          <li>{k}</li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</section>
+<style>
+  h3 {
+    font-size: 1rem;
+    margin: 1.25rem 0 0.5rem;
+    color: var(--vv-color-muted);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .chips li {
+    padding: 0.4rem 0.95rem;
+    border-radius: 999px;
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+</style>
