@@ -1,0 +1,16 @@
+{
+  "name": "vvitrine-monorepo",
+  "private": true,
+  "type": "module",
+  "description": "VVitrine: an open-source, plugin-based portfolio framework. Edit site/ only.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {},
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3"
+  }
+}
