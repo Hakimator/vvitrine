@@ -41,6 +41,7 @@
     "@vvitrine/core": "workspace:*",
     "@vvitrine/sections": "workspace:*",
     "@vvitrine/seo": "workspace:*",
+    "@vvitrine/images": "workspace:*",
     "@vvitrine/source-markdown": "workspace:*",
     "@vvitrine/source-yaml": "workspace:*",
     "@vvitrine/theme-bold": "workspace:*",

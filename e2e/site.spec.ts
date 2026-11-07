@@ -28,6 +28,26 @@ test('home page renders the configured sections in order, in French by default',
   await expect(page.locator('#interests-title')).toHaveText('Centres d’intérêt');
 });
 
+test('images are responsive, sized and lazy where they should be', async ({ page }, testInfo) => {
+  await page.goto('/en/');
+  const card = page.locator('#projects img');
+  await expect(card).toHaveAttribute('srcset', /\/_images\/bibliotheque-[0-9a-f]{6}-480\.webp 480w, .*960w, .*1440w$/);
+  await expect(card).toHaveAttribute('width', '1600');
+  await expect(card).toHaveAttribute('height', '900');
+  await expect(card).toHaveAttribute('loading', 'lazy');
+  await card.scrollIntoViewIfNeeded();
+  await expect.poll(() => card.evaluate((img: HTMLImageElement) => img.currentSrc)).toMatch(/\.webp$/);
+  const variant = await card.evaluate((img: HTMLImageElement) => img.currentSrc);
+  const response = await page.request.get(variant);
+  expect(response.headers()['content-type']).toBe('image/webp');
+  if (testInfo.project.name === 'bold') {
+    // The hero photo is above the fold: loaded first, never lazily.
+    const photo = page.locator('#hero img');
+    await expect(photo).toHaveAttribute('fetchpriority', 'high');
+    await expect(photo).not.toHaveAttribute('loading', 'lazy');
+  }
+});
+
 test('a project page shows its Markdown write-up', async ({ page }) => {
   await page.goto('/en/projects/bibliotheque/');
   const article = page.locator('main article');

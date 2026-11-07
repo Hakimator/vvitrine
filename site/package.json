@@ -12,6 +12,7 @@
   "dependencies": {
     "@vvitrine/astro": "workspace:*",
     "@vvitrine/core": "workspace:*",
+    "@vvitrine/images": "workspace:*",
     "@vvitrine/sections": "workspace:*",
     "@vvitrine/seo": "workspace:*",
     "@vvitrine/source-markdown": "workspace:*",
@@ -19,6 +20,7 @@
     "@vvitrine/theme-bold": "workspace:*",
     "@vvitrine/theme-corporate": "workspace:*",
     "astro": "7.4.7",
+    "sharp": "0.35.5",
     "zod": "4.6.7"
   }
 }

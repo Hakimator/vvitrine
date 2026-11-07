@@ -40,6 +40,9 @@ importers:
       '@vvitrine/core':
         specifier: workspace:*
         version: link:packages/core
+      '@vvitrine/images':
+        specifier: workspace:*
+        version: link:packages/images
       '@vvitrine/sections':
         specifier: workspace:*
         version: link:packages/sections
@@ -176,6 +179,9 @@ importers:
       '@vvitrine/core':
         specifier: workspace:*
         version: link:../packages/core
+      '@vvitrine/images':
+        specifier: workspace:*
+        version: link:../packages/images
       '@vvitrine/sections':
         specifier: workspace:*
         version: link:../packages/sections
@@ -197,6 +203,9 @@ importers:
       astro:
         specifier: 7.4.7
         version: 7.4.7(@types/node@22.20.5)(jiti@2.7.0)(yaml@2.9.1)
+      sharp:
+        specifier: 0.35.5
+        version: 0.35.5(@types/node@22.20.5)
       zod:
         specifier: 4.6.7
         version: 4.6.7
