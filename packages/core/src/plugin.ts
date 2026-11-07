@@ -3,6 +3,7 @@ import type { Basics } from './content/schemas.ts';
 import type { Locale, Messages, Translate } from './i18n/translator.ts';
 import type { HeadTag } from './render/head.ts';
 import type { ThemeTokens } from './render/tokens.ts';
+import type { ImageProvider, ResponsiveImage } from './images.ts';
 import type { ViewKind } from './views.ts';
 
 /**
@@ -35,6 +36,11 @@ export interface RenderContext {
    * '/repo/me.jpg'. Full URLs (https://...) and data: URLs are returned unchanged.
    */
   asset(path: string): string;
+  /**
+   * An image from public/ (or a full URL) ready to draw: `src` with the base path, plus responsive variants and
+   * dimensions when an image plugin such as `@vvitrine/images` is installed.
+   */
+  image(path: string): ResponsiveImage;
 }
 
 /** One link of the site navigation, e.g. { id: 'work', label: 'Experience', href: '/#work' }. */
@@ -208,6 +214,8 @@ export interface GeneratorContext {
 
 export interface GeneratorPlugin extends BasePlugin {
   readonly kind: 'generator';
+  /** Set by image plugins: answers `ctx.image()` for local images (at most one per site). */
+  readonly images?: ImageProvider;
   generate(ctx: GeneratorContext): Promise<readonly GeneratedFile[]>;
 }
 
