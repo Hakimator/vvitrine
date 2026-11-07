@@ -1,0 +1,43 @@
+---
+/** Draws every `figures` view (key figures). */
+import type { FiguresView } from '@vvitrine/core';
+type Props = FiguresView & { sectionId: string };
+const { title, items, sectionId } = Astro.props;
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  <ul class="figures">
+    {items.map((item) => (
+      <li>
+        <span class="value">{item.value}</span> <span class="label">{item.label}</span>
+      </li>
+    ))}
+  </ul>
+</section>
+<style>
+  .figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+    gap: 1rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  li {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    border: 1px solid var(--vv-color-border);
+    border-radius: var(--vv-radius);
+    background: var(--vv-color-surface);
+  }
+  .value {
+    color: var(--vv-color-primary);
+    font: 700 2rem/1.1 var(--vv-font-heading);
+  }
+  .label {
+    color: var(--vv-color-muted);
+    font-size: 0.95rem;
+  }
+</style>

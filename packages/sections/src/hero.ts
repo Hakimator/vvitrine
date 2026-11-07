@@ -53,6 +53,8 @@ export const hero = () =>
     kind: 'section',
     apiVersion: 1,
     id: 'hero',
+    // The hero shows the person's name as the page's <h1>.
+    pageHeading: true,
     optionsSchema: HeroOptions,
     messages: {
       fr: {

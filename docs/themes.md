@@ -34,11 +34,12 @@ Check contrast (WCAG AA: 4.5:1 for text) when you change colours; `pnpm e2e` che
 
 A theme plugin provides:
 
-- `layout`: an Astro component that receives `lang`, `title`, `path`, `t`, `url`, `alternates`, `locales`, `siteName`
-  and `nav`, and renders three slots: `head` (inside `<head>`), the default slot (inside `<main id="main">`) and
+- `layout`: an Astro component that receives `lang`, `title`, `path`, `t`, `url`, `alternates`, `locales`, `siteName`,
+  `nav` and `heading`, and renders three slots: `head` (inside `<head>`), the default slot (inside `<main id="main">`) and
   `body-end`. `nav` is `{ home, items: [{ id, label, href }] }`: render it as the site navigation. Each section is
-  rendered with `id` equal to its section id, so `href` (e.g. `/#work`) scrolls to it;
-- `components`: one component per view kind (`kind:entries`, `kind:tags`, `kind:quotes`, see below), per section id
+  rendered with `id` equal to its section id, so `href` (e.g. `/#work`) scrolls to it. `heading` is set on pages where
+  no section renders the `<h1>` (pages without a hero): render it as the page's `<h1>`;
+- `components`: one component per view kind (`kind:entries`, `kind:tags`, `kind:quotes`, `kind:figures`, see below), per section id
   when a section needs its own layout (`hero`, `projects`, `languages`), and per contributed page (`projects:detail`);
 - `fallback`: a component for sections it does not know (custom sections then still render);
 - `tokens`: default values for every design token, light and dark.
@@ -48,11 +49,12 @@ A theme plugin provides:
 Most sections share a few shapes, so a theme draws each shape once and every section that uses it, built-in or
 third-party, looks right. The shapes are exported by `@vvitrine/core`:
 
-| Kind      | View                                                                              | Built-in sections                                              |
-| --------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `entries` | `{ title, items: [{ title, subtitle?, url?, meta: string[], summary?, notes }] }` | work, education, volunteer, awards, certificates, publications |
-| `tags`    | `{ title, groups: [{ name, level?, keywords }] }`                                 | skills, interests                                              |
-| `quotes`  | `{ title, items: [{ quote, author, role? }] }`                                    | references                                                     |
+| Kind      | View                                                                              | Built-in sections                                                        |
+| --------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `entries` | `{ title, items: [{ title, subtitle?, url?, meta: string[], summary?, notes }] }` | work, education, volunteer, awards, certificates, publications, timeline |
+| `tags`    | `{ title, groups: [{ name, level?, keywords }] }`                                 | skills, interests                                                        |
+| `quotes`  | `{ title, items: [{ quote, author, role? }] }`                                    | references, testimonials                                                 |
+| `figures` | `{ title, items: [{ value, label }] }`                                            | stats                                                                    |
 
 For a section, the theme component is chosen in this order: the component for its id, then the one for its view kind,
 then the section's own default component, then `fallback`.

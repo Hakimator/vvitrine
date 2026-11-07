@@ -10,8 +10,10 @@ interface Props {
   locales: readonly string[];
   siteName: string;
   nav: Navigation;
+  /** Set on pages where no section renders the <h1> (pages without a hero). */
+  heading?: string | undefined;
 }
-const { lang, title, t, alternates, siteName, nav } = Astro.props;
+const { lang, title, t, alternates, siteName, nav, heading } = Astro.props;
 // The switcher lists the other languages only: the current one needs no link.
 const otherLocales = alternates.filter((a) => a.locale !== lang);
 ---
@@ -79,6 +81,7 @@ const otherLocales = alternates.filter((a) => a.locale !== lang);
       </div>
     </header>
     <main id="main">
+      {heading && <h1 class="page-heading">{heading}</h1>}
       <slot />
     </main>
     <footer>{t('theme.builtWith', { name: 'VVitrine' })}</footer>
@@ -262,6 +265,11 @@ const otherLocales = alternates.filter((a) => a.locale !== lang);
     .nav-menu {
       display: none;
     }
+  }
+  .page-heading {
+    margin: 2.5rem 0 0;
+    font: 900 clamp(2.4rem, 8vw, 4rem) / 1.05 var(--vv-font-heading);
+    letter-spacing: -0.02em;
   }
   /* Sections stay visible below the sticky header when reached through a link. */
   main,

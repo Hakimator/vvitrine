@@ -60,6 +60,11 @@ export interface PageContext extends RenderContext {
   readonly siteUrl?: string;
   readonly alternates: readonly { locale: Locale; href: string }[];
   readonly nav: Navigation;
+  /**
+   * Text for the page's main heading (<h1>), set when no section on the page renders one (see
+   * `SectionPlugin.pageHeading`). Layouts render it at the top of the main content. Undefined otherwise.
+   */
+  readonly heading?: string;
 }
 
 /** A component to render plus its props; used for body-end injections (banners, widgets). */
@@ -137,6 +142,11 @@ export interface SectionPlugin<TContent = unknown, TOptions = unknown, TView = u
   readonly id: string;
   /** Content key this plugin owns and validates (ADR-008). */
   readonly content?: { readonly key: string; readonly schema: z.ZodType<TContent> };
+  /**
+   * True when the section renders the page's main heading (<h1>), like the hero. Pages without such a section get
+   * their title as `PageContext.heading`, so every page has exactly one <h1>.
+   */
+  readonly pageHeading?: boolean;
   /** Content keys owned by other plugins that this section needs (read-only). */
   readonly reads?: readonly string[];
   readonly optionsSchema?: z.ZodType<TOptions>;

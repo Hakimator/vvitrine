@@ -13,6 +13,9 @@ import {
   projects,
   references,
   skills,
+  stats,
+  testimonials,
+  timeline,
   volunteer,
   work,
 } from '@vvitrine/sections';
@@ -31,6 +34,7 @@ export default defineConfig({
     corporate({ tokens: { light: { colorPrimary: '#1f3a5f' } } }),
     // Sections you can place on pages
     hero(),
+    stats(),
     projects(),
     work(),
     education(),
@@ -40,7 +44,10 @@ export default defineConfig({
     awards(),
     languages(),
     interests(),
+    testimonials(),
     references(),
+    // One chronological list built from work, education and volunteer, plus its own milestones.
+    timeline({ from: ['work', 'education', 'volunteer'] }),
     talks(), // a local plugin (see plugins/talks.ts)
     // Services and generators
     seo(),
@@ -53,6 +60,7 @@ export default defineConfig({
       path: '/',
       sections: [
         'hero',
+        { id: 'stats', nav: false },
         { id: 'projects', options: { limit: 6 } },
         'work',
         'education',
@@ -64,13 +72,17 @@ export default defineConfig({
         'talks',
         'languages',
         { id: 'interests', nav: false },
+        { id: 'testimonials', nav: false },
         { id: 'references', nav: false },
       ],
     },
+    // A second page: its sections get header links too (here /timeline/#timeline).
+    { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
   ],
 
-  // Override any text, in any language.
+  // Override any text, or add your own (here the title of the /timeline page), in any language.
   messages: {
-    en: { 'section.work.title': 'Experience' },
+    fr: { 'page.timeline': 'Mon parcours' },
+    en: { 'section.work.title': 'Experience', 'page.timeline': 'My journey' },
   },
 });

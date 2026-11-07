@@ -9,6 +9,7 @@ test('home page renders the configured sections in order, in French by default',
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Jeanne Martin');
   const ids = await page.locator('main h2').evaluateAll((els) => els.map((e) => e.id));
   expect(ids).toEqual([
+    'stats-title',
     'projects-title',
     'work-title',
     'education-title',
@@ -19,11 +20,43 @@ test('home page renders the configured sections in order, in French by default',
     'talks-title',
     'languages-title',
     'interests-title',
+    'testimonials-title',
     'references-title',
   ]);
   await expect(page.locator('#work-title')).toHaveText('Expérience');
   await expect(page.locator('#volunteer-title')).toHaveText('Bénévolat');
   await expect(page.locator('#interests-title')).toHaveText('Centres d’intérêt');
+});
+
+test('every page has exactly one main heading', async ({ page }) => {
+  const pages = [
+    ['/en/', 'Jeanne Martin'],
+    ['/en/projects/bibliotheque/', 'Library manager'],
+    ['/en/timeline/', 'My journey'],
+    ['/timeline/', 'Mon parcours'],
+  ];
+  for (const [path, heading] of pages) {
+    await page.goto(path!);
+    await expect(page.getByRole('heading', { level: 1 }), path).toHaveText([heading!]);
+  }
+});
+
+test('the timeline page merges work, education, volunteering and milestones, most recent first', async ({ page }) => {
+  await page.goto('/en/');
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Timeline' }).click();
+  await expect(page).toHaveURL(/\/en\/timeline\/#timeline$/);
+  await expect(page.locator('#timeline h3')).toHaveText([
+    /Software engineering intern/,
+    /Volunteer developer/,
+    /Engineering degree/,
+    /First open-source contribution/,
+  ]);
+});
+
+test('key figures and testimonials are shown on the home page', async ({ page }) => {
+  await page.goto('/en/');
+  await expect(page.locator('#stats li')).toHaveText(['12 projects shipped', '2 years of team projects', /40 %/]);
+  await expect(page.locator('#testimonials figcaption')).toContainText('Camille Bernard');
 });
 
 test('references are quotations with their author', async ({ page }) => {
@@ -44,6 +77,7 @@ test('header links lead to each section, without the sticky header covering its 
     'Skills',
     'Talks',
     'Languages',
+    'Timeline',
   ]);
   await nav.getByRole('link', { name: 'Education' }).click();
   await expect(page).toHaveURL(/\/en\/#education$/);
@@ -129,7 +163,7 @@ test('each project card is a single link that covers the whole card', async ({ p
   await expect(page).toHaveURL(/\/en\/projects\/bibliotheque\/$/);
 });
 
-for (const path of ['/', '/en/', '/projects/bibliotheque/']) {
+for (const path of ['/', '/en/', '/projects/bibliotheque/', '/en/timeline/']) {
   test(`no accessibility violations (WCAG 2.2 AA) on ${path}`, async ({ page }) => {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();

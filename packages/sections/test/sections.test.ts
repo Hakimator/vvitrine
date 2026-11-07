@@ -5,6 +5,7 @@ import {
   InvalidPluginOptionsError,
   type BuiltSite,
   type EntriesView,
+  type FiguresView,
   type QuotesView,
   type TagsView,
   type PageConfig,
@@ -12,7 +13,10 @@ import {
 import { memorySource, stringTheme } from '@vvitrine/core/testing';
 import {
   allSections,
+  hero,
   initialsOf,
+  timeline,
+  work,
   type ProjectDetailView,
   type ProjectsView,
   type EducationView,
@@ -77,6 +81,12 @@ describe('built-in sections', () => {
       actions: [],
       links: [{ label: 'GitHub', url: 'https://github.com/example' }],
     });
+  });
+
+  it('hero provides the page heading', async () => {
+    expect(hero().pageHeading).toBe(true);
+    const site = await build(content);
+    expect(site.routes.find((r) => r.key === 'en:/')!.context.heading).toBeUndefined();
   });
 
   it('hero shows the photo with the base path, and initials otherwise', async () => {
@@ -243,6 +253,121 @@ describe('built-in sections', () => {
       ],
     });
     await expect(build({ ...content, references: [{ name: 'No text' }] })).rejects.toThrow(InvalidContentError);
+  });
+
+  it('testimonials produce quotes and stats produce figures', async () => {
+    const more = {
+      ...content,
+      testimonials: [{ quote: 'Shipped on time.', author: 'A client', role: 'Founder' }],
+      stats: [
+        { value: 12, label: 'projects' },
+        { value: '3+', label: 'years of code' },
+      ],
+    };
+    const site = await build(more, [{ path: '/', sections: ['testimonials', 'stats'] }]);
+    expect(view<QuotesView>(site, 'fr:/', 'testimonials')).toEqual({
+      title: 'Témoignages',
+      items: [{ quote: 'Shipped on time.', author: 'A client', role: 'Founder' }],
+    });
+    expect(view<FiguresView>(site, 'en:/', 'stats')).toEqual({
+      title: 'Key figures',
+      items: [
+        { value: '12', label: 'projects' },
+        { value: '3+', label: 'years of code' },
+      ],
+    });
+  });
+
+  it('timeline merges the keys it reads with its own milestones, most recent first', async () => {
+    const more = {
+      ...content,
+      volunteer: [{ organization: 'Code club', position: 'Mentor', startDate: '2024-09' }],
+      timeline: [{ title: 'Moved to Lyon', date: '2022-09' }],
+    };
+    const kernel = createKernel(
+      {
+        site: { defaultLocale: 'en', locales: ['en'] },
+        plugins: [
+          memorySource({ en: more }),
+          theme,
+          ...allSections(),
+          timeline({ from: ['work', 'education', 'volunteer'] }),
+        ],
+        pages: [{ path: '/', sections: ['timeline'] }],
+      },
+      { root: '/', base: '/', logger: { info: () => {}, warn: () => {} } },
+    );
+    const items = view<EntriesView>(await kernel.build(), 'en:/', 'timeline').items;
+    expect(items.map((i) => [i.title, i.meta])).toEqual([
+      ['Dev', ['Jan 2025 – present', 'Experience']],
+      ['Mentor', ['Sep 2024 – present', 'Volunteering']],
+      ['MSc, CS', ['Sep 2023 – present', 'Education']],
+      ['Moved to Lyon', ['Sep 2022']],
+      ['Intern', ['Jun 2022 – Aug 2022', 'Experience']],
+    ]);
+  });
+
+  it('timeline keeps links, summaries and ranges, and skips undated entries', async () => {
+    const more = {
+      ...content,
+      work: [{ name: 'Acme', position: 'Dev', url: 'https://acme.example', startDate: '2025-01' }],
+      education: [{ institution: 'School', url: 'https://school.example', startDate: '2023-09', endDate: '2024-06' }],
+      volunteer: [
+        { organization: 'Food bank', url: 'https://food.example', startDate: '2021-01' },
+        { organization: 'Undated club' },
+      ],
+      timeline: [
+        { title: 'Exchange year', date: '2022-09', endDate: '2023-06', summary: 'Montreal.', url: 'https://u.example' },
+      ],
+      testimonials: [{ quote: 'Great.', author: 'B' }],
+    };
+    const kernel = createKernel(
+      {
+        site: { defaultLocale: 'en', locales: ['en'] },
+        plugins: [
+          memorySource({ en: more }),
+          theme,
+          ...allSections(),
+          timeline({ from: ['work', 'education', 'volunteer'] }),
+        ],
+        pages: [{ path: '/', sections: ['timeline', 'testimonials'] }],
+      },
+      { root: '/', base: '/', logger: { info: () => {}, warn: () => {} } },
+    );
+    const site = await kernel.build();
+    expect(view<EntriesView>(site, 'en:/', 'timeline').items).toEqual([
+      {
+        title: 'Dev',
+        subtitle: 'Acme',
+        url: 'https://acme.example',
+        meta: ['Jan 2025 – present', 'Experience'],
+        notes: [],
+      },
+      { title: 'School', url: 'https://school.example', meta: ['Sep 2023 – Jun 2024', 'Education'], notes: [] },
+      {
+        title: 'Exchange year',
+        url: 'https://u.example',
+        meta: ['Sep 2022 – Jun 2023'],
+        summary: 'Montreal.',
+        notes: [],
+      },
+      { title: 'Food bank', url: 'https://food.example', meta: ['Jan 2021 – present', 'Volunteering'], notes: [] },
+    ]);
+    expect(view<QuotesView>(site, 'en:/', 'testimonials').items).toEqual([{ quote: 'Great.', author: 'B' }]);
+    const empty = await build({ ...content, work: [], education: [] }, [{ path: '/', sections: ['hero'] }]);
+    expect(empty.routes[0]!.sections.map((s) => s.id)).toEqual(['hero']);
+  });
+
+  it('timeline refuses to read a key that no installed section owns', () => {
+    expect(() =>
+      createKernel(
+        {
+          site: { defaultLocale: 'en' },
+          plugins: [memorySource({ en: content }), theme, hero(), work(), timeline({ from: ['work', 'volunteer'] })],
+        },
+        { root: '/', logger: { info: () => {}, warn: () => {} } },
+      ),
+    ).toThrow(/reads content key "volunteer", but no plugin owns it/);
   });
 
   it('rejects an award without a title', async () => {

@@ -40,7 +40,8 @@ See `site/plugins/talks.ts`. A section:
 4. ships its texts in `messages`. If its view has one of the shared shapes (`entries`, `tags`, `quotes`, see
    [Themes](themes.md#view-kinds)), it declares `viewKind` and every theme draws it with no component of its own;
    otherwise it ships a `defaultComponents` entry so it works with every theme;
-5. optionally returns extra pages from `routes(input, ctx)` (see the `projects` section).
+5. optionally returns extra pages from `routes(input, ctx)` (see the `projects` section);
+6. sets `pageHeading: true` if it renders the page's `<h1>` (like the hero); other pages get their title as heading.
 
 `ctx` gives `t(key)` for texts, `formatDate`, `formatPeriod` and `url(path)` for links that respect the language and the
 deployment base path. Never hard-code a visible string or an absolute link.

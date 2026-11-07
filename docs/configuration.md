@@ -13,15 +13,15 @@ export default defineConfig({
 });
 ```
 
-| Field                | Default                          | Description                                                                    |
-| -------------------- | -------------------------------- | ------------------------------------------------------------------------------ |
-| `site.defaultLocale` | `'en'`                           | Language served at `/`. Other languages are served at `/<locale>/`.            |
-| `site.locales`       | `[defaultLocale]`                | Must include `defaultLocale`.                                                  |
-| `site.favicon`       | `'/favicon.svg'`                 | File in `public/`, or `false`.                                                 |
-| `plugins`            | (required)                       | Plugin instances. Call the factories: `corporate()`, not `corporate`.          |
-| `pages`              | one home page with every section | Each page: `path` (`/` or `/cv`), optional `title`, ordered `sections`.        |
-| `pages[].sections[]` |                                  | A section id, or `{ id, options, nav }`. Options are validated by the section. |
-| `messages`           |                                  | Overrides of any UI string, per locale.                                        |
+| Field                | Default                          | Description                                                                                                                        |
+| -------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `site.defaultLocale` | `'en'`                           | Language served at `/`. Other languages are served at `/<locale>/`.                                                                |
+| `site.locales`       | `[defaultLocale]`                | Must include `defaultLocale`.                                                                                                      |
+| `site.favicon`       | `'/favicon.svg'`                 | File in `public/`, or `false`.                                                                                                     |
+| `plugins`            | (required)                       | Plugin instances. Call the factories: `corporate()`, not `corporate`.                                                              |
+| `pages`              | one home page with every section | Each page: `path` (`/` or `/cv`), optional `title`, ordered `sections`. A page without a hero shows its title as its main heading. |
+| `pages[].sections[]` |                                  | A section id, or `{ id, options, nav }`. Options are validated by the section.                                                     |
+| `messages`           |                                  | Overrides of any UI string, per locale, and your own texts (e.g. a page title key).                                                |
 
 ## Navigation
 
@@ -46,12 +46,16 @@ Every rule fails the build with a message that names the problem and how to fix 
 
 ## Built-in section options
 
-| Section                                                                                  | Options                                      |
-| ---------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `work`, `education`, `volunteer`, `awards`, `certificates`, `publications`, `references` | `title?: string`, `limit?: number`           |
-| `projects`                                                                               | `title?`, `limit?`, `featuredOnly?: boolean` |
-| `skills`, `languages`, `interests`                                                       | `title?`                                     |
-| `hero`                                                                                   | `cv?: string`, `contact?: string`            |
+| Section                                                                                                                       | Options                                      |
+| ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `work`, `education`, `volunteer`, `awards`, `certificates`, `publications`, `references`, `testimonials`, `stats`, `timeline` | `title?: string`, `limit?: number`           |
+| `projects`                                                                                                                    | `title?`, `limit?`, `featuredOnly?: boolean` |
+| `skills`, `languages`, `interests`                                                                                            | `title?`                                     |
+| `hero`                                                                                                                        | `cv?: string`, `contact?: string`            |
+
+`timeline` also takes a setting when you add the plugin: `timeline({ from: ['work', 'education', 'volunteer'] })` lists
+the keys it merges (default: work and education). It is not part of `allSections()`, because it repeats those sections;
+the demo puts it on its own page.
 
 `hero` options: `cv` is a file in `public/` (e.g. `'/cv.pdf'`) or a full URL; it adds a "Download CV (PDF)" button.
 `contact` is the target of the "Contact me" button (e.g. `'#contact'`); by default it opens an e-mail to

@@ -79,6 +79,19 @@ interests:
   - { name: Climbing, keywords: [Bouldering, Outdoor routes] }
   - { name: Open source, keywords: [Accessibility audits, Documentation] }
 
+testimonials:
+  - quote: Jeanne turned a vague brief into a clear, accessible website in three weeks.
+    author: Camille Bernard
+    role: President, Example Non-profit
+
+stats:
+  - { value: 12, label: projects shipped }
+  - { value: 2, label: years of team projects }
+  - { value: 40 %, label: faster CI builds at Fictional Company }
+
+timeline:
+  - { title: First open-source contribution, date: 2023-03 }
+
 references:
   - name: Alex Dupont
     reference: >-

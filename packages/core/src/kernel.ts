@@ -83,6 +83,8 @@ interface PendingRoute {
   readonly basics: ValidatedContent['basics'];
   readonly render: RenderContext;
   readonly nav: Navigation;
+  /** Page title to render as the <h1>, when no section on the page renders one. */
+  readonly heading?: string;
 }
 
 /**
@@ -173,14 +175,17 @@ export class Kernel {
         const item = this.navItem(ref, section, render.url(page.path));
         if (item && !navItems.some((i) => i.id === item.id)) navItems.push(item);
       }
+      const title = this.pageTitle(page, content, render);
+      const hasHeading = sections.some((s) => this.registry.section(s.id)?.pageHeading === true);
       routes.push({
         basePath: page.path,
         locale,
-        title: this.pageTitle(page, content, render),
+        title,
         sections,
         basics: content.basics,
         render,
         nav,
+        ...(hasHeading ? {} : { heading: title }),
       });
     }
 
@@ -284,6 +289,7 @@ export class Kernel {
         basics: route.basics,
         alternates,
         nav: route.nav,
+        ...(route.heading ? { heading: route.heading } : {}),
         ...(this.options.siteUrl ? { siteUrl: this.options.siteUrl.replace(/\/$/, '') } : {}),
       };
       const plugins = this.registry.all();
