@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@vvitrine/core": "workspace:*",
+    "marked": "18.1.1",
     "zod": "4.6.7"
   }
 }

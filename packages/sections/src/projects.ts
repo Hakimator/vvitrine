@@ -1,5 +1,6 @@
 import { defineSection, PartialDate, Url, type RenderContext } from '@vvitrine/core';
 import { z } from 'zod';
+import { renderMarkdown } from './markdown.ts';
 import { byMostRecent, ListOptions, slugify, take } from './shared.ts';
 
 export const ProjectsContent = z
@@ -24,6 +25,8 @@ export const ProjectsContent = z
           image: z
             .object({ src: z.string(), alt: z.string().min(1, { message: 'alt text is required (accessibility)' }) })
             .optional(),
+          /** Long write-up in Markdown (case study), shown on the project page. */
+          body: z.string().optional(),
         })
         .default({ featured: false }),
     }),
@@ -56,6 +59,8 @@ export interface ProjectDetailView extends ProjectSummary {
   readonly roles: readonly string[];
   readonly url?: string;
   readonly repository?: string;
+  /** The Markdown write-up as HTML (headings start at <h2>; local links have the base path). */
+  readonly body?: string;
   readonly labels: {
     readonly back: string;
     readonly demo: string;
@@ -124,6 +129,9 @@ export const projects = () =>
           roles: p.roles,
           ...(p.url ? { url: p.url } : {}),
           ...(p['x-vvitrine'].repository ? { repository: p['x-vvitrine'].repository } : {}),
+          ...(p['x-vvitrine'].body
+            ? { body: renderMarkdown(p['x-vvitrine'].body, ctx.asset, `Project "${p.name}" (${ctx.locale})`) }
+            : {}),
           labels: {
             back: ctx.t('section.projects.back'),
             demo: ctx.t('section.projects.demo'),
