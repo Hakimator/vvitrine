@@ -14,6 +14,9 @@ export const byMostRecent = <T extends { startDate?: string | undefined; endDate
 ): number =>
   (b.endDate ?? '9999').localeCompare(a.endDate ?? '9999') || (b.startDate ?? '').localeCompare(a.startDate ?? '');
 
+/** Type guard that drops undefined and empty strings, for optional `meta` facts. */
+export const isText = (value: string | undefined): value is string => typeof value === 'string' && value !== '';
+
 export const take = <T>(items: readonly T[], limit?: number): T[] => (limit ? items.slice(0, limit) : [...items]);
 
 export const slugify = (value: string): string =>

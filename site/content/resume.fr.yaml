@@ -41,7 +41,9 @@ work:
     highlights:
       - Mise en place d'une chaîne CI réduisant le temps de build de 40 %
       - Tests de bout en bout avec Playwright
-  - name: Association Exemple
+
+volunteer:
+  - organization: Association Exemple
     position: Développeuse bénévole
     startDate: 2024-01
     endDate: 2024-12
@@ -60,9 +62,29 @@ skills:
   - name: Outils
     keywords: [Git, Docker, GitHub Actions, Astro]
 
+certificates:
+  - { name: Fondamentaux du cloud (fictif), issuer: Académie Exemple, date: 2025-03 }
+
+awards:
+  - title: Lauréate du Hackathon fictif de Lyon
+    awarder: Mairie Exemple
+    date: 2024-05
+    summary: Première place sur 40 équipes, avec une application pour les banques alimentaires locales.
+
 languages:
   - { language: Français, fluency: Langue maternelle }
   - { language: Anglais, fluency: C1 }
+
+interests:
+  - { name: Escalade, keywords: [Bloc, Grandes voies] }
+  - { name: Open source, keywords: [Audits d’accessibilité, Documentation] }
+
+references:
+  - name: Alex Dupont
+    reference: >-
+      Jeanne est vite devenue la référence de l’équipe pour les tests et la CI. Fiable, curieuse et très agréable
+      à côtoyer.
+    x-vvitrine: { role: 'Responsable technique, Entreprise Fictive' }
 
 talks:
   - { title: Clean Architecture en pratique, event: Meetup Fictif Lyon, date: 2026-10 }

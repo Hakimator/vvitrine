@@ -4,6 +4,9 @@ import {
   InvalidContentError,
   InvalidPluginOptionsError,
   type BuiltSite,
+  type EntriesView,
+  type QuotesView,
+  type TagsView,
   type PageConfig,
 } from '@vvitrine/core';
 import { memorySource, stringTheme } from '@vvitrine/core/testing';
@@ -12,6 +15,7 @@ import {
   initialsOf,
   type ProjectDetailView,
   type ProjectsView,
+  type EducationView,
   type WorkView,
   type HeroView,
 } from '../src/index.ts';
@@ -106,13 +110,143 @@ describe('built-in sections', () => {
     const site = await build(content);
     const en = view<WorkView>(site, 'en:/', 'work');
     expect(en.title).toBe('Experience');
-    expect(en.items.map((i) => [i.organization, i.period])).toEqual([
+    expect(en.items.map((i) => [i.subtitle, i.meta[0]])).toEqual([
       ['Now Co', 'Jan 2025 – present'],
       ['Old Co', 'Jun 2022 – Aug 2022'],
     ]);
     const fr = view<WorkView>(site, 'fr:/', 'work');
     expect(fr.title).toBe('Expérience');
-    expect(fr.items[0]!.period).toBe('janv. 2025 – aujourd’hui');
+    expect(fr.items[0]!.meta[0]).toBe('janv. 2025 – aujourd’hui');
+  });
+
+  it('work and education produce the shared entries shape', async () => {
+    const detailed = {
+      ...content,
+      work: [
+        {
+          name: 'Acme',
+          position: 'Developer',
+          location: 'Lyon',
+          url: 'https://acme.example',
+          startDate: '2025-01',
+          summary: 'Web apps.',
+          highlights: ['Shipped v2'],
+        },
+      ],
+      education: [
+        { institution: 'School', studyType: 'MSc', area: 'CS', score: '16/20', startDate: '2023-09', courses: ['AI'] },
+      ],
+    };
+    const site = await build(detailed);
+    expect(view<WorkView>(site, 'en:/', 'work').items).toEqual([
+      {
+        title: 'Developer',
+        subtitle: 'Acme',
+        url: 'https://acme.example',
+        meta: ['Jan 2025 – present', 'Lyon'],
+        summary: 'Web apps.',
+        notes: ['Shipped v2'],
+      },
+    ]);
+    expect(view<EducationView>(site, 'en:/', 'education').items).toEqual([
+      { title: 'MSc, CS', subtitle: 'School', meta: ['Sep 2023 – present', '16/20'], notes: ['AI'] },
+    ]);
+    const noDegree = { ...content, education: [{ institution: 'School', startDate: '2023-09' }] };
+    expect(view<EducationView>(await build(noDegree), 'en:/', 'education').items).toEqual([
+      { title: 'School', meta: ['Sep 2023 – present'], notes: [] },
+    ]);
+  });
+
+  it('volunteer, awards, certificates and publications produce entries, most recent first', async () => {
+    const more = {
+      ...content,
+      volunteer: [
+        { organization: 'Food bank', startDate: '2021-01', endDate: '2021-06' },
+        {
+          organization: 'Code club',
+          position: 'Mentor',
+          url: 'https://club.example',
+          startDate: '2024-09',
+          highlights: ['10 pupils'],
+        },
+      ],
+      awards: [
+        { title: 'Hackathon winner', awarder: 'City of Lyon', date: '2024-05', summary: 'First of 40 teams.' },
+        { title: 'Dean list', date: '2025' },
+      ],
+      certificates: [{ name: 'AWS Cloud Practitioner', issuer: 'AWS', date: '2025-03', url: 'https://aws.example/c' }],
+      publications: [
+        { name: 'On plugins', publisher: 'Blog', releaseDate: '2025-10-02', url: 'https://blog.example/p' },
+      ],
+    };
+    const sections = ['volunteer', 'awards', 'certificates', 'publications'];
+    const site = await build(more, [{ path: '/', sections }]);
+    const items = (id: string) => view<EntriesView>(site, 'en:/', id).items;
+    expect(items('volunteer')).toEqual([
+      {
+        title: 'Mentor',
+        subtitle: 'Code club',
+        url: 'https://club.example',
+        meta: ['Sep 2024 – present'],
+        notes: ['10 pupils'],
+      },
+      { title: 'Food bank', meta: ['Jan 2021 – Jun 2021'], notes: [] },
+    ]);
+    expect(items('awards')).toEqual([
+      { title: 'Dean list', meta: ['2025'], notes: [] },
+      {
+        title: 'Hackathon winner',
+        subtitle: 'City of Lyon',
+        meta: ['May 2024'],
+        summary: 'First of 40 teams.',
+        notes: [],
+      },
+    ]);
+    expect(items('certificates')).toEqual([
+      { title: 'AWS Cloud Practitioner', subtitle: 'AWS', url: 'https://aws.example/c', meta: ['Mar 2025'], notes: [] },
+    ]);
+    expect(items('publications')[0]).toMatchObject({
+      title: 'On plugins',
+      subtitle: 'Blog',
+      meta: ['October 2, 2025'],
+    });
+    expect(sections.map((id) => view<EntriesView>(site, 'fr:/', id).title)).toEqual([
+      'Bénévolat',
+      'Distinctions',
+      'Certifications',
+      'Publications',
+    ]);
+  });
+
+  it('interests produce tags and references produce quotes', async () => {
+    const more = {
+      ...content,
+      interests: [{ name: 'Climbing', keywords: ['bouldering'] }, { name: 'Chess' }],
+      references: [
+        { name: 'Alex Martin', reference: 'Reliable and curious.', 'x-vvitrine': { role: 'Team lead at Acme' } },
+        { name: 'Sam Lee', reference: 'Great teammate.' },
+      ],
+    };
+    const site = await build(more, [{ path: '/', sections: ['interests', 'references'] }]);
+    expect(view<TagsView>(site, 'en:/', 'interests')).toEqual({
+      title: 'Interests',
+      groups: [
+        { name: 'Climbing', keywords: ['bouldering'] },
+        { name: 'Chess', keywords: [] },
+      ],
+    });
+    expect(view<QuotesView>(site, 'fr:/', 'references')).toEqual({
+      title: 'Recommandations',
+      items: [
+        { quote: 'Reliable and curious.', author: 'Alex Martin', role: 'Team lead at Acme' },
+        { quote: 'Great teammate.', author: 'Sam Lee' },
+      ],
+    });
+    await expect(build({ ...content, references: [{ name: 'No text' }] })).rejects.toThrow(InvalidContentError);
+  });
+
+  it('rejects an award without a title', async () => {
+    await expect(build({ ...content, awards: [{ date: '2024' }] })).rejects.toThrow(InvalidContentError);
   });
 
   it('applies list options (title override and limit)', async () => {
@@ -121,7 +255,7 @@ describe('built-in sections', () => {
     ]);
     expect(view<WorkView>(site, 'en:/', 'work')).toMatchObject({
       title: 'Career',
-      items: [{ organization: 'Now Co' }],
+      items: [{ subtitle: 'Now Co' }],
     });
   });
 

@@ -99,6 +99,13 @@ const otherLocales = alternates.filter((a) => a.locale !== lang);
     background: var(--vv-color-background);
     color: var(--vv-color-text);
     font: 1.0625rem/1.6 var(--vv-font-body);
+    /* A word longer than its line (a French heading, a URL) breaks instead of widening the page. */
+    overflow-wrap: break-word;
+  }
+  h1,
+  h2,
+  h3 {
+    hyphens: auto;
   }
   main,
   footer {

@@ -15,6 +15,7 @@ import {
   RouteConflictError,
   ThemeCountError,
   UnknownSectionError,
+  type BuiltSite,
   type Plugin,
   type VVitrineConfig,
 } from '../src/index.ts';
@@ -168,6 +169,52 @@ describe('navigation', () => {
   it('rejects a nav value that is not a boolean', () => {
     const bad = config({ pages: [{ path: '/', sections: [{ id: 'work', nav: 'no' as unknown as boolean }] }] });
     expect(() => createKernel(bad, { root: '/', logger: silent })).toThrow(InvalidConfigError);
+  });
+});
+
+describe('view kinds', () => {
+  const entriesSection = (id: string, extra: object = {}) =>
+    defineSection({
+      name: `test-${id}`,
+      kind: 'section',
+      apiVersion: 1,
+      id,
+      viewKind: 'entries',
+      present: () => ({ title: id, items: [] }),
+      ...extra,
+    });
+  const componentOf = (site: BuiltSite, id: string) => site.routes[0]!.sections.find((s) => s.id === id)!.component;
+
+  it('draws a section with the theme component for its kind, unless the theme has one for its id', async () => {
+    const kindTheme = {
+      ...theme,
+      components: { ...theme.components, 'kind:entries': 'EntriesComponent', b: 'BComponent' },
+    };
+    const site = await build(
+      config({
+        plugins: [memorySource(content), kindTheme, hero, entriesSection('a'), entriesSection('b')],
+        pages: [{ path: '/', sections: ['a', 'b'] }],
+      }),
+    );
+    expect(componentOf(site, 'a')).toBe('EntriesComponent');
+    expect(componentOf(site, 'b')).toBe('BComponent');
+  });
+
+  it('prefers the theme kind component over the section default, and falls back otherwise', async () => {
+    const withDefault = entriesSection('a', { defaultComponents: { a: 'OwnComponent' } });
+    const pages = [{ path: '/', sections: ['a'] }];
+    const kindTheme = { ...theme, components: { ...theme.components, 'kind:entries': 'EntriesComponent' } };
+    const themed = await build(config({ plugins: [memorySource(content), kindTheme, hero, withDefault], pages }));
+    expect(componentOf(themed, 'a')).toBe('EntriesComponent');
+    const plain = await build(config({ plugins: [memorySource(content), theme, hero, withDefault], pages }));
+    expect(componentOf(plain, 'a')).toBe('OwnComponent');
+  });
+
+  it('rejects an unknown view kind', () => {
+    const odd = entriesSection('a', { viewKind: 'gallery' });
+    expect(() =>
+      createKernel(config({ plugins: [memorySource(content), theme, hero, odd] }), { root: '/', logger: silent }),
+    ).toThrow(/unknown view kind "gallery"/);
   });
 });
 

@@ -1,0 +1,53 @@
+---
+/** Draws every `quotes` view (references, testimonials...). */
+import type { QuotesView } from '@vvitrine/core';
+type Props = QuotesView & { sectionId: string };
+const { title, items, sectionId } = Astro.props;
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  <ul class="quotes">
+    {items.map((item) => (
+      <li>
+        <figure>
+          <blockquote>
+            <p>{item.quote}</p>
+          </blockquote>
+          <figcaption>
+            <span class="author">{item.author}</span>
+            {item.role && <span class="muted">, {item.role}</span>}
+          </figcaption>
+        </figure>
+      </li>
+    ))}
+  </ul>
+</section>
+<style>
+  .quotes {
+    display: grid;
+    gap: 1.25rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  figure {
+    margin: 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--vv-color-accent);
+  }
+  blockquote {
+    margin: 0;
+    font-style: italic;
+  }
+  blockquote p {
+    margin: 0 0 0.4rem;
+  }
+  figcaption {
+    font-family: var(--vv-font-heading);
+    font-size: 0.9rem;
+  }
+  .author {
+    font-weight: 600;
+  }
+</style>

@@ -1,0 +1,70 @@
+---
+/** Draws every `quotes` view (references, testimonials...). */
+import type { QuotesView } from '@vvitrine/core';
+type Props = QuotesView & { sectionId: string };
+const { title, items, sectionId } = Astro.props;
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  <ul class="quotes">
+    {items.map((item) => (
+      <li>
+        <figure>
+          <blockquote>
+            <p>{item.quote}</p>
+          </blockquote>
+          <figcaption>
+            <span class="author">{item.author}</span>
+            {item.role && <span class="role">{item.role}</span>}
+          </figcaption>
+        </figure>
+      </li>
+    ))}
+  </ul>
+</section>
+<style>
+  .quotes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    gap: 1.25rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  figure {
+    position: relative;
+    height: 100%;
+    margin: 0;
+    padding: 2.5rem 1.5rem 1.5rem;
+    border-radius: var(--vv-radius);
+    background: var(--vv-color-surface);
+  }
+  figure::before {
+    content: '\201C';
+    position: absolute;
+    top: 0.25rem;
+    left: 1.25rem;
+    color: var(--vv-color-accent);
+    font: 900 3.5rem/1 var(--vv-font-heading);
+  }
+  blockquote {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+  blockquote p {
+    margin: 0 0 1rem;
+  }
+  figcaption {
+    display: flex;
+    flex-direction: column;
+  }
+  .author {
+    font-weight: 800;
+  }
+  .role {
+    color: var(--vv-color-muted);
+    font-size: 0.9rem;
+  }
+</style>

@@ -1,4 +1,4 @@
-import { defineSection } from '@vvitrine/core';
+import { defineSection, type TagsView } from '@vvitrine/core';
 import { z } from 'zod';
 import { ListOptions } from './shared.ts';
 
@@ -6,10 +6,8 @@ export const SkillsContent = z
   .array(z.object({ name: z.string().min(1), level: z.string().optional(), keywords: z.array(z.string()).default([]) }))
   .default([]);
 
-export interface SkillsView {
-  readonly title: string;
-  readonly groups: readonly { name: string; level?: string; keywords: readonly string[] }[];
-}
+/** Drawn as the shared `tags` view kind. */
+export type SkillsView = TagsView;
 
 export const skills = () =>
   defineSection({
@@ -17,6 +15,7 @@ export const skills = () =>
     kind: 'section',
     apiVersion: 1,
     id: 'skills',
+    viewKind: 'tags',
     content: { key: 'skills', schema: SkillsContent },
     optionsSchema: ListOptions.omit({ limit: true }),
     messages: { fr: { 'section.skills.title': 'Compétences' }, en: { 'section.skills.title': 'Skills' } },

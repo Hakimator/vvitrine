@@ -38,9 +38,24 @@ A theme plugin provides:
   and `nav`, and renders three slots: `head` (inside `<head>`), the default slot (inside `<main id="main">`) and
   `body-end`. `nav` is `{ home, items: [{ id, label, href }] }`: render it as the site navigation. Each section is
   rendered with `id` equal to its section id, so `href` (e.g. `/#work`) scrolls to it;
-- `components`: one component per section id (`hero`, `work`...) and per contributed page (`projects:detail`);
+- `components`: one component per view kind (`kind:entries`, `kind:tags`, `kind:quotes`, see below), per section id
+  when a section needs its own layout (`hero`, `projects`, `languages`), and per contributed page (`projects:detail`);
 - `fallback`: a component for sections it does not know (custom sections then still render);
 - `tokens`: default values for every design token, light and dark.
+
+### View kinds
+
+Most sections share a few shapes, so a theme draws each shape once and every section that uses it, built-in or
+third-party, looks right. The shapes are exported by `@vvitrine/core`:
+
+| Kind      | View                                                                              | Built-in sections                                              |
+| --------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `entries` | `{ title, items: [{ title, subtitle?, url?, meta: string[], summary?, notes }] }` | work, education, volunteer, awards, certificates, publications |
+| `tags`    | `{ title, groups: [{ name, level?, keywords }] }`                                 | skills, interests                                              |
+| `quotes`  | `{ title, items: [{ quote, author, role? }] }`                                    | references                                                     |
+
+For a section, the theme component is chosen in this order: the component for its id, then the one for its view kind,
+then the section's own default component, then `fallback`.
 
 Theme CSS must only use the `--vv-*` variables (never define them): the kernel writes them, merged with user overrides.
 Start by copying `themes/corporate`.

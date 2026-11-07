@@ -1,12 +1,8 @@
 ---
-/** Renders both `work` and `education` views as cards. */
-import type { EducationView, WorkView } from '@vvitrine/sections';
-type Props = (WorkView | EducationView) & { sectionId: string };
+/** Draws every `entries` view (experience, education, volunteering, awards...) as cards. */
+import type { EntriesView } from '@vvitrine/core';
+type Props = EntriesView & { sectionId: string };
 const { title, items, sectionId } = Astro.props;
-type Item = Record<string, any>;
-const heading = (i: Item) => ('position' in i ? i.position : i.institution);
-const sub = (i: Item) => ('position' in i ? i.organization : i.degree);
-const notes = (i: Item): readonly string[] => i.highlights ?? i.courses ?? [];
 ---
 
 <section id={sectionId} aria-labelledby={`${sectionId}-title`}>
@@ -14,13 +10,13 @@ const notes = (i: Item): readonly string[] => i.highlights ?? i.courses ?? [];
   <ol class="grid">
     {items.map((item) => (
       <li class="card">
-        <p class="muted period">{item.period}</p>
-        <h3>{heading(item)}</h3>
-        {sub(item) && <p class="sub">{item.url ? <a href={item.url}>{sub(item)}</a> : sub(item)}</p>}
-        {'summary' in item && item.summary && <p>{item.summary}</p>}
-        {notes(item).length > 0 && (
+        {item.meta.length > 0 && <p class="muted period">{item.meta.join(' · ')}</p>}
+        <h3>{item.url && !item.subtitle ? <a href={item.url}>{item.title}</a> : item.title}</h3>
+        {item.subtitle && <p class="sub">{item.url ? <a href={item.url}>{item.subtitle}</a> : item.subtitle}</p>}
+        {item.summary && <p>{item.summary}</p>}
+        {item.notes.length > 0 && (
           <ul>
-            {notes(item).map((n) => (
+            {item.notes.map((n) => (
               <li>{n}</li>
             ))}
           </ul>

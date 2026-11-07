@@ -3,6 +3,7 @@ import type { Basics } from './content/schemas.ts';
 import type { Locale, Messages, Translate } from './i18n/translator.ts';
 import type { HeadTag } from './render/head.ts';
 import type { ThemeTokens } from './render/tokens.ts';
+import type { ViewKind } from './views.ts';
 
 /**
  * Public plugin contracts (ADR-007). The kernel depends only on these interfaces, never on a
@@ -146,6 +147,11 @@ export interface SectionPlugin<TContent = unknown, TOptions = unknown, TView = u
   present(input: SectionInput<TContent>, options: TOptions, ctx: RenderContext): TView | null;
   /** Extra pages contributed by the section (e.g. one page per project). */
   routes?(input: SectionInput<TContent>, ctx: RenderContext): readonly RouteContribution[];
+  /**
+   * Shared view shape returned by `present` (see views.ts). The theme then draws the section with its component for
+   * that kind when it has none for the section id, so the section needs no component of its own.
+   */
+  readonly viewKind?: ViewKind;
   /** Components used when the active theme has none for a key (e.g. { talks: TalksComponent }). */
   readonly defaultComponents?: Readonly<Record<string, unknown>>;
 }
@@ -159,7 +165,11 @@ export interface ThemePlugin extends BasePlugin {
    * slots: head, default (inside <main id="main">), body-end.
    */
   readonly layout: unknown;
-  /** One component per key: section id ('work') or contributed page ('projects:detail'). */
+  /**
+   * One component per key: section id ('work'), contributed page ('projects:detail') or view kind
+   * ('kind:entries'). Lookup order for a section: its id, then its view kind, then the section's own default
+   * component, then `fallback`.
+   */
   readonly components: Readonly<Record<string, unknown>>;
   /** Renders any section without a dedicated component. */
   readonly fallback?: unknown;
