@@ -171,9 +171,9 @@ test('no horizontal scrolling on a 320 px wide screen', async ({ page }) => {
   for (const path of ['/', '/en/projects/bibliotheque/']) {
     await page.goto(path);
     expect(await overflow(), path).toBeLessThanOrEqual(0);
-    // Fallback fonts differ between machines (DejaVu Sans on Linux CI is wide).
-    // Widening every glyph makes long words such as e-mail addresses overflow on any machine.
-    await page.addStyleTag({ content: '* { letter-spacing: 0.12em !important; }' });
+    // Fallback fonts differ between machines (DejaVu Sans on Linux CI is wide). Widening every glyph
+    // makes long words (e-mail addresses, "Recommandations") overflow here as they would on CI.
+    await page.addStyleTag({ content: '* { letter-spacing: 0.25em !important; }' });
     expect(await overflow(), `${path} with wide text`).toBeLessThanOrEqual(0);
   }
 });
