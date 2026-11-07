@@ -9,7 +9,7 @@ short version.
 site/ (user)            vvitrine.config.ts, content/, plugins/, public/
 packages/astro          composition root: loads the config, injects routes, renders the kernel output
 themes/*                theme plugins (Astro components)
-packages/sections, seo, source-yaml   plugins
+packages/sections, seo, source-*  plugins
 packages/core           kernel: plugin contracts, registry, content pipeline, i18n, tokens, routes. Framework-free.
 ```
 

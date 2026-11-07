@@ -5,7 +5,7 @@ function. There are five kinds:
 
 | Kind        | Role                                                                            | Built-in examples                                                         |
 | ----------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `source`    | Load raw content                                                                | `@vvitrine/source-yaml`                                                   |
+| `source`    | Load raw content                                                                | `@vvitrine/source-yaml`, `@vvitrine/source-markdown`                      |
 | `section`   | Own and validate a content key, turn it into a view model, optionally add pages | `@vvitrine/sections` (hero, work, education, skills, languages, projects) |
 | `theme`     | Render: layout, one component per section, design tokens                        | `@vvitrine/theme-corporate`, `@vvitrine/theme-bold`                       |
 | `service`   | Add behaviour to every page through hooks (head tags, body-end components)      | `seo()` in `@vvitrine/seo`                                                |
