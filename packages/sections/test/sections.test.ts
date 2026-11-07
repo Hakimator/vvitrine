@@ -83,6 +83,12 @@ describe('built-in sections', () => {
     });
   });
 
+  it('hero provides the page heading', async () => {
+    expect(hero().pageHeading).toBe(true);
+    const site = await build(content);
+    expect(site.routes.find((r) => r.key === 'en:/')!.context.heading).toBeUndefined();
+  });
+
   it('hero shows the photo with the base path, and initials otherwise', async () => {
     const withPhoto = { ...content, basics: { ...content.basics, image: '/me.jpg' } };
     const site = await build(withPhoto, undefined, '/demo/');
