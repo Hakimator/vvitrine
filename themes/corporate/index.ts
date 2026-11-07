@@ -7,6 +7,7 @@ import Languages from './components/Languages.astro';
 import Projects from './components/Projects.astro';
 import ProjectDetail from './components/ProjectDetail.astro';
 import Generic from './components/Generic.astro';
+import Quotes from './components/Quotes.astro';
 
 const defaults: ThemeTokens = {
   light: {
@@ -52,6 +53,7 @@ export default function corporate(options: CorporateOptions = {}): ThemePlugin {
       // Shared view kinds: any section that returns these shapes is drawn by these components.
       'kind:entries': Timeline,
       'kind:tags': Skills,
+      'kind:quotes': Quotes,
       languages: Languages,
       projects: Projects,
       'projects:detail': ProjectDetail,
