@@ -4,7 +4,7 @@
  * ships the CSS of every imported component (spike finding F1). The e2e suite checks for leaks.
  */
 import { defineConfig, definePlugin } from '@vvitrine/core';
-import { allSections } from '@vvitrine/sections';
+import { allSections, timeline } from '@vvitrine/sections';
 import { seo, sitemap } from '@vvitrine/seo';
 import yamlSource from '@vvitrine/source-yaml';
 import bold from '@vvitrine/theme-bold';
@@ -24,13 +24,23 @@ const withPhoto = definePlugin({
 
 export default defineConfig({
   site: { defaultLocale: 'fr', locales: ['fr', 'en'] },
-  plugins: [yamlSource(), bold(), withPhoto, ...allSections(), talks(), seo(), sitemap()],
+  plugins: [
+    yamlSource(),
+    bold(),
+    withPhoto,
+    ...allSections(),
+    timeline({ from: ['work', 'education', 'volunteer'] }),
+    talks(),
+    seo(),
+    sitemap(),
+  ],
   pages: [
     {
       path: '/',
       sections: [
         // The e2e suite only checks the link; the file itself is out of scope here.
         { id: 'hero', options: { cv: '/cv.pdf' } },
+        { id: 'stats', nav: false },
         { id: 'projects', options: { limit: 6 } },
         'work',
         'education',
@@ -41,8 +51,14 @@ export default defineConfig({
         'talks',
         'languages',
         { id: 'interests', nav: false },
+        { id: 'testimonials', nav: false },
         { id: 'references', nav: false },
       ],
     },
+    { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
   ],
+  messages: {
+    fr: { 'page.timeline': 'Mon parcours' },
+    en: { 'page.timeline': 'My journey' },
+  },
 });

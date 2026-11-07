@@ -79,6 +79,19 @@ interests:
   - { name: Escalade, keywords: [Bloc, Grandes voies] }
   - { name: Open source, keywords: [Audits d’accessibilité, Documentation] }
 
+testimonials:
+  - quote: Jeanne a transformé un cahier des charges flou en un site clair et accessible en trois semaines.
+    author: Camille Bernard
+    role: Présidente, Association Exemple
+
+stats:
+  - { value: 12, label: projets livrés }
+  - { value: 2, label: ans de projets en équipe }
+  - { value: 40 %, label: de temps de build en moins chez Entreprise Fictive }
+
+timeline:
+  - { title: Première contribution open source, date: 2023-03 }
+
 references:
   - name: Alex Dupont
     reference: >-
