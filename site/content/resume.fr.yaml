@@ -15,23 +15,6 @@ basics:
   x-vvitrine:
     availability: Recherche un stage de 6 mois à partir de février 2027
 
-projects:
-  - name: Gestionnaire de bibliothèque
-    description: Application web de prêt de livres pour une association, avec réservation en ligne.
-    startDate: 2025-10
-    endDate: 2026-01
-    keywords: [TypeScript, Astro, PostgreSQL]
-    roles: [Développeuse principale (équipe de 4)]
-    highlights:
-      - Architecture hexagonale, 85 % de couverture de tests
-      - Conforme RGAA niveau AA
-    x-vvitrine: { featured: true, slug: bibliotheque, repository: https://github.com/example/library }
-  - name: Tableau de bord météo
-    description: Visualisation de données météo ouvertes en temps réel.
-    startDate: 2025-03
-    keywords: [Python, FastAPI, D3.js]
-    x-vvitrine: { slug: meteo }
-
 work:
   - name: Entreprise Fictive
     position: Stagiaire développeuse

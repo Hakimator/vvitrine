@@ -20,6 +20,7 @@ import {
   work,
 } from '@vvitrine/sections';
 import { seo, sitemap } from '@vvitrine/seo';
+import markdownSource from '@vvitrine/source-markdown';
 import yamlSource from '@vvitrine/source-yaml';
 import corporate from '@vvitrine/theme-corporate';
 import talks from './plugins/talks.ts';
@@ -30,6 +31,8 @@ export default defineConfig({
   plugins: [
     // Where content comes from: content/resume.fr.yaml, content/resume.en.yaml
     yamlSource({ dir: 'content', file: 'resume' }),
+    // One Markdown file per project in content/projects/ (front matter + write-up). Replaces "projects" from YAML.
+    markdownSource({ dir: 'content/projects' }),
     // Exactly one theme. Override any design token here.
     corporate({ tokens: { light: { colorPrimary: '#1f3a5f' } } }),
     // Sections you can place on pages

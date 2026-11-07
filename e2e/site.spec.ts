@@ -28,6 +28,27 @@ test('home page renders the configured sections in order, in French by default',
   await expect(page.locator('#interests-title')).toHaveText('Centres d’intérêt');
 });
 
+test('a project page shows its Markdown write-up', async ({ page }) => {
+  await page.goto('/en/projects/bibliotheque/');
+  const article = page.locator('main article');
+  await expect(article.getByRole('heading', { level: 2, name: 'The problem' })).toBeVisible();
+  await expect(article.locator('pre code')).toContainText('export function canLend');
+  await expect(article.getByRole('table')).toContainText('Time to record a loan');
+  await page.goto('/projects/bibliotheque/');
+  await expect(page.locator('main article').getByRole('heading', { level: 2, name: 'Le problème' })).toBeVisible();
+});
+
+test('on a phone, a write-up with wide code and tables stays accessible', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 375, height: 800 } });
+  const page = await context.newPage();
+  await page.goto('/en/projects/bibliotheque/');
+  // The code block scrolls inside itself, so keyboard users must be able to reach it (WCAG 2.1.1).
+  await expect(page.locator('main pre')).toHaveAttribute('tabindex', '0');
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
+  expect(results.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.length})`)).toEqual([]);
+  await context.close();
+});
+
 test('every page has exactly one main heading', async ({ page }) => {
   const pages = [
     ['/en/', 'Jeanne Martin'],

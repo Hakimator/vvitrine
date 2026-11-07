@@ -15,23 +15,6 @@ basics:
   x-vvitrine:
     availability: Looking for a 6-month internship from February 2027
 
-projects:
-  - name: Library manager
-    description: Book lending web app for a non-profit, with online booking.
-    startDate: 2025-10
-    endDate: 2026-01
-    keywords: [TypeScript, Astro, PostgreSQL]
-    roles: [Lead developer (team of 4)]
-    highlights:
-      - Hexagonal architecture, 85% test coverage
-      - WCAG 2.2 AA compliant
-    x-vvitrine: { featured: true, slug: bibliotheque, repository: https://github.com/example/library }
-  - name: Weather dashboard
-    description: Real-time visualisation of open weather data.
-    startDate: 2025-03
-    keywords: [Python, FastAPI, D3.js]
-    x-vvitrine: { slug: meteo }
-
 work:
   - name: Fictional Company
     position: Software engineering intern

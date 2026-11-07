@@ -6,6 +6,7 @@
 import { defineConfig, definePlugin } from '@vvitrine/core';
 import { allSections, timeline } from '@vvitrine/sections';
 import { seo, sitemap } from '@vvitrine/seo';
+import markdownSource from '@vvitrine/source-markdown';
 import yamlSource from '@vvitrine/source-yaml';
 import bold from '@vvitrine/theme-bold';
 import talks from '../../site/plugins/talks.ts';
@@ -26,6 +27,7 @@ export default defineConfig({
   site: { defaultLocale: 'fr', locales: ['fr', 'en'] },
   plugins: [
     yamlSource(),
+    markdownSource(),
     bold(),
     withPhoto,
     ...allSections(),
