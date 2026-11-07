@@ -4,7 +4,7 @@
  * ships the CSS of every imported component (spike finding F1). The e2e suite checks for leaks.
  */
 import { defineConfig, definePlugin } from '@vvitrine/core';
-import { education, hero, languages, projects, skills, work } from '@vvitrine/sections';
+import { allSections } from '@vvitrine/sections';
 import { seo, sitemap } from '@vvitrine/seo';
 import yamlSource from '@vvitrine/source-yaml';
 import bold from '@vvitrine/theme-bold';
@@ -24,20 +24,7 @@ const withPhoto = definePlugin({
 
 export default defineConfig({
   site: { defaultLocale: 'fr', locales: ['fr', 'en'] },
-  plugins: [
-    yamlSource(),
-    bold(),
-    withPhoto,
-    hero(),
-    projects(),
-    work(),
-    education(),
-    skills(),
-    languages(),
-    talks(),
-    seo(),
-    sitemap(),
-  ],
+  plugins: [yamlSource(), bold(), withPhoto, ...allSections(), talks(), seo(), sitemap()],
   pages: [
     {
       path: '/',
@@ -47,9 +34,14 @@ export default defineConfig({
         { id: 'projects', options: { limit: 6 } },
         'work',
         'education',
+        { id: 'volunteer', nav: false },
         'skills',
+        { id: 'certificates', nav: false },
+        { id: 'awards', nav: false },
         'talks',
         'languages',
+        { id: 'interests', nav: false },
+        { id: 'references', nav: false },
       ],
     },
   ],

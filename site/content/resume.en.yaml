@@ -41,7 +41,9 @@ work:
     highlights:
       - Built a CI pipeline that cut build time by 40%
       - End-to-end tests with Playwright
-  - name: Example Non-profit
+
+volunteer:
+  - organization: Example Non-profit
     position: Volunteer developer
     startDate: 2024-01
     endDate: 2024-12
@@ -60,9 +62,29 @@ skills:
   - name: Tools
     keywords: [Git, Docker, GitHub Actions, Astro]
 
+certificates:
+  - { name: Fictional Cloud Fundamentals, issuer: Example Academy, date: 2025-03 }
+
+awards:
+  - title: Winner, Fictional Hackathon Lyon
+    awarder: Example City Council
+    date: 2024-05
+    summary: First place out of 40 teams with an app for local food banks.
+
 languages:
   - { language: French, fluency: Native }
   - { language: English, fluency: C1 }
+
+interests:
+  - { name: Climbing, keywords: [Bouldering, Outdoor routes] }
+  - { name: Open source, keywords: [Accessibility audits, Documentation] }
+
+references:
+  - name: Alex Dupont
+    reference: >-
+      Jeanne quickly became the person the team turned to for testing and CI. Reliable, curious and a pleasure to
+      work with.
+    x-vvitrine: { role: 'Engineering manager, Fictional Company' }
 
 talks:
   - { title: Clean Architecture in practice, event: Fictional Meetup Lyon, date: 2026-10 }

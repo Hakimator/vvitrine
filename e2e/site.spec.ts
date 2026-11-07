@@ -12,11 +12,26 @@ test('home page renders the configured sections in order, in French by default',
     'projects-title',
     'work-title',
     'education-title',
+    'volunteer-title',
     'skills-title',
+    'certificates-title',
+    'awards-title',
     'talks-title',
     'languages-title',
+    'interests-title',
+    'references-title',
   ]);
   await expect(page.locator('#work-title')).toHaveText('Expérience');
+  await expect(page.locator('#volunteer-title')).toHaveText('Bénévolat');
+  await expect(page.locator('#interests-title')).toHaveText('Centres d’intérêt');
+});
+
+test('references are quotations with their author', async ({ page }) => {
+  await page.goto('/en/');
+  const quote = page.locator('#references figure');
+  await expect(quote.locator('blockquote')).toContainText('Reliable, curious and a pleasure to work with.');
+  await expect(quote.locator('figcaption')).toContainText('Alex Dupont');
+  await expect(quote.locator('figcaption')).toContainText('Engineering manager, Fictional Company');
 });
 
 test('header links lead to each section, without the sticky header covering its title', async ({ page }) => {

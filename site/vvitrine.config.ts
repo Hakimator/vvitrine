@@ -3,7 +3,19 @@
  * Everything is a plugin: add, remove or replace any line in `plugins`.
  */
 import { defineConfig } from '@vvitrine/core';
-import { education, hero, languages, projects, skills, work } from '@vvitrine/sections';
+import {
+  awards,
+  certificates,
+  education,
+  hero,
+  interests,
+  languages,
+  projects,
+  references,
+  skills,
+  volunteer,
+  work,
+} from '@vvitrine/sections';
 import { seo, sitemap } from '@vvitrine/seo';
 import yamlSource from '@vvitrine/source-yaml';
 import corporate from '@vvitrine/theme-corporate';
@@ -22,8 +34,13 @@ export default defineConfig({
     projects(),
     work(),
     education(),
+    volunteer(),
     skills(),
+    certificates(),
+    awards(),
     languages(),
+    interests(),
+    references(),
     talks(), // a local plugin (see plugins/talks.ts)
     // Services and generators
     seo(),
@@ -39,9 +56,15 @@ export default defineConfig({
         { id: 'projects', options: { limit: 6 } },
         'work',
         'education',
+        // nav: false keeps a section out of the header menu (it stays on the page).
+        { id: 'volunteer', nav: false },
         'skills',
+        { id: 'certificates', nav: false },
+        { id: 'awards', nav: false },
         'talks',
         'languages',
+        { id: 'interests', nav: false },
+        { id: 'references', nav: false },
       ],
     },
   ],
