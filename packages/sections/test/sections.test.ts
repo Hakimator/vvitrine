@@ -32,6 +32,7 @@ const theme = stringTheme({}, 'Fallback');
 const build = (
   data: Record<string, unknown>,
   pages = [{ path: '/', sections: ['hero', 'projects', 'work', 'education', 'skills', 'languages'] }],
+  base = '/',
 ) =>
   createKernel(
     {
@@ -39,7 +40,7 @@ const build = (
       plugins: [memorySource({ en: data, fr: data }), theme, ...allSections()],
       pages,
     },
-    { root: '/', base: '/', logger: { info: () => {}, warn: () => {} } },
+    { root: '/', base, logger: { info: () => {}, warn: () => {} } },
   ).build();
 
 const view = <T>(site: BuiltSite, key: string, id: string) =>
@@ -93,6 +94,21 @@ describe('built-in sections', () => {
     expect(d.repository).toBe('https://github.com/x/y');
     expect(d.labels.code).toBe('Code source');
     expect(d.backHref).toBe('/fr/#projects');
+  });
+
+  it('resolves project images from public/ with the base path', async () => {
+    const withImages = {
+      ...content,
+      projects: [
+        { name: 'Local', 'x-vvitrine': { image: { src: '/images/local.png', alt: 'Local screenshot' } } },
+        { name: 'Remote', 'x-vvitrine': { image: { src: 'https://cdn.example.com/r.png', alt: 'Remote' } } },
+      ],
+    };
+    const site = await build(withImages, undefined, '/demo/');
+    const list = view<ProjectsView>(site, 'en:/', 'projects');
+    expect(list.items.map((p) => p.image?.src)).toEqual(['/demo/images/local.png', 'https://cdn.example.com/r.png']);
+    const detail = site.routes.find((r) => r.key === 'en:/projects/local')!.sections[0]!.view as ProjectDetailView;
+    expect(detail.image).toEqual({ src: '/demo/images/local.png', alt: 'Local screenshot' });
   });
 
   it('featuredOnly keeps only featured projects', async () => {
