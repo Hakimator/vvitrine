@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "description": "VVitrine: an open-source, plugin-based portfolio framework. Edit site/ only.",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": ">=22.12"
