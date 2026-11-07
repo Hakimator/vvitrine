@@ -214,7 +214,7 @@ describe('view kinds', () => {
     const odd = entriesSection('a', { viewKind: 'gallery' });
     expect(() =>
       createKernel(config({ plugins: [memorySource(content), theme, hero, odd] }), { root: '/', logger: silent }),
-    ).toThrow(/unknown view kind "gallery"/);
+    ).toThrow(/unknown view kind "gallery"\. Known kinds: entries, tags, quotes, figures/);
   });
 });
 

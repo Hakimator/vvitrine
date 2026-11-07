@@ -49,16 +49,29 @@ export interface QuotesView {
   readonly items: readonly QuoteItem[];
 }
 
+/** A key figure, e.g. { value: '12', label: 'projects shipped' }. */
+export interface FigureItem {
+  /** Shown large. A string, so it can hold '3+', '98 %' or '2 yrs'. */
+  readonly value: string;
+  readonly label: string;
+}
+
+export interface FiguresView {
+  readonly title: string;
+  readonly items: readonly FigureItem[];
+}
+
 /** View kind name -> view shape. */
 export interface ViewKinds {
   readonly entries: EntriesView;
   readonly tags: TagsView;
   readonly quotes: QuotesView;
+  readonly figures: FiguresView;
 }
 
 export type ViewKind = keyof ViewKinds;
 
-export const VIEW_KINDS: readonly ViewKind[] = ['entries', 'tags', 'quotes'];
+export const VIEW_KINDS: readonly ViewKind[] = ['entries', 'tags', 'quotes', 'figures'];
 
 /** Theme component key for a view kind, e.g. 'kind:entries'. */
 export const viewKindKey = (kind: ViewKind): `kind:${ViewKind}` => `kind:${kind}`;
