@@ -3,13 +3,17 @@
 import { execFileSync } from 'node:child_process';
 
 const port = 4330;
+// Each command must return quickly: a hung command fails the test instead of blocking CI.
 const astro = (...args) =>
   execFileSync('pnpm', ['--filter', 'site', 'exec', 'astro', ...args], {
     stdio: 'pipe',
     shell: process.platform === 'win32',
+    timeout: 60_000,
   });
 
-astro('dev', '--port', String(port));
+// `--background` is explicit: without it, Astro chooses foreground or background
+// from the environment, and a foreground server never returns here.
+astro('dev', '--background', '--port', String(port));
 let failure = null;
 try {
   const deadline = Date.now() + 30_000;

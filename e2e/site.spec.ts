@@ -78,12 +78,15 @@ test('skip link moves focus to the main content', async ({ page }) => {
 
 test('no horizontal scrolling on a 320 px wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
+  const overflow = () =>
+    page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   for (const path of ['/', '/en/projects/bibliotheque/']) {
     await page.goto(path);
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow, path).toBeLessThanOrEqual(0);
+    expect(await overflow(), path).toBeLessThanOrEqual(0);
+    // Fallback fonts differ between machines (DejaVu Sans on Linux CI is wide).
+    // Widening every glyph makes long words such as e-mail addresses overflow on any machine.
+    await page.addStyleTag({ content: '* { letter-spacing: 0.12em !important; }' });
+    expect(await overflow(), `${path} with wide text`).toBeLessThanOrEqual(0);
   }
 });
 

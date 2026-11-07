@@ -50,4 +50,9 @@ const { name, label, summary, location, availability, email, links, sectionId } 
     padding: 0;
     font-family: var(--vv-font-heading);
   }
+  .links li {
+    /* Long words such as e-mail addresses must wrap instead of widening the page. */
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
 </style>

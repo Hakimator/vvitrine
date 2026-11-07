@@ -85,11 +85,18 @@ const { name, label, summary, location, availability, email, links, sectionId } 
     padding: 0;
     margin-top: 1.5rem;
   }
+  .links li {
+    /* Long words such as e-mail addresses must wrap instead of widening the page. */
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
   .primary {
+    display: inline-block;
     background: var(--vv-color-primary);
     color: var(--vv-color-on-primary);
     padding: 0.7rem 1.3rem;
-    border-radius: 999px;
+    /* A full pill on one line, a rounded rectangle if the address wraps. */
+    border-radius: 1.5rem;
     text-decoration: none;
   }
 </style>
