@@ -13,6 +13,7 @@ import { formatPartialDate, formatPeriod } from './i18n/dates.ts';
 import { Translator, type Locale } from './i18n/translator.ts';
 import type { HeadTag } from './render/head.ts';
 import { tokensToCss } from './render/tokens.ts';
+import { viewKindKey } from './views.ts';
 import type {
   ComponentRef,
   GeneratedFile,
@@ -247,7 +248,9 @@ export class Kernel {
 
   private component(key: string, section: SectionPlugin<any, any, any>): unknown {
     const theme = this.registry.theme;
-    const component = theme.components[key] ?? section.defaultComponents?.[key] ?? theme.fallback;
+    // The view kind applies to the section's own key only, not to the pages it contributes.
+    const byKind = key === section.id && section.viewKind ? theme.components[viewKindKey(section.viewKind)] : undefined;
+    const component = theme.components[key] ?? byKind ?? section.defaultComponents?.[key] ?? theme.fallback;
     if (!component) throw new MissingRendererError(key, theme.name);
     return component;
   }

@@ -17,6 +17,7 @@ import {
   type SourcePlugin,
   type ThemePlugin,
 } from './plugin.ts';
+import { VIEW_KINDS } from './views.ts';
 
 /**
  * Holds registered plugins and enforces the plugin contract: API version, unique names,
@@ -46,6 +47,11 @@ export class PluginRegistry {
     const existing = this.sectionsById.get(section.id);
     if (existing) throw new DuplicateSectionError(section.id, existing.name, section.name);
     this.sectionsById.set(section.id, section);
+    if (section.viewKind !== undefined && !VIEW_KINDS.includes(section.viewKind)) {
+      throw new VVitrineError(
+        `Plugin "${section.name}" declares an unknown view kind "${String(section.viewKind)}". Known kinds: ${VIEW_KINDS.join(', ')}.`,
+      );
+    }
 
     if (!section.content) return;
     const { key } = section.content;
