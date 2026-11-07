@@ -1,39 +1,84 @@
 ---
 import type { HeroView } from '@vvitrine/sections';
 type Props = HeroView & { sectionId: string };
-const { name, label, summary, location, availability, email, links, sectionId } = Astro.props;
+const { name, label, summary, location, availability, photo, initials, actions, links, sectionId } = Astro.props;
 ---
 
 <header id={sectionId} class="hero">
-  {label && <p class="label">{label}</p>}
-  <h1>{name}</h1>
-  {summary && <p class="summary">{summary}</p>}
-  <p class="meta">
-    {location && <span class="muted">{location}</span>}
-    {availability && <span class="badge">{availability}</span>}
-  </p>
-  {(links.length > 0 || email) && (
-    <ul class="links">
-      {email && (
-        <li>
-          <a class="primary" href={`mailto:${email}`}>
-            {email}
-          </a>
-        </li>
-      )}
-      {links.map((l) => (
-        <li>
-          <a href={l.url} rel="me noopener">
-            {l.label} →
-          </a>
-        </li>
-      ))}
-    </ul>
-  )}
+  <div class="avatar">
+    {photo ? (
+      <img src={photo.src} alt={photo.alt} width="176" height="176" decoding="async" />
+    ) : (
+      <span class="initials" aria-hidden="true">
+        {initials}
+      </span>
+    )}
+  </div>
+  <div class="identity">
+    {label && <p class="label">{label}</p>}
+    <h1>{name}</h1>
+    {summary && <p class="summary">{summary}</p>}
+    <p class="meta">
+      {location && <span class="muted">{location}</span>}
+      {availability && <span class="badge">{availability}</span>}
+    </p>
+    {(actions.length > 0 || links.length > 0) && (
+      <ul class="links">
+        {actions.map((a, i) => (
+          <li>
+            <a class:list={['button', i === 0 ? 'primary' : 'secondary']} href={a.href} download={a.download}>
+              {a.label}
+            </a>
+          </li>
+        ))}
+        {links.map((l) => (
+          <li>
+            <a href={l.url} rel="me noopener">
+              {l.label} →
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
 </header>
 <style>
   .hero {
-    padding: 4rem 0 1rem;
+    display: grid;
+    gap: 1.5rem 3rem;
+    align-items: center;
+    padding: 3rem 0 1rem;
+  }
+  @media (min-width: 48rem) {
+    .hero {
+      grid-template-columns: 11rem 1fr;
+    }
+  }
+  .avatar img,
+  .initials {
+    display: grid;
+    place-items: center;
+    width: 7rem;
+    height: 7rem;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 4px var(--vv-color-background),
+      0 0 0 7px var(--vv-color-accent);
+  }
+  @media (min-width: 48rem) {
+    .avatar img,
+    .initials {
+      width: 11rem;
+      height: 11rem;
+    }
+  }
+  .avatar img {
+    object-fit: cover;
+  }
+  .initials {
+    background: linear-gradient(135deg, var(--vv-color-primary), var(--vv-color-accent));
+    color: var(--vv-color-on-primary);
+    font: 900 clamp(2.5rem, 6vw, 3.5rem) / 1 var(--vv-font-heading);
   }
   .label {
     text-transform: uppercase;
@@ -86,17 +131,24 @@ const { name, label, summary, location, availability, email, links, sectionId } 
     margin-top: 1.5rem;
   }
   .links li {
-    /* Long words such as e-mail addresses must wrap instead of widening the page. */
+    /* Long words must wrap instead of widening the page. */
     max-width: 100%;
     overflow-wrap: anywhere;
   }
-  .primary {
+  .button {
     display: inline-block;
-    background: var(--vv-color-primary);
-    color: var(--vv-color-on-primary);
-    padding: 0.7rem 1.3rem;
-    /* A full pill on one line, a rounded rectangle if the address wraps. */
+    padding: 0.6rem 1.3rem;
+    border: 2px solid var(--vv-color-primary);
+    /* A full pill on one line, a rounded rectangle if the label wraps. */
     border-radius: 1.5rem;
     text-decoration: none;
+  }
+  .primary {
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+  }
+  .button:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
   }
 </style>
