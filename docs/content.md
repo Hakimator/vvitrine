@@ -16,20 +16,20 @@ warning, never a silent error.
 
 ## Keys provided by the built-in sections
 
-| Key            | Section        | Main fields                                                                                                                                                 |
-| -------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `basics`       | core / `hero`  | `name` (required), `label`, `image`, `email`, `summary`, `location { city, region, countryCode }`, `profiles [{ network, url }]`, `x-vvitrine.availability` |
-| `work`         | `work`         | `name`, `position`, `startDate`, `endDate` (omit = ongoing), `location`, `url`, `summary`, `highlights`                                                     |
-| `education`    | `education`    | `institution`, `studyType`, `area`, `startDate`, `endDate`, `score`, `courses`                                                                              |
-| `volunteer`    | `volunteer`    | `organization`, `position`, `url`, `startDate`, `endDate`, `summary`, `highlights`                                                                          |
-| `awards`       | `awards`       | `title`, `date`, `awarder`, `summary`                                                                                                                       |
-| `certificates` | `certificates` | `name`, `date`, `issuer`, `url`                                                                                                                             |
-| `publications` | `publications` | `name`, `publisher`, `releaseDate`, `url`, `summary`                                                                                                        |
-| `skills`       | `skills`       | `name`, `level`, `keywords`                                                                                                                                 |
-| `languages`    | `languages`    | `language`, `fluency`                                                                                                                                       |
-| `interests`    | `interests`    | `name`, `keywords`                                                                                                                                          |
-| `references`   | `references`   | `name`, `reference` (the quotation), `x-vvitrine.role` (e.g. "Team lead at Acme")                                                                           |
-| `projects`     | `projects`     | `name`, `description`, `highlights`, `keywords`, `roles`, `startDate`, `endDate`, `url`, `x-vvitrine { slug, repository, featured, image { src, alt } }`    |
+| Key            | Section        | Main fields                                                                                                                                                    |
+| -------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `basics`       | core / `hero`  | `name` (required), `label`, `image`, `email`, `summary`, `location { city, region, countryCode }`, `profiles [{ network, url }]`, `x-vvitrine.availability`    |
+| `work`         | `work`         | `name`, `position`, `startDate`, `endDate` (omit = ongoing), `location`, `url`, `summary`, `highlights`                                                        |
+| `education`    | `education`    | `institution`, `studyType`, `area`, `startDate`, `endDate`, `score`, `courses`                                                                                 |
+| `volunteer`    | `volunteer`    | `organization`, `position`, `url`, `startDate`, `endDate`, `summary`, `highlights`                                                                             |
+| `awards`       | `awards`       | `title`, `date`, `awarder`, `summary`                                                                                                                          |
+| `certificates` | `certificates` | `name`, `date`, `issuer`, `url`                                                                                                                                |
+| `publications` | `publications` | `name`, `publisher`, `releaseDate`, `url`, `summary`                                                                                                           |
+| `skills`       | `skills`       | `name`, `level`, `keywords`                                                                                                                                    |
+| `languages`    | `languages`    | `language`, `fluency`                                                                                                                                          |
+| `interests`    | `interests`    | `name`, `keywords`                                                                                                                                             |
+| `references`   | `references`   | `name`, `reference` (the quotation), `x-vvitrine.role` (e.g. "Team lead at Acme")                                                                              |
+| `projects`     | `projects`     | `name`, `description`, `highlights`, `keywords`, `roles`, `startDate`, `endDate`, `url`, `x-vvitrine { slug, repository, featured, image { src, alt }, body }` |
 
 Dates are `YYYY`, `YYYY-MM` or `YYYY-MM-DD`. They are displayed in the reader's language (`juin 2025`, `Jun 2025`).
 
@@ -48,6 +48,36 @@ added for you. Full URLs (`https://...`) work too. Without `basics.image`, theme
 | `timeline`     | `timeline`     | your own milestones: `title`, `date`, `endDate`, `summary`, `url` (work, education... are added for you) |
 
 Every top-level JSON Resume section has a built-in section. Dated lists are shown most recent first.
+
+## Projects as Markdown files
+
+A project page can hold a full case study. Write it in `x-vvitrine.body` (Markdown), or, easier, give each project its
+own file with `@vvitrine/source-markdown`:
+
+```ts
+plugins: [yamlSource(), markdownSource({ dir: 'content/projects' }), /* ... */],
+```
+
+```markdown
+---
+name: Library manager
+description: Book lending web app for a non-profit.
+startDate: 2025-10
+keywords: [TypeScript, Astro]
+x-vvitrine: { featured: true }
+---
+
+# The problem
+
+Text, lists, `code`, tables and images: ![Screenshot of the app](/images/library.png)
+```
+
+- One file per project: `content/projects/<slug>.md`, or one per language: `<slug>.fr.md`, `<slug>.en.md` (a language
+  file wins over the shared one). The file name is the page address: `/projects/<slug>/`.
+- The front matter holds the same fields as a `projects` entry; the text below it is the write-up.
+- When this source is used, it provides the whole `projects` list: remove `projects` from your YAML file.
+- `#` headings become sub-headings of the project page, local images and links get the base path, and every image needs
+  an alt text (the build says which one is missing).
 
 ## Privacy
 

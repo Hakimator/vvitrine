@@ -417,6 +417,44 @@ describe('built-in sections', () => {
     expect(detail.image).toEqual({ src: '/demo/images/local.png', alt: 'Local screenshot' });
   });
 
+  it('renders a Markdown write-up on the project page', async () => {
+    const body = [
+      '# Context',
+      'A **small** app. See [the docs](/docs/guide.pdf) or [MDN](https://developer.mozilla.org).',
+      '',
+      '![Screenshot of the app](/images/app.png)',
+      '',
+      '```ts',
+      'const x = 1;',
+      '```',
+      '',
+      '| Before | After |',
+      '| ------ | ----- |',
+      '| 3 min  | 20 s  |',
+    ].join('\n');
+    const withBody = { ...content, projects: [{ name: 'Star', 'x-vvitrine': { body } }] };
+    const site = await build(withBody, undefined, '/demo/');
+    const detail = site.routes.find((r) => r.key === 'en:/projects/star')!.sections[0]!.view as ProjectDetailView;
+    expect(detail.body).toContain('<h2>Context</h2>');
+    expect(detail.body).toContain('<strong>small</strong>');
+    expect(detail.body).toContain('href="/demo/docs/guide.pdf"');
+    expect(detail.body).toContain('href="https://developer.mozilla.org"');
+    expect(detail.body).toContain('<img src="/demo/images/app.png" alt="Screenshot of the app">');
+    expect(detail.body).toContain('<pre tabindex="0"><code class="language-ts">const x = 1;');
+    expect(detail.body).toContain('<table tabindex="0">');
+    const plain = await build({ ...content, projects: [{ name: 'Star' }] });
+    expect(
+      (plain.routes.find((r) => r.key === 'en:/projects/star')!.sections[0]!.view as ProjectDetailView).body,
+    ).toBeUndefined();
+  });
+
+  it('refuses a Markdown image without alt text', async () => {
+    const bad = { ...content, projects: [{ name: 'Star', 'x-vvitrine': { body: '![](/images/app.png)' } }] };
+    await expect(build(bad)).rejects.toThrow(
+      /Project "Star" \((en|fr)\): the image "\/images\/app.png" has no alt text/,
+    );
+  });
+
   it('featuredOnly keeps only featured projects', async () => {
     const site = await build(content, [
       { path: '/', sections: [{ id: 'projects', options: { featuredOnly: true } }] } as never,
