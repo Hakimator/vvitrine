@@ -39,6 +39,14 @@ Each project gets its own page at `/projects/<slug>/` (the slug comes from the n
 Image and file paths such as `basics.image: /photo.jpg` point to files in `site/public/`; the deployment base path is
 added for you. Full URLs (`https://...`) work too. Without `basics.image`, themes show your initials.
 
+### Portfolio extras (not part of JSON Resume)
+
+| Key            | Section        | Main fields                                                                                              |
+| -------------- | -------------- | -------------------------------------------------------------------------------------------------------- |
+| `stats`        | `stats`        | `value` (text or number, e.g. `12`, `3+`, `40 %`), `label`                                               |
+| `testimonials` | `testimonials` | `quote`, `author`, `role`                                                                                |
+| `timeline`     | `timeline`     | your own milestones: `title`, `date`, `endDate`, `summary`, `url` (work, education... are added for you) |
+
 Every top-level JSON Resume section has a built-in section. Dated lists are shown most recent first.
 
 ## Privacy
