@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { createKernel, InvalidContentError, type BuiltSite } from '@vvitrine/core';
+import {
+  createKernel,
+  InvalidContentError,
+  InvalidPluginOptionsError,
+  type BuiltSite,
+  type PageConfig,
+} from '@vvitrine/core';
 import { memorySource, stringTheme } from '@vvitrine/core/testing';
-import { allSections, type ProjectDetailView, type ProjectsView, type WorkView, type HeroView } from '../src/index.ts';
+import {
+  allSections,
+  initialsOf,
+  type ProjectDetailView,
+  type ProjectsView,
+  type WorkView,
+  type HeroView,
+} from '../src/index.ts';
 
 const content = {
   basics: {
@@ -31,7 +44,9 @@ const content = {
 const theme = stringTheme({}, 'Fallback');
 const build = (
   data: Record<string, unknown>,
-  pages = [{ path: '/', sections: ['hero', 'projects', 'work', 'education', 'skills', 'languages'] }],
+  pages: readonly PageConfig[] = [
+    { path: '/', sections: ['hero', 'projects', 'work', 'education', 'skills', 'languages'] },
+  ],
   base = '/',
 ) =>
   createKernel(
@@ -54,8 +69,37 @@ describe('built-in sections', () => {
       label: 'Engineer',
       location: 'Lyon, FR',
       availability: 'Open to internships',
+      initials: 'JD',
+      actions: [],
       links: [{ label: 'GitHub', url: 'https://github.com/example' }],
     });
+  });
+
+  it('hero shows the photo with the base path, and initials otherwise', async () => {
+    const withPhoto = { ...content, basics: { ...content.basics, image: '/me.jpg' } };
+    const site = await build(withPhoto, undefined, '/demo/');
+    expect(view<HeroView>(site, 'fr:/', 'hero').photo).toEqual({ src: '/demo/me.jpg', alt: 'Photo de Jane Doe' });
+    expect(view<HeroView>(await build(content), 'en:/', 'hero').photo).toBeUndefined();
+    expect(initialsOf('Jeanne Martin')).toBe('JM');
+    expect(initialsOf('  Abdel-Hakim   Atmani ')).toBe('AA');
+    expect(initialsOf('Ada')).toBe('A');
+    expect(initialsOf('élodie durand', 'fr')).toBe('ÉD');
+  });
+
+  it('hero offers the CV download first, then contact (mailto or a custom target)', async () => {
+    const withEmail = { ...content, basics: { ...content.basics, email: 'jane@example.dev' } };
+    const placed = (options: Record<string, string>) => [{ path: '/', sections: [{ id: 'hero', options }] }];
+    const site = await build(withEmail, placed({ cv: '/cv.pdf' }), '/demo/');
+    expect(view<HeroView>(site, 'en:/', 'hero').actions).toEqual([
+      { id: 'cv', label: 'Download CV (PDF)', href: '/demo/cv.pdf', download: true },
+      { id: 'contact', label: 'Contact me', href: 'mailto:jane@example.dev' },
+    ]);
+    const custom = await build(withEmail, placed({ cv: 'https://cdn.example.com/cv.pdf', contact: '#contact' }));
+    expect(view<HeroView>(custom, 'fr:/', 'hero').actions).toEqual([
+      { id: 'cv', label: 'Télécharger le CV (PDF)', href: 'https://cdn.example.com/cv.pdf' },
+      { id: 'contact', label: 'Me contacter', href: '#contact' },
+    ]);
+    await expect(build(withEmail, placed({ cv: '' }))).rejects.toThrow(InvalidPluginOptionsError);
   });
 
   it('work is ordered with ongoing jobs first, localized titles and periods', async () => {

@@ -6,7 +6,8 @@ import { skills } from './skills.ts';
 import { work } from './work.ts';
 
 export { education, hero, languages, projects, skills, work };
-export type { HeroView } from './hero.ts';
+export type { HeroAction, HeroView } from './hero.ts';
+export { initialsOf } from './hero.ts';
 export type { WorkView } from './work.ts';
 export type { EducationView } from './education.ts';
 export type { SkillsView } from './skills.ts';
