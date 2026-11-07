@@ -37,6 +37,12 @@ builds and the end-to-end tests (including accessibility). CI runs the same step
   `feat(sections): add awards section`, `fix(seo): respect base path in sitemap`.
 - **Changesets:** run `pnpm changeset` when a package changes, to record the SemVer bump and the changelog entry.
 
+## Licence of contributions
+
+VVitrine is licensed under the [GNU AGPL v3.0 or later](LICENSE) with an
+[additional permission](LICENSE-EXCEPTION.md) for generated sites. By opening a pull request, you agree that your
+contribution is licensed under these same terms.
+
 ## Workflow
 
 GitHub Flow: `main` is always deployable and protected.
