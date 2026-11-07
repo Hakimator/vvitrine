@@ -4,6 +4,7 @@ import {
   InvalidContentError,
   InvalidPluginOptionsError,
   type BuiltSite,
+  type EntriesView,
   type PageConfig,
 } from '@vvitrine/core';
 import { memorySource, stringTheme } from '@vvitrine/core/testing';
@@ -152,6 +153,71 @@ describe('built-in sections', () => {
     expect(view<EducationView>(await build(noDegree), 'en:/', 'education').items).toEqual([
       { title: 'School', meta: ['Sep 2023 – present'], notes: [] },
     ]);
+  });
+
+  it('volunteer, awards, certificates and publications produce entries, most recent first', async () => {
+    const more = {
+      ...content,
+      volunteer: [
+        { organization: 'Food bank', startDate: '2021-01', endDate: '2021-06' },
+        {
+          organization: 'Code club',
+          position: 'Mentor',
+          url: 'https://club.example',
+          startDate: '2024-09',
+          highlights: ['10 pupils'],
+        },
+      ],
+      awards: [
+        { title: 'Hackathon winner', awarder: 'City of Lyon', date: '2024-05', summary: 'First of 40 teams.' },
+        { title: 'Dean list', date: '2025' },
+      ],
+      certificates: [{ name: 'AWS Cloud Practitioner', issuer: 'AWS', date: '2025-03', url: 'https://aws.example/c' }],
+      publications: [
+        { name: 'On plugins', publisher: 'Blog', releaseDate: '2025-10-02', url: 'https://blog.example/p' },
+      ],
+    };
+    const sections = ['volunteer', 'awards', 'certificates', 'publications'];
+    const site = await build(more, [{ path: '/', sections }]);
+    const items = (id: string) => view<EntriesView>(site, 'en:/', id).items;
+    expect(items('volunteer')).toEqual([
+      {
+        title: 'Mentor',
+        subtitle: 'Code club',
+        url: 'https://club.example',
+        meta: ['Sep 2024 – present'],
+        notes: ['10 pupils'],
+      },
+      { title: 'Food bank', meta: ['Jan 2021 – Jun 2021'], notes: [] },
+    ]);
+    expect(items('awards')).toEqual([
+      { title: 'Dean list', meta: ['2025'], notes: [] },
+      {
+        title: 'Hackathon winner',
+        subtitle: 'City of Lyon',
+        meta: ['May 2024'],
+        summary: 'First of 40 teams.',
+        notes: [],
+      },
+    ]);
+    expect(items('certificates')).toEqual([
+      { title: 'AWS Cloud Practitioner', subtitle: 'AWS', url: 'https://aws.example/c', meta: ['Mar 2025'], notes: [] },
+    ]);
+    expect(items('publications')[0]).toMatchObject({
+      title: 'On plugins',
+      subtitle: 'Blog',
+      meta: ['October 2, 2025'],
+    });
+    expect(sections.map((id) => view<EntriesView>(site, 'fr:/', id).title)).toEqual([
+      'Bénévolat',
+      'Distinctions',
+      'Certifications',
+      'Publications',
+    ]);
+  });
+
+  it('rejects an award without a title', async () => {
+    await expect(build({ ...content, awards: [{ date: '2024' }] })).rejects.toThrow(InvalidContentError);
   });
 
   it('applies list options (title override and limit)', async () => {
