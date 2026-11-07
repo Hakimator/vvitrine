@@ -1,5 +1,5 @@
 ---
-import type { Translate } from '@vvitrine/core';
+import type { Navigation, Translate } from '@vvitrine/core';
 interface Props {
   lang: string;
   title: string;
@@ -8,8 +8,12 @@ interface Props {
   url: (path: string, locale?: string) => string;
   alternates: readonly { locale: string; href: string }[];
   locales: readonly string[];
+  siteName: string;
+  nav: Navigation;
 }
-const { lang, title, t, alternates } = Astro.props;
+const { lang, title, t, alternates, siteName, nav } = Astro.props;
+// The switcher lists the other languages only: the current one needs no link.
+const otherLocales = alternates.filter((a) => a.locale !== lang);
 ---
 
 <!doctype html>
@@ -24,24 +28,56 @@ const { lang, title, t, alternates } = Astro.props;
     <a class="skip" href="#main">
       {t('common.skipToContent')}
     </a>
-    {alternates.length > 1 && (
-      <nav class="locales" aria-label={t('common.language')}>
-        <ul>
-          {alternates.map((a) => (
-            <li>
-              <a
-                href={a.href}
-                hreflang={a.locale}
-                lang={a.locale}
-                aria-current={a.locale === lang ? 'page' : undefined}
-              >
-                {t(`locale.${a.locale}`)}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    )}
+    <header class="site-header">
+      <div class="bar">
+        <a class="brand" href={nav.home}>
+          {siteName}
+        </a>
+        {nav.items.length > 0 && (
+          <nav class="nav-inline" aria-label={t('common.mainNav')}>
+            <ul>
+              {nav.items.map((item) => (
+                <li>
+                  <a href={item.href}>{item.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+        {otherLocales.length > 0 && (
+          <nav class="locales" aria-label={t('common.language')}>
+            <ul>
+              {otherLocales.map((a) => (
+                <li>
+                  <a href={a.href} hreflang={a.locale} lang={a.locale}>
+                    {t(`locale.${a.locale}`)}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+        {nav.items.length > 0 && (
+          <details class="nav-menu">
+            <summary>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+              </svg>
+              <span class="visually-hidden">{t('common.menu')}</span>
+            </summary>
+            <nav aria-label={t('common.mainNav')}>
+              <ul>
+                {nav.items.map((item) => (
+                  <li>
+                    <a href={item.href}>{item.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </details>
+        )}
+      </div>
+    </header>
     <main id="main">
       <slot />
     </main>
@@ -65,7 +101,6 @@ const { lang, title, t, alternates } = Astro.props;
     font: 1.0625rem/1.6 var(--vv-font-body);
   }
   main,
-  .locales,
   footer {
     max-width: var(--vv-content-width);
     margin: 0 auto;
@@ -107,13 +142,55 @@ const { lang, title, t, alternates } = Astro.props;
   .skip:focus {
     left: 1rem;
   }
-  .locales ul {
+  /* Header: the name, one link per section (inline on wide screens, a <details> menu on small ones)
+     and the language switcher. No JavaScript. */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--vv-color-background);
+    border-bottom: 3px solid var(--vv-color-primary);
+    font-family: var(--vv-font-heading);
+  }
+  .bar {
     display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    max-width: var(--vv-content-width);
+    min-height: 3.75rem;
+    margin: 0 auto;
+    padding: 0.5rem 1.25rem;
+  }
+  .site-header ul {
+    display: flex;
+    flex-wrap: wrap;
     list-style: none;
     margin: 0;
-    padding: 1rem 0 0;
+    padding: 0;
+  }
+  .brand {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    margin-right: auto;
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: var(--vv-color-text);
+    text-decoration: none;
+  }
+  .nav-inline {
+    display: none;
+  }
+  .nav-inline ul {
+    gap: 0.25rem 1.25rem;
+  }
+  .nav-inline a {
+    color: var(--vv-color-text);
+    text-decoration: none;
+  }
+  .nav-inline a:hover {
+    color: var(--vv-color-primary);
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
   }
   .locales a {
     display: inline-block;
@@ -123,9 +200,74 @@ const { lang, title, t, alternates } = Astro.props;
     text-decoration: none;
     font-size: 0.85rem;
   }
-  .locales a[aria-current='page'] {
+  .locales a:hover {
     background: var(--vv-color-primary);
     color: var(--vv-color-on-primary);
+  }
+  .nav-menu summary {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 2px solid var(--vv-color-primary);
+    border-radius: 50%;
+    color: var(--vv-color-primary);
+    cursor: pointer;
+    list-style: none;
+  }
+  .nav-menu summary::-webkit-details-marker {
+    display: none;
+  }
+  .nav-menu summary:focus-visible {
+    outline: 3px solid var(--vv-color-accent);
+    outline-offset: 3px;
+  }
+  .nav-menu[open] summary {
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+  }
+  .nav-menu nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--vv-color-surface);
+    border-bottom: 3px solid var(--vv-color-primary);
+  }
+  .nav-menu ul {
+    flex-direction: column;
+    max-width: var(--vv-content-width);
+    margin: 0 auto;
+    padding: 0.5rem 1.25rem;
+  }
+  .nav-menu a {
+    display: block;
+    padding: 0.55rem 0;
+    font-size: 1.15rem;
+  }
+  @media (min-width: 64rem) {
+    .brand {
+      white-space: nowrap;
+    }
+    .nav-inline {
+      display: block;
+    }
+    .nav-menu {
+      display: none;
+    }
+  }
+  /* Sections stay visible below the sticky header when reached through a link. */
+  main,
+  main [id] {
+    scroll-margin-top: 5rem;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   footer {
     color: var(--vv-color-muted);
