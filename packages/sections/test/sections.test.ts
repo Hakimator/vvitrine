@@ -5,6 +5,8 @@ import {
   InvalidPluginOptionsError,
   type BuiltSite,
   type EntriesView,
+  type QuotesView,
+  type TagsView,
   type PageConfig,
 } from '@vvitrine/core';
 import { memorySource, stringTheme } from '@vvitrine/core/testing';
@@ -214,6 +216,33 @@ describe('built-in sections', () => {
       'Certifications',
       'Publications',
     ]);
+  });
+
+  it('interests produce tags and references produce quotes', async () => {
+    const more = {
+      ...content,
+      interests: [{ name: 'Climbing', keywords: ['bouldering'] }, { name: 'Chess' }],
+      references: [
+        { name: 'Alex Martin', reference: 'Reliable and curious.', 'x-vvitrine': { role: 'Team lead at Acme' } },
+        { name: 'Sam Lee', reference: 'Great teammate.' },
+      ],
+    };
+    const site = await build(more, [{ path: '/', sections: ['interests', 'references'] }]);
+    expect(view<TagsView>(site, 'en:/', 'interests')).toEqual({
+      title: 'Interests',
+      groups: [
+        { name: 'Climbing', keywords: ['bouldering'] },
+        { name: 'Chess', keywords: [] },
+      ],
+    });
+    expect(view<QuotesView>(site, 'fr:/', 'references')).toEqual({
+      title: 'Recommandations',
+      items: [
+        { quote: 'Reliable and curious.', author: 'Alex Martin', role: 'Team lead at Acme' },
+        { quote: 'Great teammate.', author: 'Sam Lee' },
+      ],
+    });
+    await expect(build({ ...content, references: [{ name: 'No text' }] })).rejects.toThrow(InvalidContentError);
   });
 
   it('rejects an award without a title', async () => {

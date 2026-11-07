@@ -2,11 +2,25 @@ import { education } from './education.ts';
 import { awards, certificates, publications, volunteer } from './entries.ts';
 import { hero } from './hero.ts';
 import { languages } from './languages.ts';
+import { interests, references } from './people.ts';
 import { projects } from './projects.ts';
 import { skills } from './skills.ts';
 import { work } from './work.ts';
 
-export { awards, certificates, education, hero, languages, projects, publications, skills, volunteer, work };
+export {
+  awards,
+  certificates,
+  education,
+  hero,
+  interests,
+  languages,
+  projects,
+  publications,
+  references,
+  skills,
+  volunteer,
+  work,
+};
 export type { HeroAction, HeroView } from './hero.ts';
 export { initialsOf } from './hero.ts';
 export type { WorkView } from './work.ts';
@@ -28,4 +42,6 @@ export const allSections = () => [
   awards(),
   publications(),
   languages(),
+  interests(),
+  references(),
 ];
