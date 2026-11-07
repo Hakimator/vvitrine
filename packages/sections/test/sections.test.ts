@@ -12,6 +12,7 @@ import {
   initialsOf,
   type ProjectDetailView,
   type ProjectsView,
+  type EducationView,
   type WorkView,
   type HeroView,
 } from '../src/index.ts';
@@ -106,13 +107,51 @@ describe('built-in sections', () => {
     const site = await build(content);
     const en = view<WorkView>(site, 'en:/', 'work');
     expect(en.title).toBe('Experience');
-    expect(en.items.map((i) => [i.organization, i.period])).toEqual([
+    expect(en.items.map((i) => [i.subtitle, i.meta[0]])).toEqual([
       ['Now Co', 'Jan 2025 – present'],
       ['Old Co', 'Jun 2022 – Aug 2022'],
     ]);
     const fr = view<WorkView>(site, 'fr:/', 'work');
     expect(fr.title).toBe('Expérience');
-    expect(fr.items[0]!.period).toBe('janv. 2025 – aujourd’hui');
+    expect(fr.items[0]!.meta[0]).toBe('janv. 2025 – aujourd’hui');
+  });
+
+  it('work and education produce the shared entries shape', async () => {
+    const detailed = {
+      ...content,
+      work: [
+        {
+          name: 'Acme',
+          position: 'Developer',
+          location: 'Lyon',
+          url: 'https://acme.example',
+          startDate: '2025-01',
+          summary: 'Web apps.',
+          highlights: ['Shipped v2'],
+        },
+      ],
+      education: [
+        { institution: 'School', studyType: 'MSc', area: 'CS', score: '16/20', startDate: '2023-09', courses: ['AI'] },
+      ],
+    };
+    const site = await build(detailed);
+    expect(view<WorkView>(site, 'en:/', 'work').items).toEqual([
+      {
+        title: 'Developer',
+        subtitle: 'Acme',
+        url: 'https://acme.example',
+        meta: ['Jan 2025 – present', 'Lyon'],
+        summary: 'Web apps.',
+        notes: ['Shipped v2'],
+      },
+    ]);
+    expect(view<EducationView>(site, 'en:/', 'education').items).toEqual([
+      { title: 'MSc, CS', subtitle: 'School', meta: ['Sep 2023 – present', '16/20'], notes: ['AI'] },
+    ]);
+    const noDegree = { ...content, education: [{ institution: 'School', startDate: '2023-09' }] };
+    expect(view<EducationView>(await build(noDegree), 'en:/', 'education').items).toEqual([
+      { title: 'School', meta: ['Sep 2023 – present'], notes: [] },
+    ]);
   });
 
   it('applies list options (title override and limit)', async () => {
@@ -121,7 +160,7 @@ describe('built-in sections', () => {
     ]);
     expect(view<WorkView>(site, 'en:/', 'work')).toMatchObject({
       title: 'Career',
-      items: [{ organization: 'Now Co' }],
+      items: [{ subtitle: 'Now Co' }],
     });
   });
 

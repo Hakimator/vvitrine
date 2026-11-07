@@ -1,12 +1,9 @@
 ---
-/** Renders both `work` and `education` views (same timeline layout). */
-import type { EducationView, WorkView } from '@vvitrine/sections';
-type Props = (WorkView | EducationView) & { sectionId: string };
+/** Draws every `entries` view (experience, education, volunteering, awards...) as a timeline. */
+import type { EntriesView, EntryItem } from '@vvitrine/core';
+type Props = EntriesView & { sectionId: string };
 const { title, items, sectionId } = Astro.props;
-type Item = Record<string, any>;
-const heading = (i: Item) => ('position' in i ? `${i.position} · ${i.organization}` : i.institution);
-const sub = (i: Item) => ('degree' in i ? i.degree : i.location);
-const notes = (i: Item): readonly string[] => i.highlights ?? i.courses ?? [];
+const heading = (i: EntryItem) => (i.subtitle ? `${i.title} · ${i.subtitle}` : i.title);
 ---
 
 <section id={sectionId} aria-labelledby={`${sectionId}-title`}>
@@ -15,11 +12,11 @@ const notes = (i: Item): readonly string[] => i.highlights ?? i.courses ?? [];
     {items.map((item) => (
       <li>
         <h3>{item.url ? <a href={item.url}>{heading(item)}</a> : heading(item)}</h3>
-        <p class="muted meta">{[item.period, sub(item)].filter(Boolean).join(' · ')}</p>
-        {'summary' in item && item.summary && <p>{item.summary}</p>}
-        {notes(item).length > 0 && (
+        {item.meta.length > 0 && <p class="muted meta">{item.meta.join(' · ')}</p>}
+        {item.summary && <p>{item.summary}</p>}
+        {item.notes.length > 0 && (
           <ul>
-            {notes(item).map((n) => (
+            {item.notes.map((n) => (
               <li>{n}</li>
             ))}
           </ul>

@@ -49,9 +49,9 @@ export default function corporate(options: CorporateOptions = {}): ThemePlugin {
     layout: Layout,
     components: {
       hero: Hero,
-      work: Timeline,
-      education: Timeline,
-      skills: Skills,
+      // Shared view kinds: any section that returns these shapes is drawn by these components.
+      'kind:entries': Timeline,
+      'kind:tags': Skills,
       languages: Languages,
       projects: Projects,
       'projects:detail': ProjectDetail,

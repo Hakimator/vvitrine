@@ -1,6 +1,7 @@
 ---
-import type { SkillsView } from '@vvitrine/sections';
-type Props = SkillsView & { sectionId: string };
+/** Draws every `tags` view (skills, interests...). */
+import type { TagsView } from '@vvitrine/core';
+type Props = TagsView & { sectionId: string };
 const { title, groups, sectionId } = Astro.props;
 ---
 

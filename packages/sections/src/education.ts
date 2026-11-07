@@ -1,6 +1,6 @@
-import { defineSection, PartialDate, Url } from '@vvitrine/core';
+import { defineSection, PartialDate, Url, type EntriesView } from '@vvitrine/core';
 import { z } from 'zod';
-import { byMostRecent, ListOptions, take } from './shared.ts';
+import { byMostRecent, isText, ListOptions, take } from './shared.ts';
 
 export const EducationContent = z
   .array(
@@ -17,16 +17,8 @@ export const EducationContent = z
   )
   .default([]);
 
-export interface EducationView {
-  readonly title: string;
-  readonly items: readonly {
-    institution: string;
-    degree: string;
-    period: string;
-    url?: string;
-    courses: readonly string[];
-  }[];
-}
+/** Drawn as the shared `entries` view kind, like work: title = degree, subtitle = institution. */
+export type EducationView = EntriesView;
 
 export const education = () =>
   defineSection({
@@ -34,6 +26,7 @@ export const education = () =>
     kind: 'section',
     apiVersion: 1,
     id: 'education',
+    viewKind: 'entries',
     content: { key: 'education', schema: EducationContent },
     optionsSchema: ListOptions,
     messages: { fr: { 'section.education.title': 'Formation' }, en: { 'section.education.title': 'Education' } },
@@ -42,12 +35,14 @@ export const education = () =>
         ? null
         : {
             title: options.title ?? t('section.education.title'),
-            items: take([...content].sort(byMostRecent), options.limit).map((e) => ({
-              institution: e.institution,
-              degree: [e.studyType, e.area].filter(Boolean).join(', '),
-              period: formatPeriod(e.startDate, e.endDate),
-              ...(e.url ? { url: e.url } : {}),
-              courses: e.courses,
-            })),
+            items: take([...content].sort(byMostRecent), options.limit).map((e) => {
+              const degree = [e.studyType, e.area].filter(isText).join(', ');
+              return {
+                ...(degree ? { title: degree, subtitle: e.institution } : { title: e.institution }),
+                ...(e.url ? { url: e.url } : {}),
+                meta: [formatPeriod(e.startDate, e.endDate), e.score].filter(isText),
+                notes: e.courses,
+              };
+            }),
           },
   });

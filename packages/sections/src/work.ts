@@ -1,6 +1,6 @@
-import { defineSection, PartialDate, Url } from '@vvitrine/core';
+import { defineSection, PartialDate, Url, type EntriesView } from '@vvitrine/core';
 import { z } from 'zod';
-import { byMostRecent, ListOptions, take } from './shared.ts';
+import { byMostRecent, isText, ListOptions, take } from './shared.ts';
 
 export const WorkContent = z
   .array(
@@ -17,18 +17,8 @@ export const WorkContent = z
   )
   .default([]);
 
-export interface WorkView {
-  readonly title: string;
-  readonly items: readonly {
-    organization: string;
-    position: string;
-    location?: string;
-    url?: string;
-    period: string;
-    summary?: string;
-    highlights: readonly string[];
-  }[];
-}
+/** Drawn as the shared `entries` view kind: title = position, subtitle = organisation. */
+export type WorkView = EntriesView;
 
 export const work = () =>
   defineSection({
@@ -36,6 +26,7 @@ export const work = () =>
     kind: 'section',
     apiVersion: 1,
     id: 'work',
+    viewKind: 'entries',
     content: { key: 'work', schema: WorkContent },
     optionsSchema: ListOptions,
     messages: { fr: { 'section.work.title': 'Expérience' }, en: { 'section.work.title': 'Experience' } },
@@ -45,13 +36,12 @@ export const work = () =>
         : {
             title: options.title ?? t('section.work.title'),
             items: take([...content].sort(byMostRecent), options.limit).map((w) => ({
-              organization: w.name,
-              position: w.position,
-              ...(w.location ? { location: w.location } : {}),
+              title: w.position,
+              subtitle: w.name,
               ...(w.url ? { url: w.url } : {}),
-              period: formatPeriod(w.startDate, w.endDate),
+              meta: [formatPeriod(w.startDate, w.endDate), w.location].filter(isText),
               ...(w.summary ? { summary: w.summary } : {}),
-              highlights: w.highlights,
+              notes: w.highlights,
             })),
           },
   });
