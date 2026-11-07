@@ -1,7 +1,7 @@
 ---
 import type { ProjectDetailView } from '@vvitrine/sections';
 type Props = ProjectDetailView & { sectionId: string };
-const { name, description, period, keywords, highlights, roles, url, repository, image, labels, backHref } =
+const { name, description, period, keywords, highlights, roles, url, repository, image, body, labels, backHref } =
   Astro.props;
 ---
 
@@ -13,6 +13,8 @@ const { name, description, period, keywords, highlights, roles, url, repository,
   {period && <p class="muted">{period}</p>}
   {image && <img src={image.src} alt={image.alt} decoding="async" />}
   {description && <p class="lead">{description}</p>}
+  {/* The Markdown write-up, already converted to HTML by the projects section. */}
+  {body && <div class="prose" set:html={body} />}
   {roles.length > 0 && (
     <>
       <h2>{labels.role}</h2>
@@ -65,5 +67,53 @@ const { name, description, period, keywords, highlights, roles, url, repository,
     padding: 0.7rem 1.3rem;
     border-radius: 999px;
     text-decoration: none;
+  }
+  /* Styles for the Markdown write-up: it is injected HTML, so the selectors are global inside .prose. */
+  .prose :global(h2) {
+    margin-top: 2rem;
+  }
+  .prose :global(h3) {
+    margin-top: 1.5rem;
+    font-size: 1.15rem;
+  }
+  .prose :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--vv-radius);
+  }
+  .prose :global(pre) {
+    overflow-x: auto;
+    padding: 1rem;
+    border-radius: var(--vv-radius);
+    background: var(--vv-color-surface);
+    border: 1px solid var(--vv-color-border);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .prose :global(code) {
+    font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  .prose :global(:not(pre) > code) {
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.25rem;
+    background: var(--vv-color-surface);
+    font-size: 0.9em;
+  }
+  .prose :global(blockquote) {
+    margin: 1rem 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--vv-color-accent);
+    color: var(--vv-color-muted);
+  }
+  .prose :global(table) {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+  .prose :global(th),
+  .prose :global(td) {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--vv-color-border);
+    text-align: left;
   }
 </style>
