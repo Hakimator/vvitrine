@@ -1,33 +1,83 @@
 ---
 import type { HeroView } from '@vvitrine/sections';
 type Props = HeroView & { sectionId: string };
-const { name, label, summary, location, availability, email, links, sectionId } = Astro.props;
+const { name, label, summary, location, availability, photo, initials, actions, links, sectionId } = Astro.props;
 ---
 
 <header id={sectionId} class="hero">
-  <h1>{name}</h1>
-  {label && <p class="label">{label}</p>}
-  {location && <p class="muted">{location}</p>}
-  {availability && <p class="availability">{availability}</p>}
-  {summary && <p>{summary}</p>}
-  {(links.length > 0 || email) && (
-    <ul class="links">
-      {email && (
-        <li>
-          <a href={`mailto:${email}`}>{email}</a>
-        </li>
-      )}
-      {links.map((l) => (
-        <li>
-          <a href={l.url} rel="me noopener">
-            {l.label}
-          </a>
-        </li>
-      ))}
-    </ul>
-  )}
+  <div class="avatar">
+    {photo ? (
+      <img src={photo.src} alt={photo.alt} width="160" height="160" decoding="async" />
+    ) : (
+      <span class="initials" aria-hidden="true">
+        {initials}
+      </span>
+    )}
+  </div>
+  <div class="identity">
+    <h1>{name}</h1>
+    {label && <p class="label">{label}</p>}
+    {location && <p class="muted">{location}</p>}
+    {availability && <p class="availability">{availability}</p>}
+    {summary && <p>{summary}</p>}
+    {(actions.length > 0 || links.length > 0) && (
+      <ul class="links">
+        {actions.map((a, i) => (
+          <li>
+            <a class:list={['button', i === 0 ? 'primary' : 'secondary']} href={a.href} download={a.download}>
+              {a.label}
+            </a>
+          </li>
+        ))}
+        {links.map((l) => (
+          <li>
+            <a href={l.url} rel="me noopener">
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
 </header>
 <style>
+  .hero {
+    display: grid;
+    gap: 1.25rem 2rem;
+    align-items: start;
+  }
+  @media (min-width: 40rem) {
+    .hero {
+      grid-template-columns: 10rem 1fr;
+    }
+    .avatar {
+      margin-top: 0.75rem;
+    }
+  }
+  .avatar img,
+  .initials {
+    display: grid;
+    place-items: center;
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+  }
+  @media (min-width: 40rem) {
+    .avatar img,
+    .initials {
+      width: 10rem;
+      height: 10rem;
+    }
+  }
+  .avatar img {
+    object-fit: cover;
+  }
+  .initials {
+    background: linear-gradient(135deg, var(--vv-color-primary), var(--vv-color-accent));
+    color: var(--vv-color-on-primary);
+    font: 700 2.75rem/1 var(--vv-font-heading);
+    letter-spacing: 0.02em;
+  }
   h1 {
     font-size: clamp(2rem, 5vw, 2.6rem);
     margin: 0;
@@ -45,14 +95,32 @@ const { name, label, summary, location, availability, email, links, sectionId } 
   .links {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1.25rem;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
     list-style: none;
     padding: 0;
+    margin-top: 1.5rem;
     font-family: var(--vv-font-heading);
   }
   .links li {
-    /* Long words such as e-mail addresses must wrap instead of widening the page. */
+    /* Long words must wrap instead of widening the page. */
     max-width: 100%;
     overflow-wrap: anywhere;
+  }
+  .button {
+    display: inline-block;
+    padding: 0.6rem 1.1rem;
+    border: 2px solid var(--vv-color-primary);
+    border-radius: var(--vv-radius);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .primary {
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+  }
+  .secondary:hover,
+  .primary:hover {
+    text-decoration: underline;
   }
 </style>
