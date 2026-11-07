@@ -7,7 +7,16 @@ const { name, label, summary, location, availability, photo, initials, actions, 
 <header id={sectionId} class="hero">
   <div class="avatar">
     {photo ? (
-      <img src={photo.src} alt={photo.alt} width="160" height="160" decoding="async" />
+      <img
+        src={photo.src}
+        srcset={photo.srcset}
+        sizes={photo.srcset ? '(min-width: 40rem) 10rem, 8rem' : undefined}
+        alt={photo.alt}
+        width="160"
+        height="160"
+        fetchpriority="high"
+        decoding="async"
+      />
     ) : (
       <span class="initials" aria-hidden="true">
         {initials}
