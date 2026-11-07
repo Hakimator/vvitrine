@@ -145,6 +145,7 @@ export class Kernel {
       formatDate: (value) => formatPartialDate(value, locale),
       formatPeriod: (start, end) => formatPeriod(start, end, locale, t),
       url: (path, targetLocale = locale) => this.url(path, targetLocale),
+      asset: (path) => this.asset(path),
     };
   }
 
@@ -334,6 +335,13 @@ export class Kernel {
     const prefix = locale === this.config.defaultLocale ? '' : `/${locale}`;
     if (path === '/') return prefix ? `${prefix}/` : '/';
     return `${prefix}${path}`;
+  }
+
+  /** File from public/ with the base path; full and data: URLs are left as they are. */
+  private asset(path: string): string {
+    if (/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(path)) return path;
+    const base = (this.options.base ?? '/').replace(/\/$/, '');
+    return `${base}/${path.replace(/^\//, '')}`;
   }
 
   /** Internal link with base path and trailing slash (directory-style static output). */

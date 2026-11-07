@@ -29,6 +29,11 @@ export interface RenderContext {
   formatPeriod(start?: string, end?: string): string;
   /** Build an internal URL that respects the locale prefix and the deployment base path. */
   url(path: string, locale?: Locale): string;
+  /**
+   * URL of a file from public/ (image, PDF...) with the deployment base path, e.g. '/me.jpg' ->
+   * '/repo/me.jpg'. Full URLs (https://...) and data: URLs are returned unchanged.
+   */
+  asset(path: string): string;
 }
 
 /** One link of the site navigation, e.g. { id: 'work', label: 'Experience', href: '/#work' }. */
