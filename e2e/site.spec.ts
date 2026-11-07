@@ -19,6 +19,41 @@ test('home page renders the configured sections in order, in French by default',
   await expect(page.locator('#work-title')).toHaveText('Expérience');
 });
 
+test('header links lead to each section, without the sticky header covering its title', async ({ page }) => {
+  await page.goto('/en/');
+  const nav = page.getByRole('navigation', { name: 'Main navigation' });
+  await expect(nav.getByRole('link')).toHaveText([
+    'Projects',
+    'Experience',
+    'Education',
+    'Skills',
+    'Talks',
+    'Languages',
+  ]);
+  await nav.getByRole('link', { name: 'Education' }).click();
+  await expect(page).toHaveURL(/\/en\/#education$/);
+  const header = await page.locator('.site-header').boundingBox();
+  const title = await page.locator('#education-title').boundingBox();
+  expect(title!.y).toBeGreaterThanOrEqual(header!.y + header!.height);
+
+  await page.goto('/en/projects/bibliotheque/');
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Skills' }).click();
+  await expect(page).toHaveURL(/\/en\/#skills$/);
+});
+
+test('on a phone, the section links are in a menu that works without JavaScript', async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 375, height: 700 }, javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/en/');
+  const nav = page.getByRole('navigation', { name: 'Main navigation' });
+  await expect(nav).toBeHidden();
+  await page.locator('summary', { hasText: 'Menu' }).click();
+  await expect(nav).toBeVisible();
+  await nav.getByRole('link', { name: 'Experience' }).click();
+  await expect(page).toHaveURL(/\/en\/#work$/);
+  await context.close();
+});
+
 test('language switcher leads to the English version', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('navigation', { name: 'Langue' }).getByRole('link', { name: 'English' }).click();
