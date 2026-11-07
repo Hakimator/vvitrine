@@ -1,4 +1,4 @@
-import { defineSection, PartialDate, Url } from '@vvitrine/core';
+import { defineSection, PartialDate, Url, type RenderContext } from '@vvitrine/core';
 import { z } from 'zod';
 import { byMostRecent, ListOptions, slugify, take } from './shared.ts';
 
@@ -133,10 +133,7 @@ export const projects = () =>
     },
   });
 
-function summary(
-  p: Project,
-  ctx: { url(path: string): string; formatPeriod(s?: string, e?: string): string },
-): ProjectSummary {
+function summary(p: Project, ctx: Pick<RenderContext, 'url' | 'asset' | 'formatPeriod'>): ProjectSummary {
   const slug = slugOf(p);
   const image = p['x-vvitrine'].image;
   return {
@@ -147,6 +144,6 @@ function summary(
     period: ctx.formatPeriod(p.startDate, p.endDate),
     href: ctx.url(`/projects/${slug}`),
     featured: p['x-vvitrine'].featured,
-    ...(image ? { image } : {}),
+    ...(image ? { image: { src: ctx.asset(image.src), alt: image.alt } } : {}),
   };
 }

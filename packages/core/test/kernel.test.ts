@@ -171,6 +171,19 @@ describe('navigation', () => {
   });
 });
 
+describe('assets', () => {
+  it('prefixes files from public/ with the base path and leaves full URLs alone', () => {
+    const asset = createKernel(config(), { root: '/', logger: silent, base: '/demo/' }).renderContext('en').asset;
+    expect(asset('/me.jpg')).toBe('/demo/me.jpg');
+    expect(asset('docs/cv.pdf')).toBe('/demo/docs/cv.pdf');
+    expect(asset('https://cdn.example.com/me.jpg')).toBe('https://cdn.example.com/me.jpg');
+    expect(asset('//cdn.example.com/me.jpg')).toBe('//cdn.example.com/me.jpg');
+    expect(asset('data:image/png;base64,AAAA')).toBe('data:image/png;base64,AAAA');
+    const atRoot = createKernel(config(), { root: '/', logger: silent }).renderContext('en').asset;
+    expect(atRoot('/me.jpg')).toBe('/me.jpg');
+  });
+});
+
 describe('content ownership (ADR-008)', () => {
   it('validates each key with the schema of its owner and reports every problem', async () => {
     const broken = memorySource({ en: { basics: { name: '' }, work: [{ name: 'ACME' }] } });

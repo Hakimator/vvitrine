@@ -54,6 +54,25 @@ test('on a phone, the section links are in a menu that works without JavaScript'
   await context.close();
 });
 
+test('hero shows a photo or initials and its calls to action', async ({ page }, testInfo) => {
+  await page.goto('/en/');
+  const hero = page.locator('#hero');
+  const contact = hero.getByRole('link', { name: 'Contact me' });
+  await expect(contact).toHaveAttribute('href', 'mailto:jeanne.martin@example.dev');
+  if (testInfo.project.name === 'bold') {
+    // The bold fixture adds a photo and a CV (e2e/fixtures/bold.config.ts).
+    await expect(hero.getByRole('img', { name: 'Photo of Jeanne Martin' })).toHaveAttribute('src', '/favicon.svg');
+    const cv = hero.getByRole('link', { name: 'Download CV (PDF)' });
+    await expect(cv).toHaveAttribute('href', '/cv.pdf');
+    await expect(cv).toHaveAttribute('download', '');
+    await expect(hero.locator('.button')).toHaveText(['Download CV (PDF)', 'Contact me']);
+  } else {
+    await expect(hero.getByRole('img')).toHaveCount(0);
+    await expect(hero.locator('.initials')).toHaveText('JM');
+    await expect(hero.getByRole('link', { name: /CV/ })).toHaveCount(0);
+  }
+});
+
 test('language switcher leads to the English version', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('navigation', { name: 'Langue' }).getByRole('link', { name: 'English' }).click();
