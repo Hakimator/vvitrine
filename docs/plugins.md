@@ -43,8 +43,15 @@ See `site/plugins/talks.ts`. A section:
 5. optionally returns extra pages from `routes(input, ctx)` (see the `projects` section);
 6. sets `pageHeading: true` if it renders the page's `<h1>` (like the hero); other pages get their title as heading.
 
-`ctx` gives `t(key)` for texts, `formatDate`, `formatPeriod` and `url(path)` for links that respect the language and the
-deployment base path. Never hard-code a visible string or an absolute link.
+`ctx` gives `t(key)` for texts, `formatDate`, `formatPeriod`, `url(path)` for links that respect the language and the
+deployment base path, `asset(path)` for files in `public/`, and `image(path)` for images: `{ src, srcset?, width?,
+height? }`, filled in by the image plugin when one is installed. Never hard-code a visible string or an absolute link.
+
+## Write an image plugin
+
+An image plugin is a generator with an `images` field (at most one per site): the kernel calls `images.prepare()` once
+before rendering, `images.describe(path)` for each local image a page uses, then the plugin's `generate()`, which returns
+the optimised files. See `@vvitrine/images`.
 
 Add it to `plugins` and place it on a page: no framework file changes.
 

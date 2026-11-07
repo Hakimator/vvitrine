@@ -61,6 +61,24 @@ the demo puts it on its own page.
 `contact` is the target of the "Contact me" button (e.g. `'#contact'`); by default it opens an e-mail to
 `basics.email`, and the button is hidden when there is neither.
 
+## Images
+
+```ts
+import images from '@vvitrine/images';
+// ...
+plugins: [/* ... */, images({ widths: [480, 960, 1440], quality: 80 })],
+```
+
+| Option    | Default            | Description                                                    |
+| --------- | ------------------ | -------------------------------------------------------------- |
+| `dir`     | `'public'`         | Folder of your static files.                                   |
+| `widths`  | `[480, 960, 1440]` | Widths of the WebP variants. Wider than the original: skipped. |
+| `quality` | `80`               | WebP quality, 1 to 100.                                        |
+| `outDir`  | `'/_images'`       | URL folder of the generated files.                             |
+
+The plugin uses `sharp`, which your site lists as a dependency (Astro uses it too). Remove the plugin to serve your
+images exactly as they are.
+
 ## Deployment settings
 
 `SITE_URL` (e.g. `https://jane.dev`) and `BASE_PATH` (e.g. `/repo`) are environment variables read by

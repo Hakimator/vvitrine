@@ -39,6 +39,10 @@ Each project gets its own page at `/projects/<slug>/` (the slug comes from the n
 Image and file paths such as `basics.image: /photo.jpg` point to files in `site/public/`; the deployment base path is
 added for you. Full URLs (`https://...`) work too. Without `basics.image`, themes show your initials.
 
+With the `@vvitrine/images` plugin (enabled in the starter), local JPEG, PNG, WebP and AVIF images are served as WebP at
+480, 960 and 1440 px wide, never wider than your file, with their real size so pages do not jump while loading. Put the
+largest version you have in `public/`: the plugin makes the smaller ones. Images from full URLs are used as they are.
+
 ### Portfolio extras (not part of JSON Resume)
 
 | Key            | Section        | Main fields                                                                                              |
