@@ -1,7 +1,7 @@
 ---
 import type { ProjectsView } from '@vvitrine/sections';
 type Props = ProjectsView & { sectionId: string };
-const { title, items, moreLabel, sectionId } = Astro.props;
+const { title, items, moreLabel, featuredLabel, sectionId } = Astro.props;
 ---
 
 <section id={sectionId} aria-labelledby={`${sectionId}-title`}>
@@ -14,12 +14,19 @@ const { title, items, moreLabel, sectionId } = Astro.props;
           <h3>
             <a href={p.href}>{p.name}</a>
           </h3>
-          {p.period && <p class="muted meta">{p.period}</p>}
+          {(p.period || p.featured) && (
+            <p class="muted meta">
+              {p.period}
+              {p.period && p.featured && ' · '}
+              {p.featured && <span class="pick">{featuredLabel}</span>}
+            </p>
+          )}
           {p.description && <p>{p.description}</p>}
           {p.keywords.length > 0 && <p class="muted tags">{p.keywords.join(' · ')}</p>}
-          <a class="more" href={p.href} aria-label={`${moreLabel}: ${p.name}`}>
+          {/* A visual hint only: the title link already covers the whole card (one link per card). */}
+          <span class="more" aria-hidden="true">
             {moreLabel} →
-          </a>
+          </span>
         </article>
       </li>
     ))}
@@ -35,6 +42,8 @@ const { title, items, moreLabel, sectionId } = Astro.props;
     grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
   }
   article {
+    /* The title link is stretched over the card, so the whole card is one link (design review D4). */
+    position: relative;
     border: 1px solid var(--vv-color-border);
     border-radius: var(--vv-radius);
     padding: 1rem 1.25rem;
@@ -46,17 +55,42 @@ const { title, items, moreLabel, sectionId } = Astro.props;
     height: auto;
     border-radius: var(--vv-radius);
   }
+  article:hover {
+    border-color: var(--vv-color-primary);
+  }
+  article:focus-within {
+    outline: 3px solid var(--vv-color-accent);
+    outline-offset: 2px;
+  }
   h3 {
     margin: 0;
     font-size: 1.1rem;
+  }
+  h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  h3 a:focus-visible {
+    outline: none;
   }
   .meta,
   .tags {
     font-size: 0.9rem;
     margin: 0.2rem 0;
   }
+  .pick {
+    color: var(--vv-color-accent);
+    font-weight: 600;
+  }
   .more {
+    display: inline-block;
+    margin-top: 0.25rem;
+    color: var(--vv-color-primary);
     font-family: var(--vv-font-heading);
     font-size: 0.9rem;
+  }
+  article:hover .more {
+    text-decoration: underline;
   }
 </style>
