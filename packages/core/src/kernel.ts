@@ -17,6 +17,8 @@ import type {
   ComponentRef,
   GeneratedFile,
   Logger,
+  Navigation,
+  NavItem,
   PageContext,
   RenderContext,
   SectionInput,
@@ -79,6 +81,7 @@ interface PendingRoute {
   readonly sections: readonly BuiltSection[];
   readonly basics: ValidatedContent['basics'];
   readonly render: RenderContext;
+  readonly nav: Navigation;
 }
 
 /**
@@ -156,11 +159,18 @@ export class Kernel {
     const pages = this.config.pages ?? [{ path: '/', sections: this.registry.sectionIds() }];
     const usedSections = new Set<string>();
     const routes: PendingRoute[] = [];
+    const navItems: NavItem[] = [];
+    const nav: Navigation = { home: render.url(pages[0]?.path ?? '/'), items: navItems };
 
     for (const page of pages) {
-      const sections = page.sections
-        .map((ref) => this.buildSection(ref, page, content, render, usedSections))
-        .filter((s): s is BuiltSection => s !== null);
+      const sections: BuiltSection[] = [];
+      for (const ref of page.sections) {
+        const section = this.buildSection(ref, page, content, render, usedSections);
+        if (!section) continue;
+        sections.push(section);
+        const item = this.navItem(ref, section, render.url(page.path));
+        if (item && !navItems.some((i) => i.id === item.id)) navItems.push(item);
+      }
       routes.push({
         basePath: page.path,
         locale,
@@ -168,6 +178,7 @@ export class Kernel {
         sections,
         basics: content.basics,
         render,
+        nav,
       });
     }
 
@@ -182,10 +193,19 @@ export class Kernel {
           sections: [{ id: contribution.component, component, view: contribution.view }],
           basics: content.basics,
           render,
+          nav,
         });
       }
     }
     return routes;
+  }
+
+  /** A placed section gets a navigation link when its view has a title and the page does not opt out. */
+  private navItem(ref: SectionRef, section: BuiltSection, pageHref: string): NavItem | null {
+    if (typeof ref !== 'string' && ref.nav === false) return null;
+    const title = (section.view as { title?: unknown } | null)?.title;
+    if (typeof title !== 'string' || title === '') return null;
+    return { id: section.id, label: title, href: `${pageHref}#${section.id}` };
   }
 
   private buildSection(
@@ -259,6 +279,7 @@ export class Kernel {
         title: route.title,
         basics: route.basics,
         alternates,
+        nav: route.nav,
         ...(this.options.siteUrl ? { siteUrl: this.options.siteUrl.replace(/\/$/, '') } : {}),
       };
       const plugins = this.registry.all();
