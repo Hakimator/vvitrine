@@ -52,4 +52,10 @@ Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code
 
 ## License
 
-[MIT](LICENSE) for the framework. Your personal content remains yours.
+The framework is licensed under the [GNU AGPL v3.0 or later](LICENSE), with an [additional permission](LICENSE-EXCEPTION.md)
+for your content and the sites you generate.
+
+- **Your portfolio is yours.** Your content and the generated website can be published under any terms, with no
+  obligation to share anything.
+- **The framework stays open.** Anyone who modifies VVitrine and distributes it, or offers it as an online service,
+  must share the modified source under the same licence.

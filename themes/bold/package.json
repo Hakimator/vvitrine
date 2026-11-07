@@ -2,7 +2,7 @@
   "name": "@vvitrine/theme-bold",
   "version": "0.1.0",
   "description": "VVitrine theme plugin 'bold'.",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "exports": {
     ".": "./index.ts"

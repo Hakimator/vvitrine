@@ -2,7 +2,7 @@
   "name": "@vvitrine/seo",
   "version": "0.1.0",
   "description": "VVitrine SEO: a service plugin for meta tags, canonical, hreflang and JSON-LD, and a generator plugin for sitemap.xml and robots.txt.",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"

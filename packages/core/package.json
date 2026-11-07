@@ -2,7 +2,7 @@
   "name": "@vvitrine/core",
   "version": "0.1.0",
   "description": "VVitrine kernel: plugin contracts, content pipeline, i18n, design tokens. Framework-free.",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
