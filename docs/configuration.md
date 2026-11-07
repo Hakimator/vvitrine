@@ -13,15 +13,25 @@ export default defineConfig({
 });
 ```
 
-| Field                | Default                          | Description                                                               |
-| -------------------- | -------------------------------- | ------------------------------------------------------------------------- |
-| `site.defaultLocale` | `'en'`                           | Language served at `/`. Other languages are served at `/<locale>/`.       |
-| `site.locales`       | `[defaultLocale]`                | Must include `defaultLocale`.                                             |
-| `site.favicon`       | `'/favicon.svg'`                 | File in `public/`, or `false`.                                            |
-| `plugins`            | (required)                       | Plugin instances. Call the factories: `corporate()`, not `corporate`.     |
-| `pages`              | one home page with every section | Each page: `path` (`/` or `/cv`), optional `title`, ordered `sections`.   |
-| `pages[].sections[]` |                                  | A section id, or `{ id, options }`. Options are validated by the section. |
-| `messages`           |                                  | Overrides of any UI string, per locale.                                   |
+| Field                | Default                          | Description                                                                    |
+| -------------------- | -------------------------------- | ------------------------------------------------------------------------------ |
+| `site.defaultLocale` | `'en'`                           | Language served at `/`. Other languages are served at `/<locale>/`.            |
+| `site.locales`       | `[defaultLocale]`                | Must include `defaultLocale`.                                                  |
+| `site.favicon`       | `'/favicon.svg'`                 | File in `public/`, or `false`.                                                 |
+| `plugins`            | (required)                       | Plugin instances. Call the factories: `corporate()`, not `corporate`.          |
+| `pages`              | one home page with every section | Each page: `path` (`/` or `/cv`), optional `title`, ordered `sections`.        |
+| `pages[].sections[]` |                                  | A section id, or `{ id, options, nav }`. Options are validated by the section. |
+| `messages`           |                                  | Overrides of any UI string, per locale.                                        |
+
+## Navigation
+
+The header links are generated from your pages: every placed section that has a title gets a link, in page and section
+order (the hero has no title, so it gets none). Links on other pages lead back to the right page and section. To hide a
+section from the header, set `nav: false`:
+
+```ts
+sections: ['hero', 'projects', { id: 'languages', nav: false }],
+```
 
 ## Rules checked at build time
 
