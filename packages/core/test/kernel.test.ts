@@ -172,6 +172,24 @@ describe('navigation', () => {
   });
 });
 
+describe('page heading', () => {
+  it('gives the page title as heading only to pages where no section renders the <h1>', async () => {
+    const headed = { ...hero, pageHeading: true };
+    const site = await build(
+      config({
+        plugins: [memorySource(content), theme, headed, work],
+        pages: [
+          { path: '/', sections: ['hero', 'work'] },
+          { path: '/cv', title: 'My CV', sections: ['work'] },
+        ],
+      }),
+    );
+    const route = (key: string) => site.routes.find((r) => r.key === key)!;
+    expect(route('en:/').context.heading).toBeUndefined();
+    expect(route('en:/cv').context.heading).toBe('My CV');
+  });
+});
+
 describe('view kinds', () => {
   const entriesSection = (id: string, extra: object = {}) =>
     defineSection({
