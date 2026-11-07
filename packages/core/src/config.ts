@@ -9,7 +9,14 @@ import type { Plugin } from './plugin.ts';
  * locales, plugins (including the single theme), pages and their sections, message overrides.
  */
 
-export type SectionRef = string | { readonly id: string; readonly options?: unknown };
+export type SectionRef =
+  | string
+  | {
+      readonly id: string;
+      readonly options?: unknown;
+      /** Show a link to this section in the site navigation (default true when it has a title). */
+      readonly nav?: boolean;
+    };
 
 export interface PageConfig {
   /** Path without locale prefix, e.g. '/' or '/cv'. */
@@ -61,7 +68,12 @@ const ConfigSchema = z.object({
       z.object({
         path: Path,
         title: z.string().optional(),
-        sections: z.array(z.union([z.string(), z.object({ id: z.string(), options: z.unknown().optional() })])),
+        sections: z.array(
+          z.union([
+            z.string(),
+            z.object({ id: z.string(), options: z.unknown().optional(), nav: z.boolean().optional() }),
+          ]),
+        ),
       }),
     )
     .optional(),

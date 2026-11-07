@@ -31,6 +31,21 @@ export interface RenderContext {
   url(path: string, locale?: Locale): string;
 }
 
+/** One link of the site navigation, e.g. { id: 'work', label: 'Experience', href: '/#work' }. */
+export interface NavItem {
+  readonly id: string;
+  readonly label: string;
+  readonly href: string;
+}
+
+/** Site navigation for one locale, computed by the kernel from the configured pages. */
+export interface Navigation {
+  /** Link to the first configured page in this locale. */
+  readonly home: string;
+  /** One item per placed section whose view has a `title`, in page and section order. */
+  readonly items: readonly NavItem[];
+}
+
 export interface PageContext extends RenderContext {
   readonly path: string;
   readonly title: string;
@@ -38,6 +53,7 @@ export interface PageContext extends RenderContext {
   /** Absolute site URL when known (set at deploy time), e.g. https://jane.dev */
   readonly siteUrl?: string;
   readonly alternates: readonly { locale: Locale; href: string }[];
+  readonly nav: Navigation;
 }
 
 /** A component to render plus its props; used for body-end injections (banners, widgets). */
@@ -118,7 +134,10 @@ export interface SectionPlugin<TContent = unknown, TOptions = unknown, TView = u
   /** Content keys owned by other plugins that this section needs (read-only). */
   readonly reads?: readonly string[];
   readonly optionsSchema?: z.ZodType<TOptions>;
-  /** Pure function: content -> view model consumed by a theme component. `null` = nothing to show. */
+  /**
+   * Pure function: content -> view model consumed by a theme component. `null` = nothing to show.
+   * A view with a string `title` gets a link in the site navigation (unless the page sets `nav: false`).
+   */
   present(input: SectionInput<TContent>, options: TOptions, ctx: RenderContext): TView | null;
   /** Extra pages contributed by the section (e.g. one page per project). */
   routes?(input: SectionInput<TContent>, ctx: RenderContext): readonly RouteContribution[];
@@ -130,7 +149,10 @@ export interface SectionPlugin<TContent = unknown, TOptions = unknown, TView = u
 
 export interface ThemePlugin extends BasePlugin {
   readonly kind: 'theme';
-  /** Layout contract: props { lang, title, t, tokensCss, alternates, path }, slots: head, default, body-end. */
+  /**
+   * Layout contract: props { lang, title, path, t, url, alternates, locales, siteName, nav },
+   * slots: head, default (inside <main id="main">), body-end.
+   */
   readonly layout: unknown;
   /** One component per key: section id ('work') or contributed page ('projects:detail'). */
   readonly components: Readonly<Record<string, unknown>>;

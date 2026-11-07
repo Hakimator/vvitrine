@@ -128,6 +128,49 @@ describe('pages and sections', () => {
   });
 });
 
+describe('navigation', () => {
+  it('links every placed section that has a title, in order, with locale and base path', async () => {
+    const site = await build(config(), { base: '/demo/' });
+    const en = site.routes.find((r) => r.key === 'en:/')!;
+    expect(en.context.nav).toEqual({
+      home: '/demo/',
+      items: [{ id: 'work', label: 'Experience', href: '/demo/#work' }],
+    });
+    const fr = site.routes.find((r) => r.key === 'fr:/')!;
+    expect(fr.context.nav.items).toEqual([{ id: 'work', label: 'Expérience', href: '/demo/fr/#work' }]);
+  });
+
+  it('points to the page that holds the section and is shared by every route of the locale', async () => {
+    const site = await build(
+      config({
+        pages: [
+          { path: '/', sections: ['hero'] },
+          { path: '/cv', sections: ['work'] },
+        ],
+      }),
+    );
+    const routes = site.routes.filter((r) => r.locale === 'en');
+    for (const route of routes) {
+      expect(route.context.nav).toEqual({ home: '/', items: [{ id: 'work', label: 'Experience', href: '/cv/#work' }] });
+    }
+  });
+
+  it('leaves out sections without a title, with nothing to show, or with nav: false', async () => {
+    const optOut = await build(config({ pages: [{ path: '/', sections: ['hero', { id: 'work', nav: false }] }] }));
+    expect(optOut.routes[0]!.context.nav.items).toEqual([]);
+    const empty = await build({
+      ...config({ plugins: [memorySource({ en: { basics: { name: 'X' } } }), theme, hero, work] }),
+      site: { defaultLocale: 'en' },
+    });
+    expect(empty.routes[0]!.context.nav.items).toEqual([]);
+  });
+
+  it('rejects a nav value that is not a boolean', () => {
+    const bad = config({ pages: [{ path: '/', sections: [{ id: 'work', nav: 'no' as unknown as boolean }] }] });
+    expect(() => createKernel(bad, { root: '/', logger: silent })).toThrow(InvalidConfigError);
+  });
+});
+
 describe('content ownership (ADR-008)', () => {
   it('validates each key with the schema of its owner and reports every problem', async () => {
     const broken = memorySource({ en: { basics: { name: '' }, work: [{ name: 'ACME' }] } });

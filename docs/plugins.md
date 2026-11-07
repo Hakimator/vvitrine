@@ -35,7 +35,8 @@ See `site/plugins/talks.ts`. A section:
 
 1. declares the content key it **owns** and its Zod schema (`content: { key: 'talks', schema }`);
 2. optionally declares keys of other plugins it **reads** (`reads: ['work']`), read-only;
-3. turns content into a view model in `present(input, options, ctx)`; return `null` to hide the section;
+3. turns content into a view model in `present(input, options, ctx)`; return `null` to hide the section. If the view
+   has a string `title`, the section gets a link in the site header;
 4. ships its texts in `messages`, and a `defaultComponents` entry so it works with every theme;
 5. optionally returns extra pages from `routes(input, ctx)` (see the `projects` section).
 

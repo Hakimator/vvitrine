@@ -34,8 +34,10 @@ Check contrast (WCAG AA: 4.5:1 for text) when you change colours; `pnpm e2e` che
 
 A theme plugin provides:
 
-- `layout`: an Astro component that receives `lang`, `title`, `path`, `t`, `url`, `alternates`, `locales` and renders
-  three slots: `head` (inside `<head>`), the default slot (inside `<main id="main">`) and `body-end`;
+- `layout`: an Astro component that receives `lang`, `title`, `path`, `t`, `url`, `alternates`, `locales`, `siteName`
+  and `nav`, and renders three slots: `head` (inside `<head>`), the default slot (inside `<main id="main">`) and
+  `body-end`. `nav` is `{ home, items: [{ id, label, href }] }`: render it as the site navigation. Each section is
+  rendered with `id` equal to its section id, so `href` (e.g. `/#work`) scrolls to it;
 - `components`: one component per section id (`hero`, `work`...) and per contributed page (`projects:detail`);
 - `fallback`: a component for sections it does not know (custom sections then still render);
 - `tokens`: default values for every design token, light and dark.
