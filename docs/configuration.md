@@ -51,7 +51,11 @@ Every rule fails the build with a message that names the problem and how to fix 
 | `work`, `education`   | `title?: string`, `limit?: number`           |
 | `projects`            | `title?`, `limit?`, `featuredOnly?: boolean` |
 | `skills`, `languages` | `title?`                                     |
-| `hero`                | none                                         |
+| `hero`                | `cv?: string`, `contact?: string`            |
+
+`hero` options: `cv` is a file in `public/` (e.g. `'/cv.pdf'`) or a full URL; it adds a "Download CV (PDF)" button.
+`contact` is the target of the "Contact me" button (e.g. `'#contact'`); by default it opens an e-mail to
+`basics.email`, and the button is hidden when there is neither.
 
 ## Deployment settings
 

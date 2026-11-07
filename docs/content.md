@@ -16,19 +16,22 @@ warning, never a silent error.
 
 ## Keys provided by the built-in sections
 
-| Key         | Section       | Main fields                                                                                                                                              |
-| ----------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `basics`    | core / `hero` | `name` (required), `label`, `email`, `summary`, `location { city, region, countryCode }`, `profiles [{ network, url }]`, `x-vvitrine.availability`       |
-| `work`      | `work`        | `name`, `position`, `startDate`, `endDate` (omit = ongoing), `location`, `url`, `summary`, `highlights`                                                  |
-| `education` | `education`   | `institution`, `studyType`, `area`, `startDate`, `endDate`, `courses`                                                                                    |
-| `skills`    | `skills`      | `name`, `level`, `keywords`                                                                                                                              |
-| `languages` | `languages`   | `language`, `fluency`                                                                                                                                    |
-| `projects`  | `projects`    | `name`, `description`, `highlights`, `keywords`, `roles`, `startDate`, `endDate`, `url`, `x-vvitrine { slug, repository, featured, image { src, alt } }` |
+| Key         | Section       | Main fields                                                                                                                                                 |
+| ----------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `basics`    | core / `hero` | `name` (required), `label`, `image`, `email`, `summary`, `location { city, region, countryCode }`, `profiles [{ network, url }]`, `x-vvitrine.availability` |
+| `work`      | `work`        | `name`, `position`, `startDate`, `endDate` (omit = ongoing), `location`, `url`, `summary`, `highlights`                                                     |
+| `education` | `education`   | `institution`, `studyType`, `area`, `startDate`, `endDate`, `courses`                                                                                       |
+| `skills`    | `skills`      | `name`, `level`, `keywords`                                                                                                                                 |
+| `languages` | `languages`   | `language`, `fluency`                                                                                                                                       |
+| `projects`  | `projects`    | `name`, `description`, `highlights`, `keywords`, `roles`, `startDate`, `endDate`, `url`, `x-vvitrine { slug, repository, featured, image { src, alt } }`    |
 
 Dates are `YYYY`, `YYYY-MM` or `YYYY-MM-DD`. They are displayed in the reader's language (`juin 2025`, `Jun 2025`).
 
 Each project gets its own page at `/projects/<slug>/` (the slug comes from the name unless you set
 `x-vvitrine.slug`). Images need an `alt` text: the build refuses an image without one (accessibility).
+
+Image and file paths such as `basics.image: /photo.jpg` point to files in `site/public/`; the deployment base path is
+added for you. Full URLs (`https://...`) work too. Without `basics.image`, themes show your initials.
 
 ## Privacy
 
