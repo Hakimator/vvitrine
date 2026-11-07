@@ -35,10 +35,11 @@ const { title, groups, sectionId } = Astro.props;
     margin: 0;
   }
   .chips li {
-    padding: 0.4rem 0.95rem;
+    /* Outlined: solid colour is reserved for actions (design review D6). */
+    padding: 0.35rem 0.9rem;
+    border: 2px solid var(--vv-color-primary);
     border-radius: 999px;
-    background: var(--vv-color-primary);
-    color: var(--vv-color-on-primary);
+    color: var(--vv-color-text);
     font-weight: 600;
     font-size: 0.9rem;
   }

@@ -132,6 +132,9 @@ describe('built-in sections', () => {
       ['Star', 'star', '/projects/star/'],
       ['Café Été', 'cafe-ete', '/projects/cafe-ete/'],
     ]);
+    expect(list.items.map((p) => p.featured)).toEqual([true, false]);
+    expect(list.featuredLabel).toBe('Featured');
+    expect(view<ProjectsView>(site, 'fr:/', 'projects').featuredLabel).toBe('À la une');
     const detail = site.routes.find((r) => r.key === 'fr:/projects/star')!;
     expect(detail.path).toBe('/fr/projects/star');
     const d = detail.sections[0]!.view as ProjectDetailView;

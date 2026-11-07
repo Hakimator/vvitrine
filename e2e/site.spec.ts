@@ -95,6 +95,25 @@ test('a project card opens its detail page, which links back to the list', async
   await expect(page).toHaveURL(/\/en\/#projects$/);
 });
 
+test('each project card is a single link that covers the whole card', async ({ page }) => {
+  await page.goto('/en/');
+  const cards = page.locator('#projects > ul > li');
+  await expect(cards).not.toHaveCount(0);
+  for (const card of await cards.all()) await expect(card.getByRole('link')).toHaveCount(1);
+  const featured = cards.filter({ hasText: 'Library manager' });
+  await expect(featured).toContainText('Featured');
+  // Whatever part of the card is pointed at (here the description), the link receives the click.
+  await featured.scrollIntoViewIfNeeded();
+  const box = (await featured.getByText('Book lending web app').boundingBox())!;
+  const target = await page.evaluate(
+    ([x, y]) => document.elementFromPoint(x!, y!)?.closest('a')?.getAttribute('href'),
+    [box.x + box.width / 2, box.y + box.height / 2],
+  );
+  expect(target).toBe('/en/projects/bibliotheque/');
+  await featured.click();
+  await expect(page).toHaveURL(/\/en\/projects\/bibliotheque\/$/);
+});
+
 for (const path of ['/', '/en/', '/projects/bibliotheque/']) {
   test(`no accessibility violations (WCAG 2.2 AA) on ${path}`, async ({ page }) => {
     await page.goto(path);

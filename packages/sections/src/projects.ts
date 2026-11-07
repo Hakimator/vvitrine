@@ -46,6 +46,8 @@ export interface ProjectSummary {
 export interface ProjectsView {
   readonly title: string;
   readonly moreLabel: string;
+  /** Label for featured projects, e.g. "Featured". */
+  readonly featuredLabel: string;
   readonly items: readonly ProjectSummary[];
 }
 
@@ -82,6 +84,7 @@ export const projects = () =>
       fr: {
         'section.projects.title': 'Projets',
         'section.projects.more': 'Voir le projet',
+        'section.projects.featured': 'À la une',
         'section.projects.demo': 'Démo',
         'section.projects.code': 'Code source',
         'section.projects.role': 'Mon rôle',
@@ -91,6 +94,7 @@ export const projects = () =>
       en: {
         'section.projects.title': 'Projects',
         'section.projects.more': 'View project',
+        'section.projects.featured': 'Featured',
         'section.projects.demo': 'Demo',
         'section.projects.code': 'Source code',
         'section.projects.role': 'My role',
@@ -104,6 +108,7 @@ export const projects = () =>
       return {
         title: options.title ?? ctx.t('section.projects.title'),
         moreLabel: ctx.t('section.projects.more'),
+        featuredLabel: ctx.t('section.projects.featured'),
         items: take(selected, options.limit).map((p) => summary(p, ctx)),
       };
     },
