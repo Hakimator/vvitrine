@@ -1,14 +1,43 @@
 ---
-import type { ProjectsView } from '@vvitrine/sections';
+import { tagFilterScript, type ProjectsView } from '@vvitrine/sections';
 type Props = ProjectsView & { sectionId: string };
-const { title, items, moreLabel, featuredLabel, sectionId } = Astro.props;
+const { title, items, moreLabel, featuredLabel, filter, sectionId } = Astro.props;
 ---
 
 <section id={sectionId} aria-labelledby={`${sectionId}-title`}>
   <h2 id={`${sectionId}-title`}>{title}</h2>
+  {filter && (
+    <nav class="filter" aria-label={filter.label}>
+      <ul>
+        {filter.links.map((link) => (
+          <li>
+            <a href={link.href} data-tag={link.slug} aria-current={link.current ? 'page' : undefined}>
+              {link.name}
+              <span class="count" aria-hidden="true">
+                {link.count}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      {filter.instant && (
+        <>
+          <p
+            class="visually-hidden"
+            role="status"
+            data-tag-status
+            data-one={filter.status.one}
+            data-other={filter.status.other}
+          />
+          {/* Progressive enhancement: filters in place; without JavaScript the links open the tag pages. */}
+          <script is:inline set:html={tagFilterScript} />
+        </>
+      )}
+    </nav>
+  )}
   <ul class="grid">
     {items.map((p) => (
-      <li class={`card${p.featured ? ' featured' : ''}`}>
+      <li class={`card${p.featured ? ' featured' : ''}`} data-tags={p.keywordSlugs.join(' ')}>
         {p.image && (
           <img
             src={p.image.src}
@@ -42,6 +71,40 @@ const { title, items, moreLabel, featuredLabel, sectionId } = Astro.props;
   </ul>
 </section>
 <style>
+  .filter ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    list-style: none;
+  }
+  .filter a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0.25rem 1rem;
+    border: 2px solid var(--vv-color-primary);
+    border-radius: 999px;
+    color: var(--vv-color-text);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .filter a:hover {
+    text-decoration: underline;
+  }
+  .filter a[aria-current='page'] {
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+  }
+  .count {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  [data-tags][hidden] {
+    display: none;
+  }
   .grid {
     list-style: none;
     padding: 0;
