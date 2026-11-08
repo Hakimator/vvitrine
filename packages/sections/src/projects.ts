@@ -40,11 +40,38 @@ export interface ProjectSummary {
   readonly name: string;
   readonly description?: string;
   readonly keywords: readonly string[];
+  /** Address-safe form of each keyword, in the same order, e.g. 'c-plus-plus' for 'C++' (for `data-tags`). */
+  readonly keywordSlugs: readonly string[];
   readonly period: string;
   readonly href: string;
   readonly featured: boolean;
   /** The project image, with responsive variants and size when an image plugin is installed. */
   readonly image?: ResponsiveImage & { readonly alt: string };
+}
+
+/** One link of the technology filter. */
+export interface TagLink {
+  readonly name: string;
+  /** Empty for "All". */
+  readonly slug: string;
+  readonly href: string;
+  /** Number of projects with this tag (all projects for "All"). */
+  readonly count: number;
+  readonly current: boolean;
+}
+
+/** Links that filter the projects by technology: "All", then one per keyword, most used first. */
+export interface TagFilter {
+  /** Accessible name of the filter, e.g. "Filter by technology". */
+  readonly label: string;
+  readonly links: readonly TagLink[];
+  /**
+   * True when every project is on the page: the theme can then add `tagFilterScript` to filter in place. Otherwise
+   * the links simply open the tag pages.
+   */
+  readonly instant: boolean;
+  /** Announcement after an instant filter; `{count}` is the number of projects shown. */
+  readonly status: { readonly one: string; readonly other: string };
 }
 
 export interface ProjectsView {
@@ -53,6 +80,8 @@ export interface ProjectsView {
   /** Label for featured projects, e.g. "Featured". */
   readonly featuredLabel: string;
   readonly items: readonly ProjectSummary[];
+  /** Present when the placement sets `filter: true`. */
+  readonly filter?: TagFilter;
 }
 
 export interface ProjectDetailView extends ProjectSummary {
@@ -74,18 +103,74 @@ export interface ProjectDetailView extends ProjectSummary {
 
 const slugOf = (p: Project) => p['x-vvitrine'].slug ?? slugify(p.name);
 
+/** 'C++' -> 'c-plus-plus', 'C#' -> 'c-sharp', 'Node.js' -> 'node-js'; a name without latin letters or digits gets a
+ * stable code instead, e.g. 'tag-65e5-672c'. */
+export const tagSlug = (keyword: string): string =>
+  slugify(keyword.replaceAll('+', ' plus ').replaceAll('#', ' sharp ')) ||
+  `tag-${[...keyword].map((c) => c.codePointAt(0)!.toString(16)).join('-')}`;
+
+/** Every keyword once (spelled as first met), most used first, then alphabetically. */
+const tagsOf = (content: readonly Project[], locale: string) => {
+  const tags = new Map<string, { name: string; slug: string; count: number }>();
+  for (const p of content) {
+    for (const slug of new Set(p.keywords.map(tagSlug))) {
+      const name = p.keywords.find((k) => tagSlug(k) === slug)!;
+      const tag = tags.get(slug) ?? { name, slug, count: 0 };
+      tags.set(slug, { ...tag, count: tag.count + 1 });
+    }
+  }
+  return [...tags.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, locale));
+};
+
+export interface ProjectsSettings {
+  /**
+   * Address of the page that lists every project, where "All projects" links lead. Default '/' (the home page).
+   */
+  readonly path?: string;
+  /** Contribute one page per technology, `/projects/tag/<tag>`, for the filter (`filter: true`). Default false. */
+  readonly tags?: boolean;
+}
+
 /** Featured first, then most recent. */
 const order = (a: Project, b: Project) =>
   Number(b['x-vvitrine'].featured) - Number(a['x-vvitrine'].featured) || byMostRecent(a, b);
 
-export const projects = () =>
-  defineSection({
+export const projects = (settings: ProjectsSettings = {}) => {
+  const listPath = settings.path ?? '/';
+  const tagPath = (slug: string) => `/projects/tag/${slug}`;
+  const listHref = (ctx: Pick<RenderContext, 'url'>) => `${ctx.url(listPath)}#projects`;
+
+  const filterOf = (content: readonly Project[], current: string, instant: boolean, ctx: RenderContext): TagFilter => ({
+    label: ctx.t('section.projects.filter'),
+    links: [
+      {
+        name: ctx.t('section.projects.all'),
+        slug: '',
+        href: listHref(ctx),
+        count: content.length,
+        current: current === '',
+      },
+      ...tagsOf(content, ctx.locale).map((tag) => ({
+        ...tag,
+        href: ctx.url(tagPath(tag.slug)),
+        current: tag.slug === current,
+      })),
+    ],
+    instant,
+    status: { one: ctx.t('section.projects.shown.one'), other: ctx.t('section.projects.shown.other') },
+  });
+
+  return defineSection({
     name: '@vvitrine/section-projects',
     kind: 'section',
     apiVersion: 1,
     id: 'projects',
     content: { key: 'projects', schema: ProjectsContent },
-    optionsSchema: ListOptions.extend({ featuredOnly: z.boolean().default(false) }),
+    optionsSchema: ListOptions.extend({
+      featuredOnly: z.boolean().default(false),
+      /** Show links that filter the projects by technology (needs `projects({ tags: true })`). */
+      filter: z.boolean().default(false),
+    }),
     messages: {
       fr: {
         'section.projects.title': 'Projets',
@@ -96,6 +181,11 @@ export const projects = () =>
         'section.projects.role': 'Mon rôle',
         'section.projects.stack': 'Technologies',
         'section.projects.back': 'Tous les projets',
+        'section.projects.filter': 'Filtrer par technologie',
+        'section.projects.all': 'Tous',
+        'section.projects.tagged': 'Projets avec {tag}',
+        'section.projects.shown.one': '{count} projet affiché',
+        'section.projects.shown.other': '{count} projets affichés',
       },
       en: {
         'section.projects.title': 'Projects',
@@ -106,21 +196,31 @@ export const projects = () =>
         'section.projects.role': 'My role',
         'section.projects.stack': 'Technologies',
         'section.projects.back': 'All projects',
+        'section.projects.filter': 'Filter by technology',
+        'section.projects.all': 'All',
+        'section.projects.tagged': 'Projects with {tag}',
+        'section.projects.shown.one': '{count} project shown',
+        'section.projects.shown.other': '{count} projects shown',
       },
     },
     present: ({ content }, options, ctx): ProjectsView | null => {
       const selected = [...content].sort(order).filter((p) => !options.featuredOnly || p['x-vvitrine'].featured);
       if (selected.length === 0) return null;
+      if (options.filter && !settings.tags) {
+        throw new Error('The projects filter needs the tag pages: install the section as projects({ tags: true }).');
+      }
+      const shown = take(selected, options.limit);
       return {
         title: options.title ?? ctx.t('section.projects.title'),
         moreLabel: ctx.t('section.projects.more'),
         featuredLabel: ctx.t('section.projects.featured'),
-        items: take(selected, options.limit).map((p) => summary(p, ctx)),
+        items: shown.map((p) => summary(p, ctx)),
+        ...(options.filter ? { filter: filterOf(content, '', shown.length === content.length, ctx) } : {}),
       };
     },
     routes: ({ content }, ctx) => {
       const seen = new Set<string>();
-      return content.map((p) => {
+      const details = content.map((p) => {
         const slug = slugOf(p);
         if (seen.has(slug)) throw new Error(`Two projects have the slug "${slug}". Set a unique x-vvitrine.slug.`);
         seen.add(slug);
@@ -140,12 +240,28 @@ export const projects = () =>
             role: ctx.t('section.projects.role'),
             stack: ctx.t('section.projects.stack'),
           },
-          backHref: `${ctx.url('/')}#projects`,
+          backHref: listHref(ctx),
         };
         return { path: `/projects/${slug}`, title: p.name, component: 'projects:detail', view };
       });
+      if (!settings.tags) return details;
+
+      const sorted = [...content].sort(order);
+      const tagPages = tagsOf(content, ctx.locale).map((tag) => {
+        const view: ProjectsView = {
+          title: ctx.t('section.projects.title'),
+          moreLabel: ctx.t('section.projects.more'),
+          featuredLabel: ctx.t('section.projects.featured'),
+          items: sorted.filter((p) => p.keywords.some((k) => tagSlug(k) === tag.slug)).map((p) => summary(p, ctx)),
+          filter: filterOf(content, tag.slug, false, ctx),
+        };
+        const heading = ctx.t('section.projects.tagged', { tag: tag.name });
+        return { path: tagPath(tag.slug), title: heading, heading, component: 'projects', view };
+      });
+      return [...details, ...tagPages];
     },
   });
+};
 
 function summary(p: Project, ctx: Pick<RenderContext, 'url' | 'image' | 'formatPeriod'>): ProjectSummary {
   const slug = slugOf(p);
@@ -155,6 +271,7 @@ function summary(p: Project, ctx: Pick<RenderContext, 'url' | 'image' | 'formatP
     name: p.name,
     ...(p.description ? { description: p.description } : {}),
     keywords: p.keywords,
+    keywordSlugs: p.keywords.map(tagSlug),
     period: ctx.formatPeriod(p.startDate, p.endDate),
     href: ctx.url(`/projects/${slug}`),
     featured: p['x-vvitrine'].featured,
