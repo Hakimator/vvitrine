@@ -2,6 +2,7 @@ import { blog } from './blog.ts';
 import { education } from './education.ts';
 import { awards, certificates, publications, volunteer } from './entries.ts';
 import { stats, testimonials, timeline } from './extras.ts';
+import { privacy } from './privacy.ts';
 import { hero } from './hero.ts';
 import { languages } from './languages.ts';
 import { interests, references } from './people.ts';
@@ -24,10 +25,12 @@ export {
   stats,
   testimonials,
   timeline,
+  privacy,
   volunteer,
   work,
 };
 export type { TimelineSource } from './extras.ts';
+export type { PrivacySettings, PrivacyView } from './privacy.ts';
 export type { ArticleView, BlogSettings } from './blog.ts';
 export { readingMinutes } from './blog.ts';
 export type { Heading } from './markdown.ts';
@@ -51,7 +54,7 @@ export { slugify } from './shared.ts';
 
 /**
  * Convenience: every built-in section in a sensible default order, except `timeline`, which repeats work and education in one list: add it yourself with
- * `timeline({ from: [...] })` when you want it.
+ * `timeline({ from: [...] })` when you want it, and `privacy`, which belongs on a page of its own: add `privacy()`.
  */
 export const allSections = () => [
   hero(),
