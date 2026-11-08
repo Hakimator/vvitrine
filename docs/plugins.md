@@ -104,6 +104,26 @@ const plausible = (domain: string): ServicePlugin => ({
 
 A service that sets cookies must declare `requires: ['consent']`, so it cannot be used without a consent plugin.
 
+### Analytics and consent
+
+An analytics plugin (see `@vvitrine/analytics` for Google Analytics 4) follows three rules:
+
+1. **Declare what it collects** with `privacy(ctx)` and `cookies: true` if it sets cookies. The privacy page lists it,
+   and the consent banner (`@vvitrine/consent`) appears only because of it, with "Manage cookies" in the footer.
+2. **Require consent**: `requires: ['consent']`. The build fails without a consent plugin.
+3. **Load nothing before consent.** Its `head` script waits for the `vvitrine:consent` browser event, then loads the
+   tracker; on `granted: false` it stops and deletes its cookies:
+
+```js
+addEventListener('vvitrine:consent', (event) => {
+  if (event.detail.granted) loadTracker();
+  else removeCookies();
+});
+```
+
+The banner sends this event once per page when the visitor's choice is known (remembered for 6 months, as the CNIL
+recommends), and again whenever the visitor changes it. Visitors without JavaScript see no banner and are never tracked.
+
 ## Write a generator
 
 ```ts

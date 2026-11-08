@@ -53,6 +53,24 @@ names your host, which sees every visit, the person responsible (`basics.name`) 
 the right to complain to a data protection authority. Add a plugin and the page updates itself. It is a starting point,
 not legal advice: read it before you publish.
 
+## Analytics and cookie consent
+
+```ts
+import { ga4 } from '@vvitrine/analytics';
+import consent from '@vvitrine/consent';
+// ...
+plugins: [/* ... */, ga4({ measurementId: 'G-ABC123DEF4' }), consent()],
+```
+
+- Nothing is loaded and no cookie is set until the visitor presses "Accept" in the banner. "Refuse" has the same size
+  and look, the choice is remembered for 6 months, and "Manage cookies" in the footer opens the banner again.
+- Advertising features stay off (consent mode keeps `ad_storage`, `ad_user_data` and `ad_personalization` denied,
+  Google signals disabled) and the cookie lasts 390 days, under the 13 months the CNIL recommends.
+- Google Analytics appears on the privacy page with what it collects. In your Google Analytics account, also choose a
+  short data retention (2 months) if you do not need more.
+- `consent()` stays out of the way when no plugin sets cookies: no banner, no footer link, no JavaScript.
+- The demo reads the ID from the `GA_MEASUREMENT_ID` environment variable, so the published demo has no analytics.
+
 ## Rules checked at build time
 
 - exactly one theme plugin;
