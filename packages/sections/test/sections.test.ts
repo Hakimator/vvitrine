@@ -21,6 +21,9 @@ import {
   initialsOf,
   timeline,
   work,
+  projects,
+  tagFilterScript,
+  tagSlug,
   type ProjectDetailView,
   type ProjectsView,
   type EducationView,
@@ -620,6 +623,101 @@ describe('built-in sections', () => {
     await expect(build(bad)).rejects.toThrow(
       /Project "Star" \((en|fr)\): the image "\/images\/app.png" has no alt text/,
     );
+  });
+
+  describe('technology filter', () => {
+    const stack = {
+      ...content,
+      projects: [
+        { name: 'Old', startDate: '2020', keywords: ['Astro', 'C++'] },
+        { name: 'New', startDate: '2026', keywords: ['astro', 'Python'] },
+        { name: 'Star', startDate: '2022', keywords: ['C#'], 'x-vvitrine': { featured: true } },
+      ],
+    };
+    const others = allSections().filter((s) => s.id !== 'projects');
+    const buildWith = (
+      settings: Parameters<typeof projects>[0],
+      options: object,
+      data: Record<string, unknown> = stack,
+    ) =>
+      createKernel(
+        {
+          site: { defaultLocale: 'en', locales: ['en', 'fr'] },
+          plugins: [memorySource({ en: data, fr: data }), theme, ...others, projects(settings)],
+          pages: [{ path: '/work', sections: [{ id: 'projects', options }] }],
+        },
+        { root: '/', logger: { info: () => {}, warn: () => {} } },
+      ).build();
+
+    it('gives every keyword an address-safe slug', () => {
+      expect(['C++', 'C#', 'Node.js', 'Été', '日本'].map(tagSlug)).toEqual([
+        'c-plus-plus',
+        'c-sharp',
+        'node-js',
+        'ete',
+        'tag-65e5-672c',
+      ]);
+    });
+
+    it('links "All" and each technology, most used first, and filters in place when every project is shown', async () => {
+      const site = await buildWith({ tags: true, path: '/work' }, { filter: true });
+      const list = view<ProjectsView>(site, 'en:/work', 'projects');
+      expect(list.filter!.links.map((l) => [l.name, l.slug, l.href, l.count, l.current])).toEqual([
+        ['All', '', '/work/#projects', 3, true],
+        ['Astro', 'astro', '/projects/tag/astro/', 2, false],
+        ['C#', 'c-sharp', '/projects/tag/c-sharp/', 1, false],
+        ['C++', 'c-plus-plus', '/projects/tag/c-plus-plus/', 1, false],
+        ['Python', 'python', '/projects/tag/python/', 1, false],
+      ]);
+      expect(list.filter!.instant).toBe(true);
+      expect(list.items.map((p) => p.keywordSlugs)).toEqual([
+        ['c-sharp'],
+        ['astro', 'python'],
+        ['astro', 'c-plus-plus'],
+      ]);
+      expect(view<ProjectsView>(site, 'fr:/work', 'projects').filter!.status).toEqual({
+        one: '{count} projet affiché',
+        other: '{count} projets affichés',
+      });
+      // Detail pages lead back to the list page.
+      const detail = site.routes.find((r) => r.key === 'en:/projects/old')!.sections[0]!.view as ProjectDetailView;
+      expect(detail.backHref).toBe('/work/#projects');
+    });
+
+    it('contributes one page per technology, with its own heading', async () => {
+      const site = await buildWith({ tags: true }, { filter: true });
+      const page = site.routes.find((r) => r.key === 'fr:/projects/tag/astro')!;
+      expect(page.path).toBe('/fr/projects/tag/astro');
+      expect(page.title).toBe('Projets avec Astro');
+      expect(page.context.heading).toBe('Projets avec Astro');
+      const list = page.sections[0]!.view as ProjectsView;
+      expect(page.sections[0]!.id).toBe('projects');
+      expect(list.items.map((p) => p.name)).toEqual(['New', 'Old']);
+      expect(list.filter!.links.find((l) => l.current)!.slug).toBe('astro');
+      expect(list.filter!.links[0]!.href).toBe('/fr/#projects');
+      // Only some projects are on a tag page: the links open the other tag pages.
+      expect(list.filter!.instant).toBe(false);
+    });
+
+    it('opens tag pages instead of filtering in place when the list is cut', async () => {
+      const site = await buildWith({ tags: true }, { filter: true, limit: 2 });
+      expect(view<ProjectsView>(site, 'en:/work', 'projects').filter!.instant).toBe(false);
+    });
+
+    it('adds no filter and no tag page unless asked', async () => {
+      const site = await buildWith({}, {});
+      expect(view<ProjectsView>(site, 'en:/work', 'projects').filter).toBeUndefined();
+      expect(site.routes.some((r) => r.key.includes('/projects/tag/'))).toBe(false);
+      await expect(buildWith({}, { filter: true })).rejects.toThrow('projects({ tags: true })');
+    });
+
+    it('ships the instant filter as one self-contained inline script', () => {
+      expect(tagFilterScript).toMatch(
+        /^\(function enhanceTagFilter\(script\) \{[\s\S]*\}\)\(document\.currentScript\);$/,
+      );
+      expect(tagFilterScript).not.toMatch(/\bimport\b|\brequire\(/);
+      expect(tagFilterScript.length).toBeLessThan(2000);
+    });
   });
 
   it('featuredOnly keeps only featured projects', async () => {

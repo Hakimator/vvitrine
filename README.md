@@ -6,7 +6,7 @@ pick a theme, choose your sections, and deploy a fast, accessible, bilingual por
 - **Content, not code.** Your resume lives in `site/content/` (JSON Resume compatible). You never edit framework code.
 - **Everything is a plugin.** Data sources, sections, themes, services (SEO, analytics...) and generators (sitemap, PDF...) all use the same public API, built-ins included.
 - **Multilingual.** French and English out of the box; add a language with one file.
-- **Fast and accessible by default.** Static HTML, zero JavaScript, WCAG 2.2 AA checked in CI, Lighthouse 100.
+- **Fast and accessible by default.** Static HTML, zero JavaScript (the optional project filter adds 1 KB inline), WCAG 2.2 AA checked in CI, Lighthouse 100.
 - **Free hosting.** One push deploys to GitHub Pages; any static host works.
 
 > VVitrine is pronounced "vitrine" (French for _shop window_), spelled with a double V.

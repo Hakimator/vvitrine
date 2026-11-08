@@ -189,6 +189,22 @@ describe('page heading', () => {
     expect(route('en:/').context.heading).toBeUndefined();
     expect(route('en:/cv').context.heading).toBe('My CV');
   });
+
+  it('gives a contributed page the heading it asks for, and none otherwise', async () => {
+    const lists = defineSection({
+      ...work,
+      routes: () => [
+        { path: '/tag/astro', title: 'Astro', component: 'work', view: { title: 'Work' }, heading: 'Work with Astro' },
+        { path: '/job', title: 'Job', component: 'work', view: { title: 'Job' } },
+      ],
+    });
+    const site = await build(
+      config({ plugins: [memorySource(content), theme, lists], pages: [{ path: '/', sections: ['work'] }] }),
+    );
+    const route = (key: string) => site.routes.find((r) => r.key === key)!;
+    expect(route('en:/tag/astro').context.heading).toBe('Work with Astro');
+    expect(route('en:/job').context.heading).toBeUndefined();
+  });
 });
 
 describe('view kinds', () => {

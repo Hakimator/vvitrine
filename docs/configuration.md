@@ -46,16 +46,33 @@ Every rule fails the build with a message that names the problem and how to fix 
 
 ## Built-in section options
 
-| Section                                                                                                                       | Options                                      |
-| ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `work`, `education`, `volunteer`, `awards`, `certificates`, `publications`, `references`, `testimonials`, `stats`, `timeline` | `title?: string`, `limit?: number`           |
-| `projects`                                                                                                                    | `title?`, `limit?`, `featuredOnly?: boolean` |
-| `skills`, `languages`, `interests`                                                                                            | `title?`                                     |
-| `hero`                                                                                                                        | `cv?: string`, `contact?: string`            |
+| Section                                                                                                                       | Options                                                          |
+| ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `work`, `education`, `volunteer`, `awards`, `certificates`, `publications`, `references`, `testimonials`, `stats`, `timeline` | `title?: string`, `limit?: number`                               |
+| `projects`                                                                                                                    | `title?`, `limit?`, `featuredOnly?: boolean`, `filter?: boolean` |
+| `skills`, `languages`, `interests`                                                                                            | `title?`                                                         |
+| `hero`                                                                                                                        | `cv?: string`, `contact?: string`                                |
 
 `timeline` also takes a setting when you add the plugin: `timeline({ from: ['work', 'education', 'volunteer'] })` lists
 the keys it merges (default: work and education). It is not part of `allSections()`, because it repeats those sections;
 the demo puts it on its own page.
+
+`projects` takes two settings when you add the plugin, and `filter` shows links that filter the list by technology:
+
+```ts
+plugins: [/* ... */, projects({ path: '/projects', tags: true })],
+pages: [
+  { path: '/', sections: ['hero', { id: 'projects', nav: false, options: { limit: 6 } }] },
+  { path: '/projects', title: 'page.projects', sections: [{ id: 'projects', options: { filter: true } }] },
+],
+```
+
+- `path` is the page that lists every project: "All projects" links lead there (default `/`, the home page).
+- `tags: true` adds one page per technology (`/projects/tag/astro/`, from the projects' `keywords`). The filter links
+  open these pages, so filtering works without JavaScript. When every project is on the page, the themes add a small
+  inline script (about 1 KB, no request) that filters in place and still updates the address. Pages without the
+  filter keep shipping zero JavaScript.
+- Keywords become addresses as `c-plus-plus` for `C++`, `c-sharp` for `C#`; `Astro` and `astro` are one technology.
 
 `hero` options: `cv` is a file in `public/` (e.g. `'/cv.pdf'`) or a full URL; it adds a "Download CV (PDF)" button.
 `contact` is the target of the "Contact me" button (e.g. `'#contact'`); by default it opens an e-mail to

@@ -4,7 +4,7 @@
  * ships the CSS of every imported component (spike finding F1). The e2e suite checks for leaks.
  */
 import { defineConfig, definePlugin } from '@vvitrine/core';
-import { allSections, timeline } from '@vvitrine/sections';
+import { allSections, projects, timeline } from '@vvitrine/sections';
 import { seo, sitemap } from '@vvitrine/seo';
 import images from '@vvitrine/images';
 import markdownSource from '@vvitrine/source-markdown';
@@ -32,7 +32,8 @@ export default defineConfig({
     markdownSource({ dir: 'content/blog', key: 'posts' }),
     bold(),
     withPhoto,
-    ...allSections(),
+    ...allSections().filter((section) => section.id !== 'projects'),
+    projects({ path: '/projects', tags: true }),
     timeline({ from: ['work', 'education', 'volunteer'] }),
     talks(),
     seo(),
@@ -46,7 +47,7 @@ export default defineConfig({
         // The e2e suite only checks the link; the file itself is out of scope here.
         { id: 'hero', options: { cv: '/cv.pdf' } },
         { id: 'stats', nav: false },
-        { id: 'projects', options: { limit: 6 } },
+        { id: 'projects', nav: false, options: { limit: 6 } },
         { id: 'blog', nav: false, options: { limit: 2 } },
         'work',
         'education',
@@ -61,11 +62,12 @@ export default defineConfig({
         { id: 'references', nav: false },
       ],
     },
+    { path: '/projects', title: 'page.projects', sections: [{ id: 'projects', options: { filter: true } }] },
     { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
     { path: '/blog', title: 'page.blog', sections: ['blog'] },
   ],
   messages: {
-    fr: { 'page.timeline': 'Mon parcours', 'page.blog': 'Blog' },
-    en: { 'page.timeline': 'My journey', 'page.blog': 'Blog' },
+    fr: { 'page.timeline': 'Mon parcours', 'page.blog': 'Blog', 'page.projects': 'Mes projets' },
+    en: { 'page.timeline': 'My journey', 'page.blog': 'Blog', 'page.projects': 'My projects' },
   },
 });

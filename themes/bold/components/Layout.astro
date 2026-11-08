@@ -190,8 +190,11 @@ const otherLocales = alternates.filter((a) => a.locale !== lang);
   .nav-inline {
     display: none;
   }
+  /* Room for about eight links in French at 64rem; more links wrap to a second line, aligned to the right. */
   .nav-inline ul {
-    gap: 0.25rem 1.25rem;
+    justify-content: flex-end;
+    gap: 0.25rem 1rem;
+    font-size: 0.95rem;
   }
   .nav-inline a {
     color: var(--vv-color-text);

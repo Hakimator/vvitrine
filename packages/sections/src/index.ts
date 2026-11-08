@@ -37,7 +37,16 @@ export type { WorkView } from './work.ts';
 export type { EducationView } from './education.ts';
 export type { SkillsView } from './skills.ts';
 export type { LanguagesView } from './languages.ts';
-export type { ProjectDetailView, ProjectsView, ProjectSummary } from './projects.ts';
+export type {
+  ProjectDetailView,
+  ProjectsSettings,
+  ProjectsView,
+  ProjectSummary,
+  TagFilter,
+  TagLink,
+} from './projects.ts';
+export { tagSlug } from './projects.ts';
+export { tagFilterScript } from './tag-filter.ts';
 export { slugify } from './shared.ts';
 
 /**

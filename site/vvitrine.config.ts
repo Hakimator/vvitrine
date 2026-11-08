@@ -42,7 +42,8 @@ export default defineConfig({
     // Sections you can place on pages
     hero(),
     stats(),
-    projects(),
+    // tags: one page per technology, for the filter on the /projects page.
+    projects({ path: '/projects', tags: true }),
     work(),
     education(),
     volunteer(),
@@ -72,7 +73,8 @@ export default defineConfig({
       sections: [
         'hero',
         { id: 'stats', nav: false },
-        { id: 'projects', options: { limit: 6 } },
+        // The latest projects; the header links to the /projects page, which has the technology filter.
+        { id: 'projects', nav: false, options: { limit: 6 } },
         // The two latest articles; the header links to the /blog page instead.
         { id: 'blog', nav: false, options: { limit: 2 } },
         'work',
@@ -89,6 +91,7 @@ export default defineConfig({
         { id: 'references', nav: false },
       ],
     },
+    { path: '/projects', title: 'page.projects', sections: [{ id: 'projects', options: { filter: true } }] },
     // A second page: its sections get header links too (here /timeline/#timeline).
     { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
     { path: '/blog', title: 'page.blog', sections: ['blog'] },
@@ -96,7 +99,12 @@ export default defineConfig({
 
   // Override any text, or add your own (here the title of the /timeline page), in any language.
   messages: {
-    fr: { 'page.timeline': 'Mon parcours', 'page.blog': 'Blog' },
-    en: { 'section.work.title': 'Experience', 'page.timeline': 'My journey', 'page.blog': 'Blog' },
+    fr: { 'page.timeline': 'Mon parcours', 'page.blog': 'Blog', 'page.projects': 'Mes projets' },
+    en: {
+      'section.work.title': 'Experience',
+      'page.timeline': 'My journey',
+      'page.blog': 'Blog',
+      'page.projects': 'My projects',
+    },
   },
 });

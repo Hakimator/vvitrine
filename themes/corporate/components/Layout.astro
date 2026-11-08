@@ -190,7 +190,9 @@ const otherLocales = alternates.filter((a) => a.locale !== lang);
   .nav-inline {
     display: none;
   }
+  /* Links that do not fit on one line wrap to a second one, aligned to the right. */
   .nav-inline ul {
+    justify-content: flex-end;
     gap: 0.25rem 1.25rem;
   }
   .nav-inline a {
