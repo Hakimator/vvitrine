@@ -78,6 +78,8 @@ test('every page has exactly one main heading', async ({ page }) => {
     ['/timeline/', 'Mon parcours'],
     ['/en/blog/', 'Blog'],
     ['/en/blog/plugin-portfolio/', 'Building a plugin-based portfolio'],
+    ['/en/projects/', 'My projects'],
+    ['/projects/tag/postgresql/', 'Projets avec PostgreSQL'],
   ];
   for (const [path, heading] of pages) {
     await page.goto(path!);
@@ -111,16 +113,28 @@ test('references are quotations with their author', async ({ page }) => {
   await expect(quote.locator('figcaption')).toContainText('Engineering manager, Fictional Company');
 });
 
+test('the header links fit on one line on a 64rem screen, in both languages', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 700 });
+  for (const path of ['/', '/en/']) {
+    await page.goto(path);
+    const links = await page
+      .getByRole('navigation', { name: path === '/' ? 'Navigation principale' : 'Main navigation' })
+      .getByRole('link')
+      .evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+    expect(new Set(links).size, path).toBe(1);
+  }
+});
+
 test('header links lead to each section, without the sticky header covering its title', async ({ page }) => {
   await page.goto('/en/');
   const nav = page.getByRole('navigation', { name: 'Main navigation' });
   await expect(nav.getByRole('link')).toHaveText([
-    'Projects',
     'Experience',
     'Education',
     'Skills',
     'Talks',
     'Languages',
+    'Projects',
     'Timeline',
     'Articles',
   ]);
@@ -186,7 +200,7 @@ test('a project card opens its detail page, which links back to the list', async
     'https://github.com/example/library',
   );
   await page.getByRole('link', { name: /All projects/ }).click();
-  await expect(page).toHaveURL(/\/en\/#projects$/);
+  await expect(page).toHaveURL(/\/en\/projects\/#projects$/);
 });
 
 test('each project card is a single link that covers the whole card', async ({ page }) => {
@@ -245,7 +259,70 @@ test('article headings in the table of contents are shown as written', async ({ 
   );
 });
 
-for (const path of ['/', '/en/', '/projects/bibliotheque/', '/en/timeline/', '/blog/plugin-portfolio/']) {
+test('without JavaScript, the technology filter opens one page per technology', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/en/projects/');
+  const filter = page.getByRole('navigation', { name: 'Filter by technology' });
+  await expect(filter.getByRole('link', { name: 'All' })).toHaveAttribute('aria-current', 'page');
+  await expect(page.locator('#projects li[data-tags]')).toHaveCount(2);
+
+  await filter.getByRole('link', { name: 'Python' }).click();
+  await expect(page).toHaveURL(/\/en\/projects\/tag\/python\/$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Projects with Python');
+  await expect(page.locator('#projects li[data-tags]')).toHaveCount(1);
+  await expect(page.locator('#projects h3')).toHaveText('Weather dashboard');
+  const current = page.getByRole('navigation', { name: 'Filter by technology' }).getByRole('link', { name: 'Python' });
+  await expect(current).toHaveAttribute('aria-current', 'page');
+
+  await page.getByRole('navigation', { name: 'Filter by technology' }).getByRole('link', { name: 'All' }).click();
+  await expect(page).toHaveURL(/\/en\/projects\/#projects$/);
+  await context.close();
+});
+
+test('with JavaScript, the technology filter works in place and keeps a shareable address', async ({ page }) => {
+  await page.goto('/en/projects/');
+  // One small inline script, no file to download.
+  await expect(page.locator('script[src]')).toHaveCount(0);
+  const filter = page.getByRole('navigation', { name: 'Filter by technology' });
+  const cards = page.locator('#projects li[data-tags]');
+
+  await filter.getByRole('link', { name: 'Python' }).click();
+  await expect(page).toHaveURL(/\/en\/projects\/tag\/python\/$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('My projects');
+  await expect(cards.filter({ visible: true })).toHaveCount(1);
+  await expect(page.getByRole('status')).toHaveText('1 project shown');
+  await expect(filter.getByRole('link', { name: 'Python' })).toHaveAttribute('aria-current', 'page');
+  await expect(filter.getByRole('link', { name: 'All' })).not.toHaveAttribute('aria-current');
+
+  await filter.getByRole('link', { name: 'PostgreSQL' }).click();
+  await expect(cards.filter({ visible: true })).toHaveCount(2);
+  await expect(page.getByRole('status')).toHaveText('2 projects shown');
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/tag\/python\/$/);
+  await expect(cards.filter({ visible: true })).toHaveCount(1);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/en\/projects\/$/);
+  await expect(cards.filter({ visible: true })).toHaveCount(2);
+});
+
+test('the home page ships no JavaScript even with the filter on another page', async ({ page }) => {
+  await page.goto('/projects/');
+  await expect(page.locator('script:not([type="application/ld+json"])')).toHaveCount(1);
+  await page.goto('/');
+  await expect(page.locator('script:not([type="application/ld+json"])')).toHaveCount(0);
+});
+
+for (const path of [
+  '/',
+  '/en/',
+  '/projects/bibliotheque/',
+  '/en/timeline/',
+  '/blog/plugin-portfolio/',
+  '/en/projects/',
+  '/projects/tag/postgresql/',
+]) {
   test(`no accessibility violations (WCAG 2.2 AA) on ${path}`, async ({ page }) => {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
@@ -284,7 +361,7 @@ test('no horizontal scrolling on a 320 px wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   const overflow = () =>
     page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  for (const path of ['/', '/en/projects/bibliotheque/', '/blog/plugin-portfolio/']) {
+  for (const path of ['/', '/en/projects/bibliotheque/', '/blog/plugin-portfolio/', '/projects/']) {
     await page.goto(path);
     expect(await overflow(), path).toBeLessThanOrEqual(0);
     // Fallback fonts differ between machines (DejaVu Sans on Linux CI is wide). Widening every glyph
