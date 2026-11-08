@@ -23,6 +23,7 @@ test('home page renders the configured sections in order, in French by default',
     'interests-title',
     'testimonials-title',
     'references-title',
+    'contact-title',
   ]);
   await expect(page.locator('#work-title')).toHaveText('Expérience');
   await expect(page.locator('#volunteer-title')).toHaveText('Bénévolat');
@@ -189,7 +190,8 @@ test('hero shows a photo or initials and its calls to action', async ({ page }, 
   await page.goto('/en/');
   const hero = page.locator('#hero');
   const contact = hero.getByRole('link', { name: 'Contact me' });
-  await expect(contact).toHaveAttribute('href', 'mailto:jeanne.martin@example.dev');
+  // The demo points the button at its contact section (by default it opens an e-mail).
+  await expect(contact).toHaveAttribute('href', '#contact');
   if (testInfo.project.name === 'bold') {
     // The bold fixture adds a photo and a CV (e2e/fixtures/bold.config.ts).
     await expect(hero.getByRole('img', { name: 'Photo of Jeanne Martin' })).toHaveAttribute('src', '/favicon.svg');
@@ -280,6 +282,66 @@ test('article headings in the table of contents are shown as written', async ({ 
   await expect(page.getByRole('navigation', { name: 'Sur cette page' }).getByRole('link').last()).toHaveText(
     "Ce que j'en retiens",
   );
+});
+
+test('the contact form is a plain HTML form that needs no JavaScript', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'bold', 'The demo has no form key; the bold fixture sets one.');
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/en/');
+  await page.locator('#hero').getByRole('link', { name: 'Contact me' }).click();
+  await expect(page).toHaveURL(/#contact$/);
+
+  const section = page.locator('#contact');
+  const form = section.locator('form');
+  await expect(form).toHaveAttribute('action', 'https://api.web3forms.com/submit');
+  await expect(form).toHaveAttribute('method', 'post');
+  for (const [label, type] of [
+    ['Name', 'text'],
+    ['E-mail address', 'email'],
+  ] as const) {
+    await expect(section.getByLabel(label)).toHaveAttribute('type', type);
+    await expect(section.getByLabel(label)).toHaveAttribute('required', '');
+  }
+  await expect(section.getByLabel('Message')).toHaveAttribute('required', '');
+  // The honeypot is invisible and unreachable for people.
+  await expect(form.locator('input[name="botcheck"]')).toBeHidden();
+  await expect(form.locator('input[type="hidden"][name="access_key"]')).toHaveCount(1);
+
+  // The browser checks the fields before anything is sent.
+  await section.getByRole('button', { name: 'Send' }).click();
+  await expect(page).toHaveURL(/\/en\/#contact$/);
+  expect(await section.getByLabel('Name').evaluate((e: HTMLInputElement) => e.validity.valueMissing)).toBe(true);
+
+  await expect(section.getByRole('link', { name: 'How Web3Forms handles your data' })).toHaveAttribute(
+    'href',
+    'https://web3forms.com/dpa',
+  );
+  await expect(section.getByRole('link', { name: 'jeanne.martin@example.dev' })).toHaveAttribute(
+    'href',
+    'mailto:jeanne.martin@example.dev',
+  );
+  await context.close();
+});
+
+test('without a form key, the contact section offers the e-mail address only', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'corporate', 'The bold fixture sets a form key.');
+  await page.goto('/');
+  const section = page.locator('#contact');
+  await expect(section.locator('form')).toHaveCount(0);
+  await expect(section).toContainText('Mon adresse e-mail :');
+  await expect(section.getByRole('link', { name: 'jeanne.martin@example.dev' })).toHaveAttribute(
+    'href',
+    'mailto:jeanne.martin@example.dev',
+  );
+});
+
+test('the "message sent" page has a heading and leads back to the site', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'bold', 'Only a site with a form key has this page.');
+  await page.goto('/contact/sent/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Message envoyé');
+  await page.getByRole('link', { name: 'Retour au site' }).click();
+  await expect(page).toHaveURL(/\/$/);
 });
 
 test('without JavaScript, the technology filter opens one page per technology', async ({ browser }) => {

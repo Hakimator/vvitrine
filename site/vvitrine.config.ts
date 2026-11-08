@@ -2,6 +2,7 @@
  * Your portfolio configuration: the only file you need to change (with content/).
  * Everything is a plugin: add, remove or replace any line in `plugins`.
  */
+import { contact, web3forms } from '@vvitrine/contact';
 import { defineConfig } from '@vvitrine/core';
 import {
   awards,
@@ -26,6 +27,8 @@ import markdownSource from '@vvitrine/source-markdown';
 import yamlSource from '@vvitrine/source-yaml';
 import corporate from '@vvitrine/theme-corporate';
 import talks from './plugins/talks.ts';
+
+const accessKey = process.env.WEB3FORMS_ACCESS_KEY;
 
 export default defineConfig({
   site: { defaultLocale: 'fr', locales: ['fr', 'en'] },
@@ -59,6 +62,9 @@ export default defineConfig({
     // Articles live under /blog: place the blog section on that page.
     blog({ path: '/blog' }),
     talks(), // a local plugin (see plugins/talks.ts)
+    // Contact form: get a free access key at https://web3forms.com and set WEB3FORMS_ACCESS_KEY when you build.
+    // Without a key, the section shows your e-mail address only.
+    contact({ provider: accessKey ? web3forms({ accessKey }) : undefined }),
     // Services and generators
     seo(),
     sitemap(),
@@ -71,7 +77,8 @@ export default defineConfig({
     {
       path: '/',
       sections: [
-        'hero',
+        // The "Contact me" button leads to the contact section below (by default it opens an e-mail).
+        { id: 'hero', options: { contact: '#contact' } },
         { id: 'stats', nav: false },
         // The latest projects; the header links to the /projects page, which has the technology filter.
         { id: 'projects', nav: false, options: { limit: 6 } },
@@ -89,6 +96,7 @@ export default defineConfig({
         { id: 'interests', nav: false },
         { id: 'testimonials', nav: false },
         { id: 'references', nav: false },
+        { id: 'contact', nav: false },
       ],
     },
     { path: '/projects', title: 'page.projects', sections: [{ id: 'projects', options: { filter: true } }] },

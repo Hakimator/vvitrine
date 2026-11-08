@@ -188,6 +188,9 @@ importers:
       '@vvitrine/astro':
         specifier: workspace:*
         version: link:../packages/astro
+      '@vvitrine/contact':
+        specifier: workspace:*
+        version: link:../packages/contact
       '@vvitrine/core':
         specifier: workspace:*
         version: link:../packages/core
