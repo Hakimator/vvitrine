@@ -4,6 +4,7 @@ import {
   definePlugin,
   InvalidContentError,
   InvalidPluginOptionsError,
+  protectEmail,
   type BuiltSite,
   type EntriesView,
   type FiguresView,
@@ -114,8 +115,9 @@ describe('built-in sections', () => {
     const site = await build(withEmail, placed({ cv: '/cv.pdf' }), '/demo/');
     expect(view<HeroView>(site, 'en:/', 'hero').actions).toEqual([
       { id: 'cv', label: 'Download CV (PDF)', href: '/demo/cv.pdf', download: true },
-      { id: 'contact', label: 'Contact me', href: 'mailto:jane@example.dev' },
+      { id: 'contact', label: 'Contact me', href: protectEmail('jane@example.dev').href },
     ]);
+    expect(view<HeroView>(site, 'en:/', 'hero').email).toEqual(protectEmail('jane@example.dev'));
     const custom = await build(withEmail, placed({ cv: 'https://cdn.example.com/cv.pdf', contact: '#contact' }));
     expect(view<HeroView>(custom, 'fr:/', 'hero').actions).toEqual([
       { id: 'cv', label: 'Télécharger le CV (PDF)', href: 'https://cdn.example.com/cv.pdf' },
