@@ -14,6 +14,9 @@ import {
 import { memorySource, stringTheme } from '@vvitrine/core/testing';
 import {
   allSections,
+  blog,
+  readingMinutes,
+  type ArticleView,
   hero,
   initialsOf,
   timeline,
@@ -370,6 +373,94 @@ describe('built-in sections', () => {
         { root: '/', logger: { info: () => {}, warn: () => {} } },
       ),
     ).toThrow(/reads content key "volunteer", but no plugin owns it/);
+  });
+
+  describe('blog', () => {
+    const words = (n: number) => Array.from({ length: n }, (_, i) => `word${i}`).join(' ');
+    const posts = [
+      {
+        title: 'Older post',
+        date: '2026-09-12',
+        tags: ['Career'],
+        'x-vvitrine': { slug: 'older', body: words(150) },
+      },
+      {
+        title: 'Plugins everywhere',
+        date: '2026-11-07',
+        summary: 'Why everything is a plugin.',
+        tags: ['Architecture', 'Astro'],
+        'x-vvitrine': { body: `# One\n\n${words(1100)}\n\n# Two\n\n# Three` },
+      },
+      { title: 'Not ready', date: '2026-12-01', draft: true, 'x-vvitrine': { slug: 'draft' } },
+    ];
+    const placed = [{ path: '/blog', sections: ['blog'] }];
+
+    it('lists published articles, newest first, as entries', async () => {
+      const site = await build({ ...content, posts }, placed, '/demo/');
+      expect(view<EntriesView>(site, 'en:/blog', 'blog')).toEqual({
+        title: 'Articles',
+        items: [
+          {
+            title: 'Plugins everywhere',
+            url: '/demo/blog/plugins-everywhere/',
+            meta: ['November 7, 2026', '6 min read', 'Architecture, Astro'],
+            summary: 'Why everything is a plugin.',
+            notes: [],
+          },
+          {
+            title: 'Older post',
+            url: '/demo/blog/older/',
+            meta: ['September 12, 2026', '1 min read', 'Career'],
+            notes: [],
+          },
+        ],
+      });
+      expect(site.routes.some((r) => r.key.endsWith('/blog/draft'))).toBe(false);
+    });
+
+    it('contributes one page per article, with a table of contents from three headings', async () => {
+      const site = await build({ ...content, posts }, placed);
+      const page = site.routes.find((r) => r.key === 'fr:/blog/plugins-everywhere')!;
+      const article = page.sections[0]!.view as ArticleView;
+      expect(article).toMatchObject({
+        title: 'Plugins everywhere',
+        dateTime: '2026-11-07',
+        readingTime: '6 min de lecture',
+        tags: ['Architecture', 'Astro'],
+        backHref: '/fr/blog/',
+        toc: [
+          { id: 'one', text: 'One' },
+          { id: 'two', text: 'Two' },
+          { id: 'three', text: 'Three' },
+        ],
+        labels: { back: 'Tous les articles', toc: 'Sur cette page', tags: 'Thèmes' },
+      });
+      expect(article.body).toContain('<h2 id="one">One</h2>');
+      const short = site.routes.find((r) => r.key === 'fr:/blog/older')!.sections[0]!.view as ArticleView;
+      expect(short.toc).toEqual([]);
+    });
+
+    it('can live at another address, and refuses two articles with the same slug', async () => {
+      const kernel = createKernel(
+        {
+          site: { defaultLocale: 'en', locales: ['en'] },
+          plugins: [memorySource({ en: { ...content, posts } }), theme, hero(), blog({ path: '/notes/' })],
+          pages: [{ path: '/notes', sections: ['blog'] }],
+        },
+        { root: '/', base: '/', logger: { info: () => {}, warn: () => {} } },
+      );
+      const site = await kernel.build();
+      expect(view<EntriesView>(site, 'en:/notes', 'blog').items[0]!.url).toBe('/notes/plugins-everywhere/');
+      expect(site.routes.some((r) => r.key === 'en:/notes/older')).toBe(true);
+      const twins = [posts[0]!, { ...posts[0]!, title: 'Twin' }];
+      await expect(build({ ...content, posts: twins }, placed)).rejects.toThrow('Two articles have the slug "older"');
+    });
+
+    it('counts reading time on words, one minute at least', () => {
+      expect(readingMinutes('')).toBe(1);
+      expect(readingMinutes(`${words(400)} --- ***`)).toBe(2);
+      expect(readingMinutes(words(401))).toBe(3);
+    });
   });
 
   it('rejects an award without a title', async () => {
