@@ -165,6 +165,7 @@ export class Kernel {
       url: (path, targetLocale = locale) => this.url(path, targetLocale),
       asset: (path) => this.asset(path),
       image: (path) => this.image(path),
+      ...(this.options.siteUrl ? { siteUrl: this.options.siteUrl.replace(/\/$/, '') } : {}),
     };
   }
 
@@ -307,7 +308,6 @@ export class Kernel {
         alternates,
         nav: route.nav,
         ...(route.heading ? { heading: route.heading } : {}),
-        ...(this.options.siteUrl ? { siteUrl: this.options.siteUrl.replace(/\/$/, '') } : {}),
       };
       const plugins = this.registry.all();
       return {

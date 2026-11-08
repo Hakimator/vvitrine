@@ -41,6 +41,11 @@ export interface RenderContext {
    * dimensions when an image plugin such as `@vvitrine/images` is installed.
    */
   image(path: string): ResponsiveImage;
+  /**
+   * Absolute site URL without trailing slash when known (set at deploy time), e.g. 'https://jane.dev'. Add
+   * `url(path)` to it for a full address, e.g. a page a third-party service sends visitors back to.
+   */
+  readonly siteUrl?: string;
 }
 
 /** One link of the site navigation, e.g. { id: 'work', label: 'Experience', href: '/#work' }. */
@@ -62,8 +67,6 @@ export interface PageContext extends RenderContext {
   readonly path: string;
   readonly title: string;
   readonly basics: Basics;
-  /** Absolute site URL when known (set at deploy time), e.g. https://jane.dev */
-  readonly siteUrl?: string;
   readonly alternates: readonly { locale: Locale; href: string }[];
   readonly nav: Navigation;
   /**

@@ -512,6 +512,25 @@ describe('contributed routes, hooks and generators', () => {
     expect(home.context.siteUrl).toBe('https://jane.dev');
   });
 
+  it('gives sections the absolute site URL when it is known', async () => {
+    const seen: (string | undefined)[] = [];
+    const probe = defineSection({
+      name: 'probe',
+      kind: 'section',
+      apiVersion: 1,
+      id: 'probe',
+      present: (_input, _options, ctx) => {
+        seen.push(ctx.siteUrl && `${ctx.siteUrl}${ctx.url('/sent')}`);
+        return {};
+      },
+    });
+    const plugins = [memorySource(data), stringTheme({ probe: 'Probe' }), probe];
+    const pages = [{ path: '/', sections: ['probe'] }];
+    await build({ ...base, pages, plugins }, { siteUrl: 'https://jane.dev/', base: '/demo/' });
+    await build({ ...base, pages, plugins });
+    expect(seen).toEqual(['https://jane.dev/demo/sent/', 'https://jane.dev/demo/fr/sent/', undefined, undefined]);
+  });
+
   it('runs generators with every route and rejects two generators writing the same file', async () => {
     const gen = (name: string): Plugin => ({
       name,
