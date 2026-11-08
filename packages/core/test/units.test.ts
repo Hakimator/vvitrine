@@ -6,12 +6,34 @@ import {
   formatPath,
   formatPeriod,
   mergeTokens,
+  protectEmail,
   renderHeadTag,
   toIssues,
   tokensToCss,
   Translator,
 } from '../src/index.ts';
 import { checkSourceContract, memorySource } from '../src/testing.ts';
+
+describe('protected e-mail addresses', () => {
+  it('percent-encodes the link and hides decoys in the text', () => {
+    const email = protectEmail('jane.doe@example.dev');
+    expect(email.href).toBe('mailto:%6A%61%6E%65%2E%64%6F%65%40%65%78%61%6D%70%6C%65%2E%64%65%76');
+    expect(decodeURIComponent(email.href)).toBe('mailto:jane.doe@example.dev');
+    // What people see (hidden parts left out) is the address; the page source is not.
+    expect(
+      email.parts
+        .filter((p) => !p.hidden)
+        .map((p) => p.text)
+        .join(''),
+    ).toBe('jane.doe@example.dev');
+    expect(email.parts.map((p) => p.text).join('')).toBe('jane.doe.nospam@example-nospam.dev');
+  });
+
+  it('encodes non-ASCII addresses as UTF-8 and keeps unusual ones whole', () => {
+    expect(decodeURIComponent(protectEmail('élodie@exemple.fr').href)).toBe('mailto:élodie@exemple.fr');
+    expect(protectEmail('root@localhost').parts).toEqual([{ text: 'root@localhost' }]);
+  });
+});
 
 describe('dates', () => {
   it('formats partial dates per locale', () => {
