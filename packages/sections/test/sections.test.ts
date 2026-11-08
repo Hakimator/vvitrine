@@ -24,6 +24,7 @@ import {
   type WorkView,
   type HeroView,
 } from '../src/index.ts';
+import { renderMarkdownDocument } from '../src/markdown.ts';
 
 const content = {
   basics: {
@@ -436,7 +437,7 @@ describe('built-in sections', () => {
     const withBody = { ...content, projects: [{ name: 'Star', 'x-vvitrine': { body } }] };
     const site = await build(withBody, undefined, '/demo/');
     const detail = site.routes.find((r) => r.key === 'en:/projects/star')!.sections[0]!.view as ProjectDetailView;
-    expect(detail.body).toContain('<h2>Context</h2>');
+    expect(detail.body).toContain('<h2 id="context">Context</h2>');
     expect(detail.body).toContain('<strong>small</strong>');
     expect(detail.body).toContain('href="/demo/docs/guide.pdf"');
     expect(detail.body).toContain('href="https://developer.mozilla.org"');
@@ -499,6 +500,27 @@ describe('built-in sections', () => {
     const detail = site.routes.find((r) => r.key === 'en:/projects/star')!.sections[0]!.view as ProjectDetailView;
     expect(detail.body).toContain(
       '<img src="/diagram.png" alt="Diagram of the &quot;flow&quot;" title="Data flow" srcset="/diagram.png-480.webp 480w" sizes="(min-width: 64rem) 64rem, 100vw" width="960" height="540" loading="lazy" decoding="async">',
+    );
+  });
+
+  it('gives headings unique ids and lists the second-level ones', () => {
+    const plain = { asset: (p: string) => p, image: (p: string) => ({ src: p }) };
+    const md = ['# Why *plugins*', '## Detail', '# Results', '# Results', 'Text'].join('\n\n');
+    const { html, headings } = renderMarkdownDocument(md, plain, 'test');
+    expect(headings).toEqual([
+      { id: 'why-plugins', text: 'Why plugins' },
+      { id: 'results', text: 'Results' },
+      { id: 'results-2', text: 'Results' },
+    ]);
+    expect(html).toContain('<h2 id="why-plugins">Why <em>plugins</em></h2>');
+    expect(html).toContain('<h3 id="detail">Detail</h3>');
+    expect(renderMarkdownDocument('# Été 2026 !', plain, 'test').headings).toEqual([
+      { id: 'ete-2026', text: 'Été 2026 !' },
+    ]);
+    expect(renderMarkdownDocument('# ???', plain, 'test').headings[0]!.id).toBe('section');
+    // Plain text, not HTML: a theme escapes it once when it prints it.
+    expect(renderMarkdownDocument("# Ce que j'en retiens & <après>", plain, 'test').headings[0]!.text).toBe(
+      "Ce que j'en retiens & <après>",
     );
   });
 
