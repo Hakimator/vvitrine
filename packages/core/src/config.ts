@@ -24,6 +24,11 @@ export interface PageConfig {
   /** Message key or literal title. Defaults to the person's name. */
   readonly title?: string;
   readonly sections: readonly SectionRef[];
+  /**
+   * Link this page from the footer of every page, with its title as the label (e.g. a privacy page). Its sections
+   * then get no header link.
+   */
+  readonly footer?: boolean;
 }
 
 export interface VVitrineConfig {
@@ -68,6 +73,7 @@ const ConfigSchema = z.object({
       z.object({
         path: Path,
         title: z.string().optional(),
+        footer: z.boolean().optional(),
         sections: z.array(
           z.union([
             z.string(),

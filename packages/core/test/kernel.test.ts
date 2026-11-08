@@ -137,6 +137,7 @@ describe('navigation', () => {
     expect(en.context.nav).toEqual({
       home: '/demo/',
       items: [{ id: 'work', label: 'Experience', href: '/demo/#work' }],
+      footer: [],
     });
     const fr = site.routes.find((r) => r.key === 'fr:/')!;
     expect(fr.context.nav.items).toEqual([{ id: 'work', label: 'Expérience', href: '/demo/fr/#work' }]);
@@ -153,7 +154,11 @@ describe('navigation', () => {
     );
     const routes = site.routes.filter((r) => r.locale === 'en');
     for (const route of routes) {
-      expect(route.context.nav).toEqual({ home: '/', items: [{ id: 'work', label: 'Experience', href: '/cv/#work' }] });
+      expect(route.context.nav).toEqual({
+        home: '/',
+        items: [{ id: 'work', label: 'Experience', href: '/cv/#work' }],
+        footer: [],
+      });
     }
   });
 
@@ -165,6 +170,20 @@ describe('navigation', () => {
       site: { defaultLocale: 'en' },
     });
     expect(empty.routes[0]!.context.nav.items).toEqual([]);
+  });
+
+  it('links footer pages from the footer instead of the header', async () => {
+    const site = await build(
+      config({
+        pages: [
+          { path: '/', sections: ['hero'] },
+          { path: '/legal', title: 'Legal notice', footer: true, sections: ['work'] },
+        ],
+      }),
+    );
+    const fr = site.routes.find((r) => r.key === 'fr:/')!.context.nav;
+    expect(fr.items).toEqual([]);
+    expect(fr.footer).toEqual([{ id: '/legal', label: 'Legal notice', href: '/fr/legal/' }]);
   });
 
   it('rejects a nav value that is not a boolean', () => {

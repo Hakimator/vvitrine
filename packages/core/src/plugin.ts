@@ -61,6 +61,8 @@ export interface Navigation {
   readonly home: string;
   /** One item per placed section whose view has a `title`, in page and section order. */
   readonly items: readonly NavItem[];
+  /** Pages configured with `footer: true`, in page order, labelled with their title (`id` is the page path). */
+  readonly footer: readonly NavItem[];
 }
 
 export interface PageContext extends RenderContext {

@@ -181,7 +181,10 @@ export class Kernel {
     const usedSections = new Set<string>();
     const routes: PendingRoute[] = [];
     const navItems: NavItem[] = [];
-    const nav: Navigation = { home: render.url(pages[0]?.path ?? '/'), items: navItems };
+    const footer = pages
+      .filter((page) => page.footer)
+      .map((page) => ({ id: page.path, label: this.pageTitle(page, content, render), href: render.url(page.path) }));
+    const nav: Navigation = { home: render.url(pages[0]?.path ?? '/'), items: navItems, footer };
 
     for (const page of pages) {
       const sections: BuiltSection[] = [];
@@ -189,7 +192,7 @@ export class Kernel {
         const section = this.buildSection(ref, page, content, render, usedSections);
         if (!section) continue;
         sections.push(section);
-        const item = this.navItem(ref, section, render.url(page.path));
+        const item = page.footer ? null : this.navItem(ref, section, render.url(page.path));
         if (item && !navItems.some((i) => i.id === item.id)) navItems.push(item);
       }
       const title = this.pageTitle(page, content, render);
