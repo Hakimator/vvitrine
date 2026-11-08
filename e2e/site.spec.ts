@@ -317,10 +317,7 @@ test('the contact form is a plain HTML form that needs no JavaScript', async ({ 
     'href',
     'https://web3forms.com/dpa',
   );
-  await expect(section.getByRole('link', { name: 'jeanne.martin@example.dev' })).toHaveAttribute(
-    'href',
-    'mailto:jeanne.martin@example.dev',
-  );
+  await expect(section.locator('a[href^="mailto:"]')).toHaveText('jeanne.martin@example.dev', { useInnerText: true });
   await context.close();
 });
 
@@ -330,10 +327,32 @@ test('without a form key, the contact section offers the e-mail address only', a
   const section = page.locator('#contact');
   await expect(section.locator('form')).toHaveCount(0);
   await expect(section).toContainText('Mon adresse e-mail :');
-  await expect(section.getByRole('link', { name: 'jeanne.martin@example.dev' })).toHaveAttribute(
-    'href',
-    'mailto:jeanne.martin@example.dev',
-  );
+  await expect(section.locator('a[href^="mailto:"]')).toHaveText('jeanne.martin@example.dev', { useInnerText: true });
+});
+
+test('the e-mail address is shown, copied and opened correctly, but never written plainly in the page', async ({
+  page,
+  request,
+  context,
+}) => {
+  for (const path of ['/', '/en/', '/projects/bibliotheque/', '/blog/plugin-portfolio/']) {
+    const html = await (await request.get(path)).text();
+    expect(html, path).not.toContain('jeanne.martin@example.dev');
+  }
+  await page.goto('/en/');
+  const link = page.locator('#contact a[href^="mailto:"]');
+  // The browser decodes the link it opens.
+  expect(decodeURIComponent((await link.getAttribute('href'))!)).toBe('mailto:jeanne.martin@example.dev');
+  await expect(link).toHaveText('jeanne.martin@example.dev', { useInnerText: true });
+  // Copying the address gives the real one, without the hidden decoys.
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await link.selectText();
+  await page.keyboard.press('ControlOrMeta+C');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('jeanne.martin@example.dev');
+  // Screen readers announce the real address too (Chromium's accessibility tree).
+  const cdp = await context.newCDPSession(page);
+  const { nodes } = await cdp.send('Accessibility.getFullAXTree');
+  expect(nodes.some((n) => n.role?.value === 'link' && n.name?.value === 'jeanne.martin@example.dev')).toBe(true);
 });
 
 test('the "message sent" page has a heading and leads back to the site', async ({ page }, testInfo) => {
