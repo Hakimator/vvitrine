@@ -42,9 +42,13 @@ describe('@vvitrine/source-markdown', () => {
     });
   });
 
-  it('fills the content key given in the options', async () => {
-    const result = await markdownSource({ dir: 'fixtures/projects', key: 'posts' }).load(ctx('en'));
-    expect(Object.keys(result.data)).toEqual(['posts']);
+  it('fills the content key given in the options, and can be installed once per key', async () => {
+    const posts = markdownSource({ dir: 'fixtures/projects', key: 'posts' });
+    expect(Object.keys((await posts.load(ctx('en'))).data)).toEqual(['posts']);
+    expect([markdownSource().name, posts.name]).toEqual([
+      '@vvitrine/source-markdown:projects',
+      '@vvitrine/source-markdown:posts',
+    ]);
   });
 
   it('provides nothing, without failing, when the folder is missing or empty for the locale', async () => {
