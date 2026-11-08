@@ -8,6 +8,7 @@ import Projects from './components/Projects.astro';
 import ProjectDetail from './components/ProjectDetail.astro';
 import Generic from './components/Generic.astro';
 import Article from './components/Article.astro';
+import Privacy from './components/Privacy.astro';
 import Contact from './components/Contact.astro';
 import ContactSent from './components/ContactSent.astro';
 import Figures from './components/Figures.astro';
@@ -64,13 +65,14 @@ export default function bold(options: BoldOptions = {}): ThemePlugin {
       'projects:detail': ProjectDetail,
       'blog:post': Article,
       contact: Contact,
+      privacy: Privacy,
       'contact:sent': ContactSent,
     },
     fallback: Generic,
     tokens: mergeTokens(defaults, options.tokens),
     messages: {
-      fr: { 'theme.builtWith': 'Site réalisé avec {name}' },
-      en: { 'theme.builtWith': 'Built with {name}' },
+      fr: { 'theme.builtWith': 'Site réalisé avec {name}', 'theme.footerNav': 'Liens du pied de page' },
+      en: { 'theme.builtWith': 'Built with {name}', 'theme.footerNav': 'Footer links' },
     },
   };
 }
