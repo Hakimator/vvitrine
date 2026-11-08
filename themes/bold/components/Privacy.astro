@@ -1,0 +1,94 @@
+---
+/** Privacy section: generated from what the plugins in use declare about personal data. */
+import type { PrivacyView } from '@vvitrine/sections';
+type Props = PrivacyView & { sectionId: string };
+const { title, summary, services, labels, host, contact, rights, sectionId } = Astro.props;
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  <p class="summary">{summary}</p>
+  {services.map((s) => (
+    <article class="service">
+      <h3>{s.service}</h3>
+      <dl>
+        <dt>{labels.purpose}</dt>
+        <dd>{s.purpose}</dd>
+        <dt>{labels.when}</dt>
+        <dd>{s.when}</dd>
+        <dt>{labels.data}</dt>
+        <dd>{s.data.join(', ')}</dd>
+        {s.retention && (
+          <>
+            <dt>{labels.retention}</dt>
+            <dd>{s.retention}</dd>
+          </>
+        )}
+        {s.location && (
+          <>
+            <dt>{labels.location}</dt>
+            <dd>{s.location}</dd>
+          </>
+        )}
+        <dt>{labels.cookies}</dt>
+        <dd>{s.cookies ? labels.yes : labels.no}</dd>
+      </dl>
+      <p>
+        <a href={s.url}>{s.linkLabel}</a>
+      </p>
+    </article>
+  ))}
+  {host && (
+    <p>
+      {host.text} <a href={host.url}>{host.linkLabel}</a>
+    </p>
+  )}
+  <p>
+    {contact.text}
+    {contact.email && (
+      <>
+        {' '}
+        <a href={contact.email.href}>
+          {contact.email.parts.map((part) => (part.hidden ? <span hidden>{part.text}</span> : part.text))}
+        </a>
+      </>
+    )}
+  </p>
+  <p>{rights}</p>
+</section>
+<style>
+  .summary {
+    font-size: 1.1rem;
+  }
+  .service {
+    margin: 1.5rem 0;
+    padding: 1rem 1.25rem;
+    background: var(--vv-color-surface);
+    border-radius: var(--vv-radius);
+  }
+  h3 {
+    margin: 0 0 0.75rem;
+    font-weight: 800;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: minmax(7rem, auto) 1fr;
+    gap: 0.4rem 1rem;
+    margin: 0;
+  }
+  dt {
+    font-weight: 600;
+  }
+  dd {
+    margin: 0;
+  }
+  @media (max-width: 30rem) {
+    dl {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+    }
+    dd {
+      margin-bottom: 0.5rem;
+    }
+  }
+</style>

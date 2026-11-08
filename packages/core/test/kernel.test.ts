@@ -137,6 +137,7 @@ describe('navigation', () => {
     expect(en.context.nav).toEqual({
       home: '/demo/',
       items: [{ id: 'work', label: 'Experience', href: '/demo/#work' }],
+      footer: [],
     });
     const fr = site.routes.find((r) => r.key === 'fr:/')!;
     expect(fr.context.nav.items).toEqual([{ id: 'work', label: 'Expérience', href: '/demo/fr/#work' }]);
@@ -153,7 +154,11 @@ describe('navigation', () => {
     );
     const routes = site.routes.filter((r) => r.locale === 'en');
     for (const route of routes) {
-      expect(route.context.nav).toEqual({ home: '/', items: [{ id: 'work', label: 'Experience', href: '/cv/#work' }] });
+      expect(route.context.nav).toEqual({
+        home: '/',
+        items: [{ id: 'work', label: 'Experience', href: '/cv/#work' }],
+        footer: [],
+      });
     }
   });
 
@@ -165,6 +170,20 @@ describe('navigation', () => {
       site: { defaultLocale: 'en' },
     });
     expect(empty.routes[0]!.context.nav.items).toEqual([]);
+  });
+
+  it('links footer pages from the footer instead of the header', async () => {
+    const site = await build(
+      config({
+        pages: [
+          { path: '/', sections: ['hero'] },
+          { path: '/legal', title: 'Legal notice', footer: true, sections: ['work'] },
+        ],
+      }),
+    );
+    const fr = site.routes.find((r) => r.key === 'fr:/')!.context.nav;
+    expect(fr.items).toEqual([]);
+    expect(fr.footer).toEqual([{ id: '/legal', label: 'Legal notice', href: '/fr/legal/' }]);
   });
 
   it('rejects a nav value that is not a boolean', () => {
@@ -510,6 +529,56 @@ describe('contributed routes, hooks and generators', () => {
     expect(home.head).toEqual([{ tag: 'meta', attrs: { name: 'description', content: 'J en' } }]);
     expect(home.bodyEnd).toEqual([{ component: 'Banner', props: { x: 1 } }]);
     expect(home.context.siteUrl).toBe('https://jane.dev');
+  });
+
+  it('collects what the plugins in use declare about personal data, in the page language', async () => {
+    const processing = (service: string) => ({
+      service,
+      purpose: '',
+      when: '',
+      data: [],
+      cookies: false,
+      url: `https://${service}.example`,
+    });
+    const tracker: Plugin = {
+      name: 'tracker',
+      kind: 'service',
+      apiVersion: 1,
+      privacy: (ctx) => [{ ...processing('stats'), purpose: ctx.locale }],
+    };
+    const form = defineSection({
+      name: 'form',
+      kind: 'section',
+      apiVersion: 1,
+      id: 'form',
+      present: () => ({}),
+      privacy: () => [processing('forms')],
+    });
+    let seen: unknown;
+    const reader = defineSection({
+      name: 'reader',
+      kind: 'section',
+      apiVersion: 1,
+      id: 'reader',
+      present: (_input, _options, ctx) => {
+        seen = ctx.dataProcessing().map((p) => [p.service, p.purpose]);
+        return {};
+      },
+    });
+    const theme = stringTheme({}, 'Any');
+    const pages = (...sections: string[]) => [{ path: '/', sections }];
+    await build({
+      ...base,
+      plugins: [memorySource(data), theme, tracker, form, reader],
+      pages: pages('form', 'reader'),
+    });
+    expect(seen).toEqual([
+      ['stats', 'fr'],
+      ['forms', ''],
+    ]);
+    // A section that is not placed on any page handles no data.
+    await build({ ...base, plugins: [memorySource(data), theme, tracker, form, reader], pages: pages('reader') });
+    expect(seen).toEqual([['stats', 'fr']]);
   });
 
   it('gives sections the absolute site URL when it is known', async () => {

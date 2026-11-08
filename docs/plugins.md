@@ -29,6 +29,24 @@ function. There are five kinds:
 }
 ```
 
+A plugin that sends visitor data to a third party, or stores it, says so with `privacy(ctx)`. The privacy section lists
+these declarations, in the reader's language; plugins that are not in use (a section placed on no page) are left out:
+
+```ts
+privacy: (ctx) => [
+  {
+    service: 'Web3Forms',
+    purpose: ctx.t('my.purpose'),       // why
+    when: ctx.t('my.when'),             // e.g. "Only when you send the form"
+    data: [ctx.t('my.data.email')],     // what
+    retention: ctx.t('my.retention'),   // optional: how long
+    location: ctx.t('my.location'),     // optional: where the company or data is
+    cookies: false,
+    url: 'https://web3forms.com/dpa',   // the service's own terms
+  },
+],
+```
+
 ## Write a section in 5 minutes
 
 See `site/plugins/talks.ts`. A section:

@@ -21,6 +21,7 @@ import type {
   Logger,
   Navigation,
   NavItem,
+  Plugin,
   PageContext,
   RenderContext,
   SectionInput,
@@ -156,7 +157,7 @@ export class Kernel {
   /** Render helpers for one locale. Exposed for tests and for plugin authors' tooling. */
   renderContext(locale: Locale): RenderContext {
     const t = this.translator.forLocale(locale);
-    return {
+    const context: RenderContext = {
       locale,
       defaultLocale: this.config.defaultLocale,
       t,
@@ -166,7 +167,19 @@ export class Kernel {
       asset: (path) => this.asset(path),
       image: (path) => this.image(path),
       ...(this.options.siteUrl ? { siteUrl: this.options.siteUrl.replace(/\/$/, '') } : {}),
+      dataProcessing: () => this.pluginsInUse().flatMap((plugin) => plugin.privacy?.(context) ?? []),
     };
+    return context;
+  }
+
+  /** Every plugin except sections that are not placed on any page. */
+  private pluginsInUse(): Plugin[] {
+    const placed = new Set(
+      (this.config.pages ?? []).flatMap((page) => page.sections.map((ref) => (typeof ref === 'string' ? ref : ref.id))),
+    );
+    return this.registry
+      .all()
+      .filter((plugin) => plugin.kind !== 'section' || !this.config.pages || placed.has(plugin.id));
   }
 
   private async buildLocale(locale: Locale): Promise<PendingRoute[]> {
@@ -181,7 +194,10 @@ export class Kernel {
     const usedSections = new Set<string>();
     const routes: PendingRoute[] = [];
     const navItems: NavItem[] = [];
-    const nav: Navigation = { home: render.url(pages[0]?.path ?? '/'), items: navItems };
+    const footer = pages
+      .filter((page) => page.footer)
+      .map((page) => ({ id: page.path, label: this.pageTitle(page, content, render), href: render.url(page.path) }));
+    const nav: Navigation = { home: render.url(pages[0]?.path ?? '/'), items: navItems, footer };
 
     for (const page of pages) {
       const sections: BuiltSection[] = [];
@@ -189,7 +205,7 @@ export class Kernel {
         const section = this.buildSection(ref, page, content, render, usedSections);
         if (!section) continue;
         sections.push(section);
-        const item = this.navItem(ref, section, render.url(page.path));
+        const item = page.footer ? null : this.navItem(ref, section, render.url(page.path));
         if (item && !navItems.some((i) => i.id === item.id)) navItems.push(item);
       }
       const title = this.pageTitle(page, content, render);

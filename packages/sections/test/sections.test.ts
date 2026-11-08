@@ -22,9 +22,11 @@ import {
   initialsOf,
   timeline,
   work,
+  privacy,
   projects,
   tagFilterScript,
   tagSlug,
+  type PrivacyView,
   type ProjectDetailView,
   type ProjectsView,
   type EducationView,
@@ -719,6 +721,71 @@ describe('built-in sections', () => {
       );
       expect(tagFilterScript).not.toMatch(/\bimport\b|\brequire\(/);
       expect(tagFilterScript.length).toBeLessThan(2000);
+    });
+  });
+
+  describe('privacy', () => {
+    const buildWith = (extra: object[], data: Record<string, unknown> = content, settings = {}) =>
+      createKernel(
+        {
+          site: { defaultLocale: 'en', locales: ['en', 'fr'] },
+          plugins: [memorySource({ en: data, fr: data }), theme, privacy(settings), ...(extra as never[])],
+          pages: [{ path: '/privacy', footer: true, sections: ['privacy'] }],
+        },
+        { root: '/', logger: { info: () => {}, warn: () => {} } },
+      ).build();
+    const page = (site: BuiltSite, key: string) => view<PrivacyView>(site, key, 'privacy');
+    const service = (cookies: boolean) =>
+      definePlugin({
+        name: 'svc',
+        kind: 'service',
+        apiVersion: 1,
+        privacy: (ctx) => [
+          { service: 'Forms', purpose: ctx.locale, when: 'w', data: ['d'], cookies, url: 'https://forms.example' },
+        ],
+      });
+
+    it('says when nothing leaves the site, and names the host and the person responsible', async () => {
+      const withEmail = { ...content, basics: { ...content.basics, email: 'jane@example.dev' } };
+      const site = await buildWith([], withEmail, { host: { name: 'GitHub Pages', url: 'https://gh.example' } });
+      const en = page(site, 'en:/privacy');
+      expect(en.summary).toBe('This site sets no cookies and sends no data to third-party services while you visit.');
+      expect(en.services).toEqual([]);
+      expect(en.host).toEqual({
+        text: 'This site is hosted by GitHub Pages, which records technical data about every visit, such as your IP address, in particular for security.',
+        linkLabel: 'GitHub Pages privacy statement',
+        url: 'https://gh.example',
+      });
+      expect(en.contact).toEqual({
+        text: 'Responsible: Jane Doe. To find out which data concerns you, correct it or have it deleted, write to me:',
+        email: protectEmail('jane@example.dev'),
+      });
+      expect(page(site, 'fr:/privacy').rights).toContain('CNIL');
+    });
+
+    it('lists what each plugin declares, in the reader language', async () => {
+      const site = await buildWith([service(false)]);
+      const fr = page(site, 'fr:/privacy');
+      expect(fr.summary).toBe(
+        'Ce site ne dépose aucun cookie. Les services ci-dessous reçoivent des données seulement dans les cas indiqués.',
+      );
+      expect(fr.services).toEqual([
+        {
+          service: 'Forms',
+          purpose: 'fr',
+          when: 'w',
+          data: ['d'],
+          cookies: false,
+          url: 'https://forms.example',
+          linkLabel: 'Conditions de Forms',
+        },
+      ]);
+      expect(fr.labels.retention).toBe('Durée de conservation');
+      expect(fr.host).toBeUndefined();
+      expect(fr.contact.email).toBeUndefined();
+      expect(page(await buildWith([service(true)]), 'en:/privacy').summary).toBe(
+        'Some services below set cookies: they only do so with your consent.',
+      );
     });
   });
 

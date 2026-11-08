@@ -33,6 +33,26 @@ section from the header, set `nav: false`:
 sections: ['hero', 'projects', { id: 'languages', nav: false }],
 ```
 
+## Footer and privacy page
+
+Pages with `footer: true` are linked from the footer of every page, with their title as the label, instead of from the
+header. The demo uses it for the privacy page:
+
+```ts
+plugins: [/* ... */, privacy({ host: { name: 'GitHub Pages', url: '<its privacy statement>' } })],
+pages: [
+  /* ... */
+  { path: '/privacy', title: 'page.privacy', footer: true, sections: ['privacy'] },
+],
+messages: { fr: { 'page.privacy': 'Confidentialité' }, en: { 'page.privacy': 'Privacy' } },
+```
+
+The `privacy` section writes the page from what your plugins declare: each service that receives visitor data (the
+contact form's provider, analytics...), what it receives, when, for how long, where, and whether it sets cookies. It also
+names your host, which sees every visit, the person responsible (`basics.name`) with the protected e-mail address, and
+the right to complain to a data protection authority. Add a plugin and the page updates itself. It is a starting point,
+not legal advice: read it before you publish.
+
 ## Rules checked at build time
 
 - exactly one theme plugin;
