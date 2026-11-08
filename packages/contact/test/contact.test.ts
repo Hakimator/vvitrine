@@ -71,6 +71,34 @@ describe('@vvitrine/contact', () => {
     expect(view(await build({}, { data: { basics: { name: 'Jane Doe' } } }), 'en:/')).toBeUndefined();
   });
 
+  it('tells the privacy page what the form sends, to whom and for how long', async () => {
+    const site = await build({ provider: web3forms({ accessKey: KEY }) });
+    const page = (key: string) => site.routes.find((r) => r.key === key)!.context;
+    expect(page('fr:/').dataProcessing()).toEqual([
+      {
+        service: 'Web3Forms',
+        purpose: 'M’envoyer les messages du formulaire de contact, pour que je puisse vous répondre',
+        when: 'Seulement quand vous envoyez le formulaire',
+        data: [
+          'votre nom',
+          'votre adresse e-mail',
+          'votre message',
+          'des données techniques vues par le service (adresse IP, navigateur)',
+        ],
+        retention: 'Jusqu’à 3 ans',
+        location: 'Pays de l’entreprise : Inde',
+        cookies: false,
+        url: 'https://web3forms.com/dpa',
+      },
+    ]);
+    expect(page('en:/').dataProcessing()[0]).toMatchObject({
+      retention: 'Up to 3 years',
+      location: 'Company based in India',
+    });
+    // Without a provider, nothing leaves the site.
+    expect((await build({})).routes[0]!.context.dataProcessing()).toEqual([]);
+  });
+
   it('rejects an access key that does not look like one', () => {
     expect(() => web3forms({ accessKey: 'my-key' })).toThrow(InvalidPluginOptionsError);
   });

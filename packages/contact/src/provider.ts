@@ -12,6 +12,13 @@ export interface ContactProvider {
   readonly action: string;
   /** Name of a hidden checkbox that only bots tick (spam protection without a third-party script). */
   readonly honeypot?: string;
+  /** Facts shown on the privacy page, from the provider's own terms. */
+  readonly facts?: {
+    /** Country where the company that runs the service is based (ISO 3166 code, e.g. 'IN'). */
+    readonly country?: string;
+    /** How long messages are kept at most. */
+    readonly retention?: { readonly value: number; readonly unit: 'day' | 'month' | 'year' };
+  };
   /** Hidden fields to send with each message (keys, subject, page to return to...). */
   hiddenFields(request: ContactRequest): readonly HiddenField[];
 }

@@ -3,7 +3,13 @@
  * sends), and the owner's e-mail address as a fallback. Without a provider, only the e-mail address is shown.
  * See ADR-011.
  */
-import { defineSection, protectEmail, type ProtectedEmail, type RenderContext } from '@vvitrine/core';
+import {
+  defineSection,
+  protectEmail,
+  type DataProcessing,
+  type ProtectedEmail,
+  type RenderContext,
+} from '@vvitrine/core';
 import { z } from 'zod';
 import type { ContactProvider, HiddenField } from './provider.ts';
 
@@ -94,6 +100,14 @@ export const contact = (settings: ContactSettings = {}) => {
         'section.contact.sent': 'Message envoyé',
         'section.contact.sentText': 'Merci ! Je vous réponds dès que possible.',
         'section.contact.back': 'Retour au site',
+        'section.contact.purpose': 'M’envoyer les messages du formulaire de contact, pour que je puisse vous répondre',
+        'section.contact.when': 'Seulement quand vous envoyez le formulaire',
+        'section.contact.data.name': 'votre nom',
+        'section.contact.data.email': 'votre adresse e-mail',
+        'section.contact.data.message': 'votre message',
+        'section.contact.data.technical': 'des données techniques vues par le service (adresse IP, navigateur)',
+        'section.contact.retention': 'Jusqu’à {duration}',
+        'section.contact.country': 'Pays de l’entreprise : {country}',
       },
       en: {
         'section.contact.title': 'Contact',
@@ -111,6 +125,14 @@ export const contact = (settings: ContactSettings = {}) => {
         'section.contact.sent': 'Message sent',
         'section.contact.sentText': 'Thank you! I will answer as soon as I can.',
         'section.contact.back': 'Back to the site',
+        'section.contact.purpose': 'Sending me the messages of the contact form, so that I can answer you',
+        'section.contact.when': 'Only when you send the form',
+        'section.contact.data.name': 'your name',
+        'section.contact.data.email': 'your e-mail address',
+        'section.contact.data.message': 'your message',
+        'section.contact.data.technical': 'technical data the service sees (IP address, browser)',
+        'section.contact.retention': 'Up to {duration}',
+        'section.contact.country': 'Company based in {country}',
       },
     },
     present: ({ basics }, options, ctx): ContactView | null => {
@@ -128,6 +150,28 @@ export const contact = (settings: ContactSettings = {}) => {
             }
           : {}),
       };
+    },
+    privacy: (ctx): DataProcessing[] => {
+      if (!provider) return [];
+      const { country, retention } = provider.facts ?? {};
+      const duration =
+        retention &&
+        new Intl.NumberFormat(ctx.locale, { style: 'unit', unit: retention.unit, unitDisplay: 'long' }).format(
+          retention.value,
+        );
+      const countryName = country && new Intl.DisplayNames([ctx.locale], { type: 'region' }).of(country);
+      return [
+        {
+          service: provider.service,
+          purpose: ctx.t('section.contact.purpose'),
+          when: ctx.t('section.contact.when'),
+          data: ['name', 'email', 'message', 'technical'].map((key) => ctx.t(`section.contact.data.${key}`)),
+          ...(duration ? { retention: ctx.t('section.contact.retention', { duration }) } : {}),
+          ...(countryName ? { location: ctx.t('section.contact.country', { country: countryName }) } : {}),
+          cookies: false,
+          url: provider.privacyUrl,
+        },
+      ];
     },
     routes: (_input, ctx) => {
       if (!provider) return [];

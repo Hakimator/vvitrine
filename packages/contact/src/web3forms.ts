@@ -24,6 +24,8 @@ export function web3forms(options: Web3FormsOptions): ContactProvider {
     // Data processing agreement: operator, hosting regions, retention and sub-processors.
     privacyUrl: 'https://web3forms.com/dpa',
     action: 'https://api.web3forms.com/submit',
+    // From the DPA (checked 8 Nov 2026): run by Web3Creative from India; submissions live up to three years.
+    facts: { country: 'IN', retention: { value: 3, unit: 'year' } },
     honeypot: 'botcheck',
     hiddenFields: ({ subject, siteName, thanksUrl }) => [
       { name: 'access_key', value: accessKey },
