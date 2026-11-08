@@ -12,6 +12,7 @@ import {
   hero,
   interests,
   languages,
+  privacy,
   projects,
   references,
   skills,
@@ -29,6 +30,10 @@ import corporate from '@vvitrine/theme-corporate';
 import talks from './plugins/talks.ts';
 
 const accessKey = process.env.WEB3FORMS_ACCESS_KEY;
+const GITHUB_PAGES = {
+  name: 'GitHub Pages',
+  url: 'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement',
+};
 
 export default defineConfig({
   site: { defaultLocale: 'fr', locales: ['fr', 'en'] },
@@ -65,6 +70,8 @@ export default defineConfig({
     // Contact form: get a free access key at https://web3forms.com and set WEB3FORMS_ACCESS_KEY when you build.
     // Without a key, the section shows your e-mail address only.
     contact({ provider: accessKey ? web3forms({ accessKey }) : undefined }),
+    // Privacy page, generated from what the plugins above declare. Name your host: it sees every visit.
+    privacy({ host: GITHUB_PAGES }),
     // Services and generators
     seo(),
     sitemap(),
@@ -103,16 +110,24 @@ export default defineConfig({
     // A second page: its sections get header links too (here /timeline/#timeline).
     { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
     { path: '/blog', title: 'page.blog', sections: ['blog'] },
+    // footer: true links the page from the footer of every page instead of the header.
+    { path: '/privacy', title: 'page.privacy', footer: true, sections: ['privacy'] },
   ],
 
   // Override any text, or add your own (here the title of the /timeline page), in any language.
   messages: {
-    fr: { 'page.timeline': 'Mon parcours', 'page.blog': 'Blog', 'page.projects': 'Mes projets' },
+    fr: {
+      'page.timeline': 'Mon parcours',
+      'page.blog': 'Blog',
+      'page.projects': 'Mes projets',
+      'page.privacy': 'Confidentialité',
+    },
     en: {
       'section.work.title': 'Experience',
       'page.timeline': 'My journey',
       'page.blog': 'Blog',
       'page.projects': 'My projects',
+      'page.privacy': 'Privacy',
     },
   },
 });

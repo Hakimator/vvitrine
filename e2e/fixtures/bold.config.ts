@@ -5,7 +5,7 @@
  */
 import { contact, web3forms } from '@vvitrine/contact';
 import { defineConfig, definePlugin } from '@vvitrine/core';
-import { allSections, projects, timeline } from '@vvitrine/sections';
+import { allSections, privacy, projects, timeline } from '@vvitrine/sections';
 import { seo, sitemap } from '@vvitrine/seo';
 import images from '@vvitrine/images';
 import markdownSource from '@vvitrine/source-markdown';
@@ -38,6 +38,12 @@ export default defineConfig({
     timeline({ from: ['work', 'education', 'volunteer'] }),
     talks(),
     // A made-up key: the e2e suite checks the form, it never sends it.
+    privacy({
+      host: {
+        name: 'GitHub Pages',
+        url: 'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement',
+      },
+    }),
     contact({ provider: web3forms({ accessKey: '0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b' }) }),
     seo(),
     sitemap(),
@@ -69,9 +75,21 @@ export default defineConfig({
     { path: '/projects', title: 'page.projects', sections: [{ id: 'projects', options: { filter: true } }] },
     { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
     { path: '/blog', title: 'page.blog', sections: ['blog'] },
+    // footer: true links the page from the footer of every page instead of the header.
+    { path: '/privacy', title: 'page.privacy', footer: true, sections: ['privacy'] },
   ],
   messages: {
-    fr: { 'page.timeline': 'Mon parcours', 'page.blog': 'Blog', 'page.projects': 'Mes projets' },
-    en: { 'page.timeline': 'My journey', 'page.blog': 'Blog', 'page.projects': 'My projects' },
+    fr: {
+      'page.timeline': 'Mon parcours',
+      'page.blog': 'Blog',
+      'page.projects': 'Mes projets',
+      'page.privacy': 'Confidentialité',
+    },
+    en: {
+      'page.timeline': 'My journey',
+      'page.blog': 'Blog',
+      'page.projects': 'My projects',
+      'page.privacy': 'Privacy',
+    },
   },
 });

@@ -81,6 +81,7 @@ test('every page has exactly one main heading', async ({ page }) => {
     ['/en/blog/plugin-portfolio/', 'Building a plugin-based portfolio'],
     ['/en/projects/', 'My projects'],
     ['/projects/tag/postgresql/', 'Projets avec PostgreSQL'],
+    ['/en/privacy/', 'Privacy'],
   ];
   for (const [path, heading] of pages) {
     await page.goto(path!);
@@ -363,6 +364,40 @@ test('the "message sent" page has a heading and leads back to the site', async (
   await expect(page).toHaveURL(/\/$/);
 });
 
+test('every page links to the privacy page from its footer, not from its header', async ({ page }) => {
+  for (const path of ['/en/', '/en/projects/bibliotheque/', '/en/blog/']) {
+    await page.goto(path);
+    const footer = page.getByRole('contentinfo');
+    await expect(footer.getByRole('navigation', { name: 'Footer links' }).getByRole('link')).toHaveText(['Privacy']);
+    await expect(footer).toContainText(`© ${new Date().getFullYear()} Jeanne Martin`);
+    await expect(page.getByRole('banner').getByRole('link', { name: 'Privacy' })).toHaveCount(0);
+  }
+  await page.getByRole('contentinfo').getByRole('link', { name: 'Privacy' }).click();
+  await expect(page).toHaveURL(/\/en\/privacy\/$/);
+});
+
+test('the privacy page lists what leaves the site, generated from the plugins', async ({ page }, testInfo) => {
+  await page.goto('/en/privacy/');
+  const section = page.locator('#privacy');
+  await expect(section.getByRole('link', { name: 'GitHub Pages privacy statement' })).toBeVisible();
+  await expect(section.locator('a[href^="mailto:"]')).toHaveText('jeanne.martin@example.dev', { useInnerText: true });
+  if (testInfo.project.name === 'bold') {
+    // The bold fixture has a contact form key: Web3Forms is listed.
+    await expect(section).toContainText('This site sets no cookies. The services below receive data only');
+    const service = section.getByRole('article');
+    await expect(service.getByRole('heading', { level: 3 })).toHaveText('Web3Forms');
+    await expect(service).toContainText('Only when you send the form');
+    await expect(service).toContainText('Up to 3 years');
+    await expect(service.getByRole('link', { name: 'Web3Forms terms' })).toHaveAttribute(
+      'href',
+      'https://web3forms.com/dpa',
+    );
+  } else {
+    await expect(section).toContainText('This site sets no cookies and sends no data to third-party services');
+    await expect(section.getByRole('article')).toHaveCount(0);
+  }
+});
+
 test('without JavaScript, the technology filter opens one page per technology', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
@@ -426,6 +461,7 @@ for (const path of [
   '/blog/plugin-portfolio/',
   '/en/projects/',
   '/projects/tag/postgresql/',
+  '/privacy/',
 ]) {
   test(`no accessibility violations (WCAG 2.2 AA) on ${path}`, async ({ page }) => {
     await page.goto(path);
@@ -465,7 +501,7 @@ test('no horizontal scrolling on a 320 px wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   const overflow = () =>
     page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  for (const path of ['/', '/en/projects/bibliotheque/', '/blog/plugin-portfolio/', '/projects/']) {
+  for (const path of ['/', '/en/projects/bibliotheque/', '/blog/plugin-portfolio/', '/projects/', '/privacy/']) {
     await page.goto(path);
     expect(await overflow(), path).toBeLessThanOrEqual(0);
     // Fallback fonts differ between machines (DejaVu Sans on Linux CI is wide). Widening every glyph
