@@ -224,6 +224,9 @@ importers:
 
   themes/bold:
     dependencies:
+      '@vvitrine/contact':
+        specifier: workspace:*
+        version: link:../../packages/contact
       '@vvitrine/core':
         specifier: workspace:*
         version: link:../../packages/core
