@@ -531,6 +531,56 @@ describe('contributed routes, hooks and generators', () => {
     expect(home.context.siteUrl).toBe('https://jane.dev');
   });
 
+  it('collects what the plugins in use declare about personal data, in the page language', async () => {
+    const processing = (service: string) => ({
+      service,
+      purpose: '',
+      when: '',
+      data: [],
+      cookies: false,
+      url: `https://${service}.example`,
+    });
+    const tracker: Plugin = {
+      name: 'tracker',
+      kind: 'service',
+      apiVersion: 1,
+      privacy: (ctx) => [{ ...processing('stats'), purpose: ctx.locale }],
+    };
+    const form = defineSection({
+      name: 'form',
+      kind: 'section',
+      apiVersion: 1,
+      id: 'form',
+      present: () => ({}),
+      privacy: () => [processing('forms')],
+    });
+    let seen: unknown;
+    const reader = defineSection({
+      name: 'reader',
+      kind: 'section',
+      apiVersion: 1,
+      id: 'reader',
+      present: (_input, _options, ctx) => {
+        seen = ctx.dataProcessing().map((p) => [p.service, p.purpose]);
+        return {};
+      },
+    });
+    const theme = stringTheme({}, 'Any');
+    const pages = (...sections: string[]) => [{ path: '/', sections }];
+    await build({
+      ...base,
+      plugins: [memorySource(data), theme, tracker, form, reader],
+      pages: pages('form', 'reader'),
+    });
+    expect(seen).toEqual([
+      ['stats', 'fr'],
+      ['forms', ''],
+    ]);
+    // A section that is not placed on any page handles no data.
+    await build({ ...base, plugins: [memorySource(data), theme, tracker, form, reader], pages: pages('reader') });
+    expect(seen).toEqual([['stats', 'fr']]);
+  });
+
   it('gives sections the absolute site URL when it is known', async () => {
     const seen: (string | undefined)[] = [];
     const probe = defineSection({

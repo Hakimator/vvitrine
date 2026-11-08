@@ -46,6 +46,8 @@ export interface RenderContext {
    * `url(path)` to it for a full address, e.g. a page a third-party service sends visitors back to.
    */
   readonly siteUrl?: string;
+  /** What every plugin in use declares about personal data (see `BasePlugin.privacy`), in this locale. */
+  dataProcessing(): readonly DataProcessing[];
 }
 
 /** One link of the site navigation, e.g. { id: 'work', label: 'Experience', href: '/#work' }. */
@@ -94,6 +96,29 @@ export interface PluginHooks {
   bodyEnd?(ctx: PageContext): readonly ComponentRef[];
 }
 
+/**
+ * Personal data a plugin sends to a third party or stores, as visitors should read it on the privacy page (texts in
+ * the reader's language). Declared by every plugin that handles visitor data: a form provider, analytics...
+ */
+export interface DataProcessing {
+  /** Who receives the data, e.g. 'Web3Forms'. */
+  readonly service: string;
+  /** Why, e.g. "Sending me the messages of the contact form". */
+  readonly purpose: string;
+  /** When it happens, e.g. "Only when you send the form". */
+  readonly when: string;
+  /** What is sent, e.g. ["your name", "your e-mail address"]. */
+  readonly data: readonly string[];
+  /** How long it is kept, e.g. "Up to 3 years". */
+  readonly retention?: string;
+  /** Where the service is based or stores data, e.g. "Company based in India". */
+  readonly location?: string;
+  /** Whether it sets cookies or similar trackers in the visitor's browser. */
+  readonly cookies: boolean;
+  /** The service's own privacy or data processing page. */
+  readonly url: string;
+}
+
 export interface BasePlugin {
   readonly name: string;
   readonly kind: PluginKind;
@@ -105,6 +130,11 @@ export interface BasePlugin {
   /** UI strings per locale; keys should be namespaced, e.g. 'section.work.title'. */
   readonly messages?: Messages;
   readonly hooks?: PluginHooks;
+  /**
+   * Personal data this plugin handles, for the privacy page. Asked only for plugins in use (a section counts when it
+   * is placed on a page).
+   */
+  privacy?(ctx: RenderContext): readonly DataProcessing[];
 }
 
 // ---------- Source ----------
