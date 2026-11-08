@@ -36,11 +36,11 @@ A theme plugin provides:
 
 - `layout`: an Astro component that receives `lang`, `title`, `path`, `t`, `url`, `alternates`, `locales`, `siteName`,
   `nav` and `heading`, and renders three slots: `head` (inside `<head>`), the default slot (inside `<main id="main">`) and
-  `body-end`. `nav` is `{ home, items: [{ id, label, href }] }`: render it as the site navigation. Each section is
+  `body-end`. `nav` is `{ home, items: [{ id, label, href }], footer: [...] }`: render `items` as the site navigation and `footer` (pages set with `footer: true`, such as the privacy page) as links in the footer. Each section is
   rendered with `id` equal to its section id, so `href` (e.g. `/#work`) scrolls to it. `heading` is set on pages where
   no section renders the `<h1>` (pages without a hero): render it as the page's `<h1>`;
 - `components`: one component per view kind (`kind:entries`, `kind:tags`, `kind:quotes`, `kind:figures`, see below), per section id
-  when a section needs its own layout (`hero`, `projects`, `languages`), and per contributed page (`projects:detail`, and `blog:post`, which receives `ArticleView` from `@vvitrine/sections`);
+  when a section needs its own layout (`hero`, `projects`, `languages`, `contact`, `privacy`) and per contributed page (`projects:detail`, `contact:sent`, and `blog:post`, which receives `ArticleView` from `@vvitrine/sections`);
 - `fallback`: a component for sections it does not know (custom sections then still render);
 - `tokens`: default values for every design token, light and dark.
 
