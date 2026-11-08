@@ -37,6 +37,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 5.1.0
         version: 5.1.0(vitest@5.1.0)
+      '@vvitrine/consent':
+        specifier: workspace:*
+        version: link:packages/consent
       '@vvitrine/contact':
         specifier: workspace:*
         version: link:packages/contact
@@ -105,6 +108,16 @@ importers:
         version: 4.6.7
 
   packages/astro:
+    dependencies:
+      '@vvitrine/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      astro:
+        specifier: 7.4.7
+        version: 7.4.7(@types/node@22.20.5)(jiti@2.7.0)(yaml@2.9.1)
+
+  packages/consent:
     dependencies:
       '@vvitrine/core':
         specifier: workspace:*
