@@ -1,0 +1,11 @@
+---
+/** The page a form provider sends visitors back to after their message (component key `contact:sent`). */
+import type { ContactSentView } from '@vvitrine/contact';
+type Props = ContactSentView & { sectionId: string };
+const { text, backLabel, backHref } = Astro.props;
+---
+
+<p>{text}</p>
+<p>
+  <a href={backHref}>{backLabel}</a>
+</p>

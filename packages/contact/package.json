@@ -1,0 +1,17 @@
+{
+  "name": "@vvitrine/contact",
+  "version": "0.1.0",
+  "description": "VVitrine contact section: a plain HTML form sent through a form provider (Web3Forms by default), with an e-mail fallback.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vvitrine/core": "workspace:*",
+    "zod": "4.6.7"
+  }
+}

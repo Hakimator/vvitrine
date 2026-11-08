@@ -78,6 +78,31 @@ pages: [
 `contact` is the target of the "Contact me" button (e.g. `'#contact'`); by default it opens an e-mail to
 `basics.email`, and the button is hidden when there is neither.
 
+## Contact form
+
+```ts
+import { contact, web3forms } from '@vvitrine/contact';
+// ...
+plugins: [/* ... */, contact({ provider: web3forms({ accessKey: '<your key>' }) })],
+pages: [{ path: '/', sections: [{ id: 'hero', options: { contact: '#contact' } }, /* ... */, 'contact'] }],
+```
+
+- The form is plain HTML: it works without JavaScript, and nothing is sent to a third party until the visitor presses
+  "Send". The browser checks the required fields first.
+- Messages go through [Web3Forms](https://web3forms.com) (250 free messages a month): enter your e-mail address there
+  and you receive an access key. The key is visible in the page, which is expected; it only lets people send you
+  messages. Spam protection is a hidden field that only bots fill in (no captcha script, no cookie).
+- The form says which service receives the message and links to
+  [how Web3Forms handles data](https://web3forms.com/dpa): it is run from India, with servers in the EU and on AWS, and
+  keeps messages for up to three years. Choose another provider if that does not suit you (see below).
+- After sending, visitors come back to a "Message sent" page of your site (`/contact/sent/`) when `SITE_URL` is set;
+  otherwise Web3Forms shows its own confirmation.
+- `basics.email` is always offered as a fallback. Without a `provider`, the section shows only the e-mail address.
+- The demo reads the key from the `WEB3FORMS_ACCESS_KEY` environment variable, so it stays out of the code.
+
+Another provider is one small object implementing `ContactProvider` (`action`, `hiddenFields()`, `honeypot`, `service`,
+`privacyUrl`), exported by `@vvitrine/contact`.
+
 ## Images
 
 ```ts

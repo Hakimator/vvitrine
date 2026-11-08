@@ -3,6 +3,7 @@
  * It must NOT import site/vvitrine.config.ts: that file imports the Corporate theme, and Astro
  * ships the CSS of every imported component (spike finding F1). The e2e suite checks for leaks.
  */
+import { contact, web3forms } from '@vvitrine/contact';
 import { defineConfig, definePlugin } from '@vvitrine/core';
 import { allSections, projects, timeline } from '@vvitrine/sections';
 import { seo, sitemap } from '@vvitrine/seo';
@@ -36,6 +37,8 @@ export default defineConfig({
     projects({ path: '/projects', tags: true }),
     timeline({ from: ['work', 'education', 'volunteer'] }),
     talks(),
+    // A made-up key: the e2e suite checks the form, it never sends it.
+    contact({ provider: web3forms({ accessKey: '0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b' }) }),
     seo(),
     sitemap(),
     images(),
@@ -45,7 +48,7 @@ export default defineConfig({
       path: '/',
       sections: [
         // The e2e suite only checks the link; the file itself is out of scope here.
-        { id: 'hero', options: { cv: '/cv.pdf' } },
+        { id: 'hero', options: { cv: '/cv.pdf', contact: '#contact' } },
         { id: 'stats', nav: false },
         { id: 'projects', nav: false, options: { limit: 6 } },
         { id: 'blog', nav: false, options: { limit: 2 } },
@@ -60,6 +63,7 @@ export default defineConfig({
         { id: 'interests', nav: false },
         { id: 'testimonials', nav: false },
         { id: 'references', nav: false },
+        { id: 'contact', nav: false },
       ],
     },
     { path: '/projects', title: 'page.projects', sections: [{ id: 'projects', options: { filter: true } }] },

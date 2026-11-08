@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@vvitrine/astro": "workspace:*",
+    "@vvitrine/contact": "workspace:*",
     "@vvitrine/core": "workspace:*",
     "@vvitrine/images": "workspace:*",
     "@vvitrine/sections": "workspace:*",
