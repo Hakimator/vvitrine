@@ -59,6 +59,17 @@ third-party, looks right. The shapes are exported by `@vvitrine/core`:
 For a section, the theme component is chosen in this order: the component for its id, then the one for its view kind,
 then the section's own default component, then `fallback`.
 
+### E-mail addresses
+
+Views never hold a plain e-mail address. They give a `ProtectedEmail` (`@vvitrine/core`): use `href` as the link and draw
+`parts` as its text, with the `hidden` attribute on hidden parts, so the page source does not contain the address:
+
+```astro
+<a href={email.href}>{email.parts.map((part) => (part.hidden ? <span hidden>{part.text}</span> : part.text))}</a>
+```
+
+Do not style `[hidden]` elements as visible.
+
 ### Technology filter
 
 When a projects placement sets `filter: true`, `ProjectsView.filter` holds the links ("All", then one per technology,

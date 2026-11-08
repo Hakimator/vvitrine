@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createKernel, InvalidPluginOptionsError, type BuiltSite } from '@vvitrine/core';
+import { createKernel, InvalidPluginOptionsError, protectEmail, type BuiltSite } from '@vvitrine/core';
 import { memorySource, stringTheme } from '@vvitrine/core/testing';
 import { contact, web3forms, type ContactSentView, type ContactSettings, type ContactView } from '../src/index.ts';
 
@@ -41,11 +41,7 @@ describe('@vvitrine/contact', () => {
       linkLabel: 'Comment Web3Forms traite vos données',
       url: 'https://web3forms.com/dpa',
     });
-    expect(view(site, 'en:/')!.email).toEqual({
-      label: 'Prefer e-mail?',
-      address: 'jane@example.dev',
-      href: 'mailto:jane@example.dev',
-    });
+    expect(view(site, 'en:/')!.email).toEqual({ label: 'Prefer e-mail?', ...protectEmail('jane@example.dev') });
   });
 
   it('contributes a "message sent" page with its own heading', async () => {
@@ -69,7 +65,7 @@ describe('@vvitrine/contact', () => {
     expect(view(site, 'en:/')).toEqual({
       title: 'Contact',
       intro: 'A question, an internship, a project? Write to me.',
-      email: { label: 'My e-mail address:', address: 'jane@example.dev', href: 'mailto:jane@example.dev' },
+      email: { label: 'My e-mail address:', ...protectEmail('jane@example.dev') },
     });
     expect(site.routes.some((r) => r.key.endsWith('/contact/sent'))).toBe(false);
     expect(view(await build({}, { data: { basics: { name: 'Jane Doe' } } }), 'en:/')).toBeUndefined();

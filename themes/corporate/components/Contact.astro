@@ -36,7 +36,8 @@ const { title, intro, form, email, sectionId } = Astro.props;
   )}
   {email && (
     <p class="email">
-      {email.label} <a href={email.href}>{email.address}</a>
+      {email.label}{' '}
+      <a href={email.href}>{email.parts.map((part) => (part.hidden ? <span hidden>{part.text}</span> : part.text))}</a>
     </p>
   )}
 </section>

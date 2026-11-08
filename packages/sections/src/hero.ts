@@ -1,4 +1,4 @@
-import { defineSection, type ResponsiveImage } from '@vvitrine/core';
+import { defineSection, protectEmail, type ProtectedEmail, type ResponsiveImage } from '@vvitrine/core';
 import { z } from 'zod';
 
 export interface HeroAction {
@@ -15,7 +15,8 @@ export interface HeroView {
   readonly summary?: string;
   readonly location?: string;
   readonly availability?: string;
-  readonly email?: string;
+  /** `basics.email`, protected from spam harvesters: draw its `parts` (see `ProtectedEmail`). */
+  readonly email?: ProtectedEmail;
   /** `basics.image` with the base path, and responsive variants and size when an image plugin is installed. */
   readonly photo?: ResponsiveImage & { readonly alt: string };
   /** Shown instead of the photo when there is none, e.g. "JM". */
@@ -28,7 +29,7 @@ export interface HeroView {
 export const HeroOptions = z.object({
   /** CV file in public/ (e.g. '/cv.pdf') or a full URL. Adds a "Download CV" button. */
   cv: z.string().min(1).optional(),
-  /** Target of the "Contact me" button. Defaults to a mailto: link to basics.email. */
+  /** Target of the "Contact me" button. Defaults to a (protected) mailto: link to basics.email. */
   contact: z.string().min(1).optional(),
 });
 export type HeroOptions = z.infer<typeof HeroOptions>;
@@ -82,7 +83,8 @@ export const hero = () =>
           ...(isFullUrl(options.cv) ? {} : { download: true }),
         });
       }
-      const contact = options.contact ?? (basics.email ? `mailto:${basics.email}` : undefined);
+      const email = basics.email ? protectEmail(basics.email) : undefined;
+      const contact = options.contact ?? email?.href;
       if (contact) actions.push({ id: 'contact', label: ctx.t('section.hero.contact'), href: contact });
 
       return {
@@ -91,7 +93,7 @@ export const hero = () =>
         ...(basics.summary ? { summary: basics.summary } : {}),
         ...(location ? { location } : {}),
         ...(availability ? { availability } : {}),
-        ...(basics.email ? { email: basics.email } : {}),
+        ...(email ? { email } : {}),
         ...(basics.image
           ? { photo: { ...ctx.image(basics.image), alt: ctx.t('section.hero.photoAlt', { name: basics.name }) } }
           : {}),

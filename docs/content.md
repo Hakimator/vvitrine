@@ -123,3 +123,9 @@ tags: [Architecture, Astro]
 
 Only publish what you want public. References quote other people: ask them before publishing their name and words. No field is required except `basics.name`. There is no phone field in the built-in
 sections on purpose.
+
+Your e-mail address (`basics.email`) never appears as plain text in the pages, so spam harvesters that read them
+do not find it. The link is percent-encoded and the visible address contains hidden decoy text; visitors still see,
+click, copy and hear the real address, without any JavaScript. In tests by Spencer Mortensen
+([Email address obfuscation: What works in 2026?](https://spencermortensen.com/articles/email-obfuscation/)), these two
+techniques blocked 96 % and 100 % of harvesters. It is not a guarantee: use an address you can filter.

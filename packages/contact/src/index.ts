@@ -3,7 +3,7 @@
  * sends), and the owner's e-mail address as a fallback. Without a provider, only the e-mail address is shown.
  * See ADR-011.
  */
-import { defineSection, type RenderContext } from '@vvitrine/core';
+import { defineSection, protectEmail, type ProtectedEmail, type RenderContext } from '@vvitrine/core';
 import { z } from 'zod';
 import type { ContactProvider, HiddenField } from './provider.ts';
 
@@ -26,8 +26,11 @@ export interface ContactView {
   readonly intro: string;
   /** Absent when no provider is set: show the e-mail address only. */
   readonly form?: ContactForm;
-  /** The owner's e-mail address (basics.email), always offered when known. */
-  readonly email?: { readonly label: string; readonly address: string; readonly href: string };
+  /**
+   * The owner's e-mail address (basics.email), always offered when known, protected from spam harvesters: use `href`
+   * as the link and draw `parts` as its text, with the `hidden` attribute on hidden parts.
+   */
+  readonly email?: { readonly label: string } & ProtectedEmail;
 }
 
 /** The "message sent" page the provider sends visitors back to (component `contact:sent`). */
@@ -120,8 +123,7 @@ export const contact = (settings: ContactSettings = {}) => {
           ? {
               email: {
                 label: ctx.t(provider ? 'section.contact.orEmail' : 'section.contact.emailOnly'),
-                address: basics.email,
-                href: `mailto:${basics.email}`,
+                ...protectEmail(basics.email),
               },
             }
           : {}),
