@@ -30,9 +30,9 @@ module.exports = {
       name: 'plugins-are-independent',
       comment: 'A plugin package must not import another plugin package (themes may import section view types).',
       severity: 'error',
-      from: { path: '^packages/(sections|seo|source-yaml|source-markdown|service-seo|images)/' },
+      from: { path: '^packages/(sections|seo|source-yaml|source-markdown|service-seo|images|contact)/' },
       to: {
-        path: '^(packages/(sections|seo|source-yaml|source-markdown|service-seo|images|astro)/|themes/)',
+        path: '^(packages/(sections|seo|source-yaml|source-markdown|service-seo|images|contact|astro)/|themes/)',
         pathNot: '^packages/$1',
       },
     },
