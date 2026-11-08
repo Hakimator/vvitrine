@@ -1,3 +1,4 @@
+import { blog } from './blog.ts';
 import { education } from './education.ts';
 import { awards, certificates, publications, volunteer } from './entries.ts';
 import { stats, testimonials, timeline } from './extras.ts';
@@ -10,6 +11,7 @@ import { work } from './work.ts';
 
 export {
   awards,
+  blog,
   certificates,
   education,
   hero,
@@ -26,6 +28,9 @@ export {
   work,
 };
 export type { TimelineSource } from './extras.ts';
+export type { ArticleView, BlogSettings } from './blog.ts';
+export { readingMinutes } from './blog.ts';
+export type { Heading } from './markdown.ts';
 export type { HeroAction, HeroView } from './hero.ts';
 export { initialsOf } from './hero.ts';
 export type { WorkView } from './work.ts';
@@ -54,4 +59,5 @@ export const allSections = () => [
   interests(),
   testimonials(),
   references(),
+  blog(),
 ];

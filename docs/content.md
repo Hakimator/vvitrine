@@ -50,6 +50,7 @@ largest version you have in `public/`: the plugin makes the smaller ones. Images
 | `stats`        | `stats`        | `value` (text or number, e.g. `12`, `3+`, `40 %`), `label`                                               |
 | `testimonials` | `testimonials` | `quote`, `author`, `role`                                                                                |
 | `timeline`     | `timeline`     | your own milestones: `title`, `date`, `endDate`, `summary`, `url` (work, education... are added for you) |
+| `posts`        | `blog`         | `title`, `date`, `summary`, `tags`, `draft` (see [Blog](#blog))                                          |
 
 Every top-level JSON Resume section has a built-in section. Dated lists are shown most recent first.
 
@@ -82,6 +83,41 @@ Text, lists, `code`, tables and images: ![Screenshot of the app](/images/library
 - When this source is used, it provides the whole `projects` list: remove `projects` from your YAML file.
 - `#` headings become sub-headings of the project page, local images and links get the base path, and every image needs
   an alt text (the build says which one is missing).
+
+## Blog
+
+The `blog` section lists your articles and gives each one its own page. Write one Markdown file per article, read by a
+second `@vvitrine/source-markdown`:
+
+```ts
+plugins: [
+  markdownSource({ dir: 'content/blog', key: 'posts' }),
+  blog({ path: '/blog' }),
+  /* ... */
+],
+pages: [
+  { path: '/', sections: ['hero', { id: 'blog', nav: false, options: { limit: 2 } }, /* ... */] },
+  { path: '/blog', title: 'page.blog', sections: ['blog'] },
+],
+```
+
+```markdown
+---
+title: Building a plugin-based portfolio
+date: 2026-11-07
+summary: Why every part of this site is a plugin.
+tags: [Architecture, Astro]
+---
+
+# Why everything is a plugin
+
+...
+```
+
+- Articles live at `<path>/<slug>/`, e.g. `/blog/plugin-portfolio/`; the slug is the file name (or `x-vvitrine.slug`).
+- The newest article comes first. `draft: true` keeps an article out of the build.
+- Each page shows the date, an estimated reading time and, from three `#` headings on, a table of contents.
+- The same rules as project write-ups apply: headings become sub-headings, every image needs an alt text.
 
 ## Privacy
 

@@ -1,0 +1,88 @@
+---
+/** One blog article (component key `blog:post`). */
+import type { ArticleView } from '@vvitrine/sections';
+import Prose from './Prose.astro';
+type Props = ArticleView & { sectionId: string };
+const { title, summary, date, dateTime, readingTime, tags, body, toc, backHref, labels } = Astro.props;
+---
+
+<article class="article">
+  <p class="back">
+    <a href={backHref}>← {labels.back}</a>
+  </p>
+  <p class="meta">
+    <time datetime={dateTime}>{date}</time>
+    <span>{readingTime}</span>
+  </p>
+  <h1>{title}</h1>
+  {summary && <p class="lead">{summary}</p>}
+  {tags.length > 0 && (
+    <ul class="tags" aria-label={labels.tags}>
+      {tags.map((tag) => (
+        <li>{tag}</li>
+      ))}
+    </ul>
+  )}
+  {toc.length > 0 && (
+    <nav class="toc" aria-label={labels.toc}>
+      <p class="toc-title">{labels.toc}</p>
+      <ol>
+        {toc.map((heading) => (
+          <li>
+            <a href={`#${heading.id}`}>{heading.text}</a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )}
+  <Prose html={body} />
+</article>
+<style>
+  .back {
+    font-weight: 600;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    margin: 1.5rem 0 0.5rem;
+    color: var(--vv-color-muted);
+    font-weight: 600;
+  }
+  h1 {
+    margin: 0 0 1rem;
+    font: 900 clamp(2.2rem, 7vw, 3.75rem) / 1.05 var(--vv-font-heading);
+    letter-spacing: -0.02em;
+  }
+  .lead {
+    font-size: 1.25rem;
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+  }
+  .tags li {
+    padding: 0.2rem 0.8rem;
+    border: 2px solid var(--vv-color-primary);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .toc {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--vv-radius);
+    background: var(--vv-color-surface);
+  }
+  .toc-title {
+    margin: 0 0 0.5rem;
+    font-weight: 800;
+  }
+  .toc ol {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+</style>

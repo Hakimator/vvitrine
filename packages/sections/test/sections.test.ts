@@ -14,6 +14,9 @@ import {
 import { memorySource, stringTheme } from '@vvitrine/core/testing';
 import {
   allSections,
+  blog,
+  readingMinutes,
+  type ArticleView,
   hero,
   initialsOf,
   timeline,
@@ -24,6 +27,7 @@ import {
   type WorkView,
   type HeroView,
 } from '../src/index.ts';
+import { renderMarkdownDocument } from '../src/markdown.ts';
 
 const content = {
   basics: {
@@ -371,6 +375,94 @@ describe('built-in sections', () => {
     ).toThrow(/reads content key "volunteer", but no plugin owns it/);
   });
 
+  describe('blog', () => {
+    const words = (n: number) => Array.from({ length: n }, (_, i) => `word${i}`).join(' ');
+    const posts = [
+      {
+        title: 'Older post',
+        date: '2026-09-12',
+        tags: ['Career'],
+        'x-vvitrine': { slug: 'older', body: words(150) },
+      },
+      {
+        title: 'Plugins everywhere',
+        date: '2026-11-07',
+        summary: 'Why everything is a plugin.',
+        tags: ['Architecture', 'Astro'],
+        'x-vvitrine': { body: `# One\n\n${words(1100)}\n\n# Two\n\n# Three` },
+      },
+      { title: 'Not ready', date: '2026-12-01', draft: true, 'x-vvitrine': { slug: 'draft' } },
+    ];
+    const placed = [{ path: '/blog', sections: ['blog'] }];
+
+    it('lists published articles, newest first, as entries', async () => {
+      const site = await build({ ...content, posts }, placed, '/demo/');
+      expect(view<EntriesView>(site, 'en:/blog', 'blog')).toEqual({
+        title: 'Articles',
+        items: [
+          {
+            title: 'Plugins everywhere',
+            url: '/demo/blog/plugins-everywhere/',
+            meta: ['November 7, 2026', '6 min read', 'Architecture, Astro'],
+            summary: 'Why everything is a plugin.',
+            notes: [],
+          },
+          {
+            title: 'Older post',
+            url: '/demo/blog/older/',
+            meta: ['September 12, 2026', '1 min read', 'Career'],
+            notes: [],
+          },
+        ],
+      });
+      expect(site.routes.some((r) => r.key.endsWith('/blog/draft'))).toBe(false);
+    });
+
+    it('contributes one page per article, with a table of contents from three headings', async () => {
+      const site = await build({ ...content, posts }, placed);
+      const page = site.routes.find((r) => r.key === 'fr:/blog/plugins-everywhere')!;
+      const article = page.sections[0]!.view as ArticleView;
+      expect(article).toMatchObject({
+        title: 'Plugins everywhere',
+        dateTime: '2026-11-07',
+        readingTime: '6 min de lecture',
+        tags: ['Architecture', 'Astro'],
+        backHref: '/fr/blog/',
+        toc: [
+          { id: 'one', text: 'One' },
+          { id: 'two', text: 'Two' },
+          { id: 'three', text: 'Three' },
+        ],
+        labels: { back: 'Tous les articles', toc: 'Sur cette page', tags: 'Thèmes' },
+      });
+      expect(article.body).toContain('<h2 id="one">One</h2>');
+      const short = site.routes.find((r) => r.key === 'fr:/blog/older')!.sections[0]!.view as ArticleView;
+      expect(short.toc).toEqual([]);
+    });
+
+    it('can live at another address, and refuses two articles with the same slug', async () => {
+      const kernel = createKernel(
+        {
+          site: { defaultLocale: 'en', locales: ['en'] },
+          plugins: [memorySource({ en: { ...content, posts } }), theme, hero(), blog({ path: '/notes/' })],
+          pages: [{ path: '/notes', sections: ['blog'] }],
+        },
+        { root: '/', base: '/', logger: { info: () => {}, warn: () => {} } },
+      );
+      const site = await kernel.build();
+      expect(view<EntriesView>(site, 'en:/notes', 'blog').items[0]!.url).toBe('/notes/plugins-everywhere/');
+      expect(site.routes.some((r) => r.key === 'en:/notes/older')).toBe(true);
+      const twins = [posts[0]!, { ...posts[0]!, title: 'Twin' }];
+      await expect(build({ ...content, posts: twins }, placed)).rejects.toThrow('Two articles have the slug "older"');
+    });
+
+    it('counts reading time on words, one minute at least', () => {
+      expect(readingMinutes('')).toBe(1);
+      expect(readingMinutes(`${words(400)} --- ***`)).toBe(2);
+      expect(readingMinutes(words(401))).toBe(3);
+    });
+  });
+
   it('rejects an award without a title', async () => {
     await expect(build({ ...content, awards: [{ date: '2024' }] })).rejects.toThrow(InvalidContentError);
   });
@@ -436,7 +528,7 @@ describe('built-in sections', () => {
     const withBody = { ...content, projects: [{ name: 'Star', 'x-vvitrine': { body } }] };
     const site = await build(withBody, undefined, '/demo/');
     const detail = site.routes.find((r) => r.key === 'en:/projects/star')!.sections[0]!.view as ProjectDetailView;
-    expect(detail.body).toContain('<h2>Context</h2>');
+    expect(detail.body).toContain('<h2 id="context">Context</h2>');
     expect(detail.body).toContain('<strong>small</strong>');
     expect(detail.body).toContain('href="/demo/docs/guide.pdf"');
     expect(detail.body).toContain('href="https://developer.mozilla.org"');
@@ -499,6 +591,27 @@ describe('built-in sections', () => {
     const detail = site.routes.find((r) => r.key === 'en:/projects/star')!.sections[0]!.view as ProjectDetailView;
     expect(detail.body).toContain(
       '<img src="/diagram.png" alt="Diagram of the &quot;flow&quot;" title="Data flow" srcset="/diagram.png-480.webp 480w" sizes="(min-width: 64rem) 64rem, 100vw" width="960" height="540" loading="lazy" decoding="async">',
+    );
+  });
+
+  it('gives headings unique ids and lists the second-level ones', () => {
+    const plain = { asset: (p: string) => p, image: (p: string) => ({ src: p }) };
+    const md = ['# Why *plugins*', '## Detail', '# Results', '# Results', 'Text'].join('\n\n');
+    const { html, headings } = renderMarkdownDocument(md, plain, 'test');
+    expect(headings).toEqual([
+      { id: 'why-plugins', text: 'Why plugins' },
+      { id: 'results', text: 'Results' },
+      { id: 'results-2', text: 'Results' },
+    ]);
+    expect(html).toContain('<h2 id="why-plugins">Why <em>plugins</em></h2>');
+    expect(html).toContain('<h3 id="detail">Detail</h3>');
+    expect(renderMarkdownDocument('# Été 2026 !', plain, 'test').headings).toEqual([
+      { id: 'ete-2026', text: 'Été 2026 !' },
+    ]);
+    expect(renderMarkdownDocument('# ???', plain, 'test').headings[0]!.id).toBe('section');
+    // Plain text, not HTML: a theme escapes it once when it prints it.
+    expect(renderMarkdownDocument("# Ce que j'en retiens & <après>", plain, 'test').headings[0]!.text).toBe(
+      "Ce que j'en retiens & <après>",
     );
   });
 

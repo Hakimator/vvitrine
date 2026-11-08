@@ -38,7 +38,8 @@ export default function markdownSource(options: MarkdownSourceOptions = {}): Sou
   const { dir, key } = parsed.data;
 
   return {
-    name: '@vvitrine/source-markdown',
+    // One instance per content key (projects, posts...): the key keeps plugin names unique.
+    name: `@vvitrine/source-markdown:${key}`,
     kind: 'source',
     apiVersion: 1,
     async load(ctx: SourceContext): Promise<RawContent> {

@@ -1,0 +1,64 @@
+---
+/** One blog article (component key `blog:post`). */
+import type { ArticleView } from '@vvitrine/sections';
+import Prose from './Prose.astro';
+type Props = ArticleView & { sectionId: string };
+const { title, summary, date, dateTime, readingTime, tags, body, toc, backHref, labels } = Astro.props;
+---
+
+<article class="article">
+  <p>
+    <a href={backHref}>← {labels.back}</a>
+  </p>
+  <p class="muted meta">
+    <time datetime={dateTime}>{date}</time> · {readingTime}
+    {tags.length > 0 && <> · {tags.join(', ')}</>}
+  </p>
+  <h1>{title}</h1>
+  {summary && <p class="lead">{summary}</p>}
+  {toc.length > 0 && (
+    <nav class="toc" aria-label={labels.toc}>
+      <p class="toc-title">{labels.toc}</p>
+      <ol>
+        {toc.map((heading) => (
+          <li>
+            <a href={`#${heading.id}`}>{heading.text}</a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )}
+  <Prose html={body} />
+</article>
+<style>
+  .meta {
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+  }
+  h1 {
+    margin: 0 0 0.75rem;
+    color: var(--vv-color-primary);
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    line-height: 1.2;
+  }
+  .lead {
+    font-size: 1.15rem;
+  }
+  .toc {
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--vv-color-border);
+    font-family: var(--vv-font-heading);
+  }
+  .toc-title {
+    margin: 0 0 0.25rem;
+    font-weight: 600;
+  }
+  .toc ol {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .toc a {
+    color: var(--vv-color-text);
+  }
+</style>

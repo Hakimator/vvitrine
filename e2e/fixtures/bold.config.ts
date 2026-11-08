@@ -29,6 +29,7 @@ export default defineConfig({
   plugins: [
     yamlSource(),
     markdownSource(),
+    markdownSource({ dir: 'content/blog', key: 'posts' }),
     bold(),
     withPhoto,
     ...allSections(),
@@ -46,6 +47,7 @@ export default defineConfig({
         { id: 'hero', options: { cv: '/cv.pdf' } },
         { id: 'stats', nav: false },
         { id: 'projects', options: { limit: 6 } },
+        { id: 'blog', nav: false, options: { limit: 2 } },
         'work',
         'education',
         { id: 'volunteer', nav: false },
@@ -60,9 +62,10 @@ export default defineConfig({
       ],
     },
     { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
+    { path: '/blog', title: 'page.blog', sections: ['blog'] },
   ],
   messages: {
-    fr: { 'page.timeline': 'Mon parcours' },
-    en: { 'page.timeline': 'My journey' },
+    fr: { 'page.timeline': 'Mon parcours', 'page.blog': 'Blog' },
+    en: { 'page.timeline': 'My journey', 'page.blog': 'Blog' },
   },
 });

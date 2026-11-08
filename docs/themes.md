@@ -40,7 +40,7 @@ A theme plugin provides:
   rendered with `id` equal to its section id, so `href` (e.g. `/#work`) scrolls to it. `heading` is set on pages where
   no section renders the `<h1>` (pages without a hero): render it as the page's `<h1>`;
 - `components`: one component per view kind (`kind:entries`, `kind:tags`, `kind:quotes`, `kind:figures`, see below), per section id
-  when a section needs its own layout (`hero`, `projects`, `languages`), and per contributed page (`projects:detail`);
+  when a section needs its own layout (`hero`, `projects`, `languages`), and per contributed page (`projects:detail`, and `blog:post`, which receives `ArticleView` from `@vvitrine/sections`);
 - `fallback`: a component for sections it does not know (custom sections then still render);
 - `tokens`: default values for every design token, light and dark.
 
@@ -49,12 +49,12 @@ A theme plugin provides:
 Most sections share a few shapes, so a theme draws each shape once and every section that uses it, built-in or
 third-party, looks right. The shapes are exported by `@vvitrine/core`:
 
-| Kind      | View                                                                              | Built-in sections                                                        |
-| --------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `entries` | `{ title, items: [{ title, subtitle?, url?, meta: string[], summary?, notes }] }` | work, education, volunteer, awards, certificates, publications, timeline |
-| `tags`    | `{ title, groups: [{ name, level?, keywords }] }`                                 | skills, interests                                                        |
-| `quotes`  | `{ title, items: [{ quote, author, role? }] }`                                    | references, testimonials                                                 |
-| `figures` | `{ title, items: [{ value, label }] }`                                            | stats                                                                    |
+| Kind      | View                                                                              | Built-in sections                                                              |
+| --------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `entries` | `{ title, items: [{ title, subtitle?, url?, meta: string[], summary?, notes }] }` | work, education, volunteer, awards, certificates, publications, timeline, blog |
+| `tags`    | `{ title, groups: [{ name, level?, keywords }] }`                                 | skills, interests                                                              |
+| `quotes`  | `{ title, items: [{ quote, author, role? }] }`                                    | references, testimonials                                                       |
+| `figures` | `{ title, items: [{ value, label }] }`                                            | stats                                                                          |
 
 For a section, the theme component is chosen in this order: the component for its id, then the one for its view kind,
 then the section's own default component, then `fallback`.
