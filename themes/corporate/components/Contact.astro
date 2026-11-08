@@ -1,0 +1,105 @@
+---
+/** Contact section: a plain HTML form (no JavaScript) and the e-mail address. */
+import type { ContactView } from '@vvitrine/contact';
+type Props = ContactView & { sectionId: string };
+const { title, intro, form, email, sectionId } = Astro.props;
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  <p>{intro}</p>
+  {form && (
+    <form action={form.action} method="post" accept-charset="UTF-8">
+      {form.hidden.map((field) => (
+        <input type="hidden" name={field.name} value={field.value} />
+      ))}
+      {form.honeypot && (
+        <input class="honeypot" type="checkbox" name={form.honeypot} tabindex="-1" autocomplete="off" />
+      )}
+      <p class="field">
+        <label for={`${sectionId}-name`}>{form.labels.name}</label>
+        <input id={`${sectionId}-name`} name="name" type="text" autocomplete="name" required />
+      </p>
+      <p class="field">
+        <label for={`${sectionId}-email`}>{form.labels.email}</label>
+        <input id={`${sectionId}-email`} name="email" type="email" autocomplete="email" required />
+      </p>
+      <p class="field">
+        <label for={`${sectionId}-message`}>{form.labels.message}</label>
+        <textarea id={`${sectionId}-message`} name="message" rows="6" required />
+      </p>
+      <p class="privacy">
+        {form.privacy.text} <a href={form.privacy.url}>{form.privacy.linkLabel}</a>
+      </p>
+      <button type="submit">{form.labels.submit}</button>
+    </form>
+  )}
+  {email && (
+    <p class="email">
+      {email.label} <a href={email.href}>{email.address}</a>
+    </p>
+  )}
+</section>
+<style>
+  form {
+    display: grid;
+    gap: 1rem;
+    max-width: 36rem;
+  }
+  .field {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0;
+  }
+  label {
+    font-family: var(--vv-font-heading);
+    font-weight: 600;
+  }
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    /* Field borders keep a 3:1 contrast with the page (WCAG 1.4.11). */
+    border: 1px solid var(--vv-color-muted);
+    border-radius: var(--vv-radius);
+    background: var(--vv-color-background);
+    color: var(--vv-color-text);
+    font: inherit;
+  }
+  textarea {
+    resize: vertical;
+  }
+  input:focus-visible,
+  textarea:focus-visible,
+  button:focus-visible {
+    outline: 3px solid var(--vv-color-accent);
+    outline-offset: 2px;
+  }
+  /* Only bots fill it in. */
+  .honeypot {
+    display: none;
+  }
+  .privacy {
+    margin: 0;
+    color: var(--vv-color-muted);
+    font-size: 0.9rem;
+  }
+  button {
+    justify-self: start;
+    padding: 0.6rem 1.3rem;
+    border: 2px solid var(--vv-color-primary);
+    border-radius: var(--vv-radius);
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+    font-family: var(--vv-font-heading);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover {
+    text-decoration: underline;
+  }
+  .email {
+    margin-top: 1.5rem;
+  }
+</style>
