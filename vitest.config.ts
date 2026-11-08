@@ -6,7 +6,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**/*.ts'],
-      exclude: ['packages/astro/src/**'],
+      // Browser scripts (*.browser.ts) run in the page: the e2e suite covers them.
+      exclude: ['packages/astro/src/**', 'packages/*/src/**/*.browser.ts'],
       reporter: ['text-summary', 'text', 'lcov'],
       // NFR-08: >= 80 % on the kernel and plugins. The Astro glue is covered by e2e tests.
       thresholds: { lines: 80, functions: 80, branches: 75, statements: 80 },

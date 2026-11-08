@@ -186,6 +186,28 @@ describe('navigation', () => {
     expect(fr.footer).toEqual([{ id: '/legal', label: 'Legal notice', href: '/fr/legal/' }]);
   });
 
+  it('adds the footer links plugins ask for, after the footer pages', async () => {
+    const banner: Plugin = {
+      name: 'banner',
+      kind: 'service',
+      apiVersion: 1,
+      hooks: { footerLinks: (ctx) => [{ id: 'consent', label: `Cookies ${ctx.locale}`, href: '#consent' }] },
+    };
+    const site = await build(
+      config({
+        plugins: [memorySource(content), theme, hero, work, banner],
+        pages: [
+          { path: '/', sections: ['hero'] },
+          { path: '/legal', title: 'Legal', footer: true, sections: ['work'] },
+        ],
+      }),
+    );
+    expect(site.routes.find((r) => r.key === 'en:/')!.context.nav.footer).toEqual([
+      { id: '/legal', label: 'Legal', href: '/legal/' },
+      { id: 'consent', label: 'Cookies en', href: '#consent' },
+    ]);
+  });
+
   it('rejects a nav value that is not a boolean', () => {
     const bad = config({ pages: [{ path: '/', sections: [{ id: 'work', nav: 'no' as unknown as boolean }] }] });
     expect(() => createKernel(bad, { root: '/', logger: silent })).toThrow(InvalidConfigError);

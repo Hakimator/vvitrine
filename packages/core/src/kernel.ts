@@ -196,7 +196,8 @@ export class Kernel {
     const navItems: NavItem[] = [];
     const footer = pages
       .filter((page) => page.footer)
-      .map((page) => ({ id: page.path, label: this.pageTitle(page, content, render), href: render.url(page.path) }));
+      .map((page) => ({ id: page.path, label: this.pageTitle(page, content, render), href: render.url(page.path) }))
+      .concat(this.pluginsInUse().flatMap((plugin) => plugin.hooks?.footerLinks?.(render) ?? []));
     const nav: Navigation = { home: render.url(pages[0]?.path ?? '/'), items: navItems, footer };
 
     for (const page of pages) {

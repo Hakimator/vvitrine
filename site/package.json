@@ -10,7 +10,9 @@
     "typecheck": "astro sync && tsc --noEmit"
   },
   "dependencies": {
+    "@vvitrine/analytics": "workspace:*",
     "@vvitrine/astro": "workspace:*",
+    "@vvitrine/consent": "workspace:*",
     "@vvitrine/contact": "workspace:*",
     "@vvitrine/core": "workspace:*",
     "@vvitrine/images": "workspace:*",

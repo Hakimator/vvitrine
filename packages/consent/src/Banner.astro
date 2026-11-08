@@ -1,0 +1,87 @@
+---
+/**
+ * The consent banner. It starts hidden: its script shows it when the visitor has not chosen yet, so visitors without
+ * JavaScript never see buttons that cannot work (and nothing can track them anyway). Styled with the theme's tokens.
+ */
+import type { ConsentBannerProps } from './plugin.ts';
+type Props = ConsentBannerProps;
+const { id, title, text, accept, refuse, privacy, script } = Astro.props;
+---
+
+<section id={id} class="vv-consent" aria-labelledby={`${id}-title`} tabindex="-1" data-consent-banner hidden>
+  <h2 id={`${id}-title`}>{title}</h2>
+  <p>{text}</p>
+  {/* Same size, same style: refusing is as easy as accepting (CNIL). */}
+  <div class="buttons">
+    <button type="button" data-consent="refuse">
+      {refuse}
+    </button>
+    <button type="button" data-consent="accept">
+      {accept}
+    </button>
+  </div>
+  {privacy && (
+    <p class="more">
+      <a href={privacy.href}>{privacy.label}</a>
+    </p>
+  )}
+  <script is:inline set:html={script} />
+</section>
+<style>
+  .vv-consent {
+    position: fixed;
+    inset: auto 1rem 1rem;
+    z-index: 20;
+    max-width: 32rem;
+    margin-inline: auto;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--vv-color-border);
+    border-radius: var(--vv-radius);
+    background: var(--vv-color-background);
+    color: var(--vv-color-text);
+    box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.2);
+    font-family: var(--vv-font-body);
+  }
+  .vv-consent[hidden] {
+    display: none;
+  }
+  .vv-consent:focus-visible {
+    outline: 3px solid var(--vv-color-accent);
+    outline-offset: 3px;
+  }
+  h2 {
+    margin: 0 0 0.5rem;
+    font: 700 1.1rem / 1.3 var(--vv-font-heading);
+  }
+  p {
+    margin: 0 0 1rem;
+  }
+  .buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  button {
+    min-height: 2.75rem;
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--vv-color-primary);
+    border-radius: var(--vv-radius);
+    background: var(--vv-color-primary);
+    color: var(--vv-color-on-primary);
+    font: 600 1rem var(--vv-font-heading);
+    cursor: pointer;
+  }
+  button:hover {
+    text-decoration: underline;
+  }
+  button:focus-visible {
+    outline: 3px solid var(--vv-color-accent);
+    outline-offset: 2px;
+  }
+  .more {
+    margin: 1rem 0 0;
+  }
+  .more a {
+    color: var(--vv-color-text);
+  }
+</style>

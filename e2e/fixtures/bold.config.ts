@@ -3,6 +3,8 @@
  * It must NOT import site/vvitrine.config.ts: that file imports the Corporate theme, and Astro
  * ships the CSS of every imported component (spike finding F1). The e2e suite checks for leaks.
  */
+import { ga4 } from '@vvitrine/analytics';
+import consent from '@vvitrine/consent';
 import { contact, web3forms } from '@vvitrine/contact';
 import { defineConfig, definePlugin } from '@vvitrine/core';
 import { allSections, privacy, projects, timeline } from '@vvitrine/sections';
@@ -47,6 +49,9 @@ export default defineConfig({
     contact({ provider: web3forms({ accessKey: '0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b' }) }),
     seo(),
     sitemap(),
+    // A made-up ID: the e2e suite checks that nothing reaches Google before consent, and stubs the requests after.
+    ga4({ measurementId: 'G-E2ETEST01' }),
+    consent(),
     images(),
   ],
   pages: [
