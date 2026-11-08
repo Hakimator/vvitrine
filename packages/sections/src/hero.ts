@@ -1,4 +1,4 @@
-import { defineSection } from '@vvitrine/core';
+import { defineSection, type ResponsiveImage } from '@vvitrine/core';
 import { z } from 'zod';
 
 export interface HeroAction {
@@ -16,8 +16,8 @@ export interface HeroView {
   readonly location?: string;
   readonly availability?: string;
   readonly email?: string;
-  /** `basics.image`, resolved with the base path. */
-  readonly photo?: { readonly src: string; readonly alt: string };
+  /** `basics.image` with the base path, and responsive variants and size when an image plugin is installed. */
+  readonly photo?: ResponsiveImage & { readonly alt: string };
   /** Shown instead of the photo when there is none, e.g. "JM". */
   readonly initials: string;
   /** Calls to action, most important first: download the CV, then contact. */
@@ -93,7 +93,7 @@ export const hero = () =>
         ...(availability ? { availability } : {}),
         ...(basics.email ? { email: basics.email } : {}),
         ...(basics.image
-          ? { photo: { src: ctx.asset(basics.image), alt: ctx.t('section.hero.photoAlt', { name: basics.name }) } }
+          ? { photo: { ...ctx.image(basics.image), alt: ctx.t('section.hero.photoAlt', { name: basics.name }) } }
           : {}),
         initials: initialsOf(basics.name, ctx.locale),
         actions,

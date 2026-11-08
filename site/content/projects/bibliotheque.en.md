@@ -8,7 +8,12 @@ roles: [Lead developer (team of 4)]
 highlights:
   - Hexagonal architecture, 85% test coverage
   - WCAG 2.2 AA compliant
-x-vvitrine: { featured: true, repository: https://github.com/example/library }
+x-vvitrine:
+  featured: true
+  repository: https://github.com/example/library
+  image:
+    src: /projects/bibliotheque.png
+    alt: Illustration of the catalogue screen, with book cards and a search bar
 ---
 
 > Fictional demo project: replace this file with your own case study.

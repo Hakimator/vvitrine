@@ -59,5 +59,11 @@ third-party, looks right. The shapes are exported by `@vvitrine/core`:
 For a section, the theme component is chosen in this order: the component for its id, then the one for its view kind,
 then the section's own default component, then `fallback`.
 
+### Images
+
+Images in views (`hero.photo`, project `image`) come as `{ src, srcset?, width?, height?, alt }`. Render `srcset` with a
+`sizes` value that matches the displayed width, and `width`/`height` so the browser reserves the space. Use
+`loading="lazy"` below the fold, and `fetchpriority="high"` for an image at the top of the page, such as the hero photo.
+
 Theme CSS must only use the `--vv-*` variables (never define them): the kernel writes them, merged with user overrides.
 Start by copying `themes/corporate`.

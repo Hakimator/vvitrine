@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   ContentOwnershipError,
   createKernel,
+  definePlugin,
   defineSection,
   DuplicatePluginError,
   DuplicateSectionError,
@@ -233,6 +234,60 @@ describe('view kinds', () => {
     expect(() =>
       createKernel(config({ plugins: [memorySource(content), theme, hero, odd] }), { root: '/', logger: silent }),
     ).toThrow(/unknown view kind "gallery"\. Known kinds: entries, tags, quotes, figures/);
+  });
+});
+
+describe('images', () => {
+  const fakeImages = (name = 'fake-images') => {
+    const prepared: string[] = [];
+    const plugin = definePlugin({
+      name,
+      kind: 'generator',
+      apiVersion: 1,
+      images: {
+        prepare: async ({ base }) => {
+          prepared.push(base);
+        },
+        describe: (path: string) =>
+          path === '/me.jpg' ? { srcset: '/demo/_images/me-480.webp 480w', width: 800, height: 600 } : undefined,
+      },
+      generate: async () => [],
+    });
+    return { plugin, prepared };
+  };
+
+  it('returns the plain file when no image plugin is installed', () => {
+    const image = createKernel(config(), { root: '/', logger: silent, base: '/demo/' }).renderContext('en').image;
+    expect(image('/me.jpg')).toEqual({ src: '/demo/me.jpg' });
+  });
+
+  it('asks the image plugin, prepared once before rendering, for local images only', async () => {
+    const { plugin, prepared } = fakeImages();
+    const kernel = createKernel(config({ plugins: [memorySource(content), theme, hero, work, plugin] }), {
+      root: '/',
+      logger: silent,
+      base: '/demo/',
+    });
+    await kernel.build();
+    expect(prepared).toEqual(['/demo/']);
+    const image = kernel.renderContext('en').image;
+    expect(image('/me.jpg')).toEqual({
+      src: '/demo/me.jpg',
+      srcset: '/demo/_images/me-480.webp 480w',
+      width: 800,
+      height: 600,
+    });
+    expect(image('me.jpg')).toEqual(image('/me.jpg'));
+    expect(image('/other.png')).toEqual({ src: '/demo/other.png' });
+    expect(image('https://cdn.example.com/me.jpg')).toEqual({ src: 'https://cdn.example.com/me.jpg' });
+    expect(image('//cdn.example.com/me.jpg')).toEqual({ src: '//cdn.example.com/me.jpg' });
+  });
+
+  it('refuses two image plugins', () => {
+    const plugins = [memorySource(content), theme, hero, fakeImages('a').plugin, fakeImages('b').plugin];
+    expect(() => createKernel(config({ plugins }), { root: '/', logger: silent })).toThrow(
+      'Only one image plugin is allowed, found "a" and "b".',
+    );
   });
 });
 

@@ -1,4 +1,4 @@
-import { defineSection, PartialDate, Url, type RenderContext } from '@vvitrine/core';
+import { defineSection, PartialDate, Url, type RenderContext, type ResponsiveImage } from '@vvitrine/core';
 import { z } from 'zod';
 import { renderMarkdown } from './markdown.ts';
 import { byMostRecent, ListOptions, slugify, take } from './shared.ts';
@@ -43,7 +43,8 @@ export interface ProjectSummary {
   readonly period: string;
   readonly href: string;
   readonly featured: boolean;
-  readonly image?: { src: string; alt: string };
+  /** The project image, with responsive variants and size when an image plugin is installed. */
+  readonly image?: ResponsiveImage & { readonly alt: string };
 }
 
 export interface ProjectsView {
@@ -130,7 +131,7 @@ export const projects = () =>
           ...(p.url ? { url: p.url } : {}),
           ...(p['x-vvitrine'].repository ? { repository: p['x-vvitrine'].repository } : {}),
           ...(p['x-vvitrine'].body
-            ? { body: renderMarkdown(p['x-vvitrine'].body, ctx.asset, `Project "${p.name}" (${ctx.locale})`) }
+            ? { body: renderMarkdown(p['x-vvitrine'].body, ctx, `Project "${p.name}" (${ctx.locale})`) }
             : {}),
           labels: {
             back: ctx.t('section.projects.back'),
@@ -146,7 +147,7 @@ export const projects = () =>
     },
   });
 
-function summary(p: Project, ctx: Pick<RenderContext, 'url' | 'asset' | 'formatPeriod'>): ProjectSummary {
+function summary(p: Project, ctx: Pick<RenderContext, 'url' | 'image' | 'formatPeriod'>): ProjectSummary {
   const slug = slugOf(p);
   const image = p['x-vvitrine'].image;
   return {
@@ -157,6 +158,6 @@ function summary(p: Project, ctx: Pick<RenderContext, 'url' | 'asset' | 'formatP
     period: ctx.formatPeriod(p.startDate, p.endDate),
     href: ctx.url(`/projects/${slug}`),
     featured: p['x-vvitrine'].featured,
-    ...(image ? { image: { src: ctx.asset(image.src), alt: image.alt } } : {}),
+    ...(image ? { image: { ...ctx.image(image.src), alt: image.alt } } : {}),
   };
 }

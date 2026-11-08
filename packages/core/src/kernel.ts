@@ -13,6 +13,7 @@ import { formatPartialDate, formatPeriod } from './i18n/dates.ts';
 import { Translator, type Locale } from './i18n/translator.ts';
 import type { HeadTag } from './render/head.ts';
 import { tokensToCss } from './render/tokens.ts';
+import type { ImageProvider, ResponsiveImage } from './images.ts';
 import { viewKindKey } from './views.ts';
 import type {
   ComponentRef,
@@ -27,6 +28,9 @@ import type {
   ThemePlugin,
 } from './plugin.ts';
 import { PluginRegistry } from './registry.ts';
+
+/** 'https://...', 'data:...', '//cdn...': used as they are, never prefixed or optimised. */
+const FULL_URL = /^([a-z][a-z0-9+.-]*:|\/\/)/i;
 
 export interface KernelOptions {
   /** Absolute path of the user's project (where content/ lives). */
@@ -105,6 +109,12 @@ export class Kernel {
     this.config = resolveConfig(userConfig);
     this.registry = new PluginRegistry(this.config.plugins);
     this.checkReads();
+    const imagePlugins = this.registry.ofKind('generator').filter((g) => g.images);
+    if (imagePlugins.length > 1) {
+      throw new VVitrineError(
+        `Only one image plugin is allowed, found ${imagePlugins.map((p) => `"${p.name}"`).join(' and ')}.`,
+      );
+    }
 
     this.translator = new Translator({
       defaultLocale: this.config.defaultLocale,
@@ -120,6 +130,11 @@ export class Kernel {
   }
 
   async build(): Promise<BuiltSite> {
+    await this.imageProvider?.prepare({
+      root: this.options.root,
+      base: `${(this.options.base ?? '/').replace(/\/$/, '')}/`,
+      logger: this.logger,
+    });
     const pending: PendingRoute[] = [];
     for (const locale of this.config.locales) pending.push(...(await this.buildLocale(locale)));
 
@@ -149,6 +164,7 @@ export class Kernel {
       formatPeriod: (start, end) => formatPeriod(start, end, locale, t),
       url: (path, targetLocale = locale) => this.url(path, targetLocale),
       asset: (path) => this.asset(path),
+      image: (path) => this.image(path),
     };
   }
 
@@ -346,9 +362,21 @@ export class Kernel {
     return `${prefix}${path}`;
   }
 
+  /** Local images go through the image plugin, if any; full URLs are used as they are. */
+  private image(path: string): ResponsiveImage {
+    const src = this.asset(path);
+    if (FULL_URL.test(path)) return { src };
+    const described = this.imageProvider?.describe(path.startsWith('/') ? path : `/${path}`);
+    return described ? { src, ...described } : { src };
+  }
+
+  private get imageProvider(): ImageProvider | undefined {
+    return this.registry.ofKind('generator').find((g) => g.images)?.images;
+  }
+
   /** File from public/ with the base path; full and data: URLs are left as they are. */
   private asset(path: string): string {
-    if (/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(path)) return path;
+    if (FULL_URL.test(path)) return path;
     const base = (this.options.base ?? '/').replace(/\/$/, '');
     return `${base}/${path.replace(/^\//, '')}`;
   }

@@ -20,6 +20,7 @@ import {
   work,
 } from '@vvitrine/sections';
 import { seo, sitemap } from '@vvitrine/seo';
+import images from '@vvitrine/images';
 import markdownSource from '@vvitrine/source-markdown';
 import yamlSource from '@vvitrine/source-yaml';
 import corporate from '@vvitrine/theme-corporate';
@@ -55,6 +56,8 @@ export default defineConfig({
     // Services and generators
     seo(),
     sitemap(),
+    // Responsive WebP variants and real sizes for the images in public/.
+    images(),
   ],
 
   // Pages and the order of their sections. Remove this block to show every section on one page.

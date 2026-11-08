@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createKernel,
+  definePlugin,
   InvalidContentError,
   InvalidPluginOptionsError,
   type BuiltSite,
@@ -439,13 +440,66 @@ describe('built-in sections', () => {
     expect(detail.body).toContain('<strong>small</strong>');
     expect(detail.body).toContain('href="/demo/docs/guide.pdf"');
     expect(detail.body).toContain('href="https://developer.mozilla.org"');
-    expect(detail.body).toContain('<img src="/demo/images/app.png" alt="Screenshot of the app">');
+    expect(detail.body).toContain(
+      '<img src="/demo/images/app.png" alt="Screenshot of the app" loading="lazy" decoding="async">',
+    );
     expect(detail.body).toContain('<pre tabindex="0"><code class="language-ts">const x = 1;');
     expect(detail.body).toContain('<table tabindex="0">');
     const plain = await build({ ...content, projects: [{ name: 'Star' }] });
     expect(
       (plain.routes.find((r) => r.key === 'en:/projects/star')!.sections[0]!.view as ProjectDetailView).body,
     ).toBeUndefined();
+  });
+
+  it('gives every image the variants and size from the image plugin', async () => {
+    const fakeImages = definePlugin({
+      name: 'fake-images',
+      kind: 'generator',
+      apiVersion: 1,
+      images: {
+        prepare: async () => {},
+        describe: (path: string) => ({ srcset: `${path}-480.webp 480w`, width: 960, height: 540 }),
+      },
+      generate: async () => [],
+    });
+    const more = {
+      ...content,
+      basics: { ...content.basics, image: '/me.jpg' },
+      projects: [
+        {
+          name: 'Star',
+          'x-vvitrine': {
+            image: { src: '/shot.png', alt: 'Shot' },
+            body: '![Diagram of the "flow"](/diagram.png "Data flow")',
+          },
+        },
+      ],
+    };
+    const kernel = createKernel(
+      {
+        site: { defaultLocale: 'en', locales: ['en'] },
+        plugins: [memorySource({ en: more }), theme, ...allSections(), fakeImages],
+      },
+      { root: '/', base: '/', logger: { info: () => {}, warn: () => {} } },
+    );
+    const site = await kernel.build();
+    const sized = { width: 960, height: 540 };
+    expect(view<HeroView>(site, 'en:/', 'hero').photo).toEqual({
+      src: '/me.jpg',
+      srcset: '/me.jpg-480.webp 480w',
+      ...sized,
+      alt: 'Photo of Jane Doe',
+    });
+    expect(view<ProjectsView>(site, 'en:/', 'projects').items[0]!.image).toEqual({
+      src: '/shot.png',
+      srcset: '/shot.png-480.webp 480w',
+      ...sized,
+      alt: 'Shot',
+    });
+    const detail = site.routes.find((r) => r.key === 'en:/projects/star')!.sections[0]!.view as ProjectDetailView;
+    expect(detail.body).toContain(
+      '<img src="/diagram.png" alt="Diagram of the &quot;flow&quot;" title="Data flow" srcset="/diagram.png-480.webp 480w" sizes="(min-width: 64rem) 64rem, 100vw" width="960" height="540" loading="lazy" decoding="async">',
+    );
   });
 
   it('refuses a Markdown image without alt text', async () => {

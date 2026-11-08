@@ -8,7 +8,12 @@ roles: [Développeuse principale (équipe de 4)]
 highlights:
   - Architecture hexagonale, 85 % de couverture de tests
   - Conforme RGAA niveau AA
-x-vvitrine: { featured: true, repository: https://github.com/example/library }
+x-vvitrine:
+  featured: true
+  repository: https://github.com/example/library
+  image:
+    src: /projects/bibliotheque.png
+    alt: Illustration de l'écran du catalogue, avec des fiches de livres et une barre de recherche
 ---
 
 > Projet de démonstration fictif : remplacez ce fichier par votre propre étude de cas.

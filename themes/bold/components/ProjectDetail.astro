@@ -11,7 +11,18 @@ const { name, description, period, keywords, highlights, roles, url, repository,
   </p>
   <h1>{name}</h1>
   {period && <p class="muted">{period}</p>}
-  {image && <img src={image.src} alt={image.alt} decoding="async" />}
+  {image && (
+    <img
+      src={image.src}
+      srcset={image.srcset}
+      sizes={image.srcset ? '(min-width: 64rem) 64rem, 100vw' : undefined}
+      alt={image.alt}
+      width={image.width}
+      height={image.height}
+      fetchpriority="high"
+      decoding="async"
+    />
+  )}
   {description && <p class="lead">{description}</p>}
   {/* The Markdown write-up, already converted to HTML by the projects section. */}
   {body && <div class="prose" set:html={body} />}

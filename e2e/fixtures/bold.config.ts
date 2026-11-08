@@ -6,6 +6,7 @@
 import { defineConfig, definePlugin } from '@vvitrine/core';
 import { allSections, timeline } from '@vvitrine/sections';
 import { seo, sitemap } from '@vvitrine/seo';
+import images from '@vvitrine/images';
 import markdownSource from '@vvitrine/source-markdown';
 import yamlSource from '@vvitrine/source-yaml';
 import bold from '@vvitrine/theme-bold';
@@ -35,6 +36,7 @@ export default defineConfig({
     talks(),
     seo(),
     sitemap(),
+    images(),
   ],
   pages: [
     {

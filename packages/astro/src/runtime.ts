@@ -36,6 +36,7 @@ const TYPES: Record<string, string> = {
   txt: 'text/plain; charset=utf-8',
   json: 'application/json',
   pdf: 'application/pdf',
+  webp: 'image/webp',
   html: 'text/html; charset=utf-8',
 };
 
