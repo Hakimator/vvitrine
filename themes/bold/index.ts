@@ -7,6 +7,7 @@ import Languages from './components/Languages.astro';
 import Projects from './components/Projects.astro';
 import ProjectDetail from './components/ProjectDetail.astro';
 import Generic from './components/Generic.astro';
+import Article from './components/Article.astro';
 import Figures from './components/Figures.astro';
 import Quotes from './components/Quotes.astro';
 
@@ -59,6 +60,7 @@ export default function bold(options: BoldOptions = {}): ThemePlugin {
       languages: Languages,
       projects: Projects,
       'projects:detail': ProjectDetail,
+      'blog:post': Article,
     },
     fallback: Generic,
     tokens: mergeTokens(defaults, options.tokens),
