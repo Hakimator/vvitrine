@@ -59,6 +59,31 @@ third-party, looks right. The shapes are exported by `@vvitrine/core`:
 For a section, the theme component is chosen in this order: the component for its id, then the one for its view kind,
 then the section's own default component, then `fallback`.
 
+### Technology filter
+
+When a projects placement sets `filter: true`, `ProjectsView.filter` holds the links ("All", then one per technology,
+with `count` and `current`). Draw them as links, inside the section, with `aria-current="page"` on the current one.
+When `filter.instant` is true, you can also filter in place with the shared script from `@vvitrine/sections`:
+
+```astro
+<a href={link.href} data-tag={link.slug} aria-current={link.current ? 'page' : undefined}>
+  {link.name}
+</a>
+<!-- after the links -->
+<p
+  class="visually-hidden"
+  role="status"
+  data-tag-status
+  data-one={filter.status.one}
+  data-other={filter.status.other}
+/>
+<script is:inline set:html={tagFilterScript} />
+<!-- each card -->
+<li data-tags={project.keywordSlugs.join(' ')}>...</li>
+```
+
+Print the script only when `filter.instant` is true, so other pages stay free of JavaScript.
+
 ### Images
 
 Images in views (`hero.photo`, project `image`) come as `{ src, srcset?, width?, height?, alt }`. Render `srcset` with a
