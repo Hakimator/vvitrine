@@ -113,15 +113,38 @@ test('references are quotations with their author', async ({ page }) => {
   await expect(quote.locator('figcaption')).toContainText('Engineering manager, Fictional Company');
 });
 
-test('the header links fit on one line on a 64rem screen, in both languages', async ({ page }) => {
+test('header links never overlap and stay inside the header, whatever the font', async ({ page }) => {
+  // Font widths differ between machines (DejaVu Sans on Linux CI is about 10% wider than Segoe UI or San Francisco),
+  // so links may wrap onto a second line. What must hold everywhere: each link is whole, readable and clickable.
   await page.setViewportSize({ width: 1024, height: 700 });
   for (const path of ['/', '/en/']) {
-    await page.goto(path);
-    const links = await page
-      .getByRole('navigation', { name: path === '/' ? 'Navigation principale' : 'Main navigation' })
-      .getByRole('link')
-      .evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
-    expect(new Set(links).size, path).toBe(1);
+    for (const spacing of ['normal', '0.1em']) {
+      await page.goto(path);
+      await page.addStyleTag({ content: `.site-header a { letter-spacing: ${spacing} !important; }` });
+      const { links, header, width } = await page.evaluate(() => {
+        const box = (e: Element) => {
+          const r = e.getBoundingClientRect();
+          return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+        };
+        return {
+          links: [...document.querySelectorAll('.nav-inline a, .locales a')].map(box),
+          header: box(document.querySelector('.site-header')!),
+          width: document.documentElement.clientWidth,
+        };
+      });
+      const where = `${path} (letter-spacing ${spacing})`;
+      expect(links.length, where).toBeGreaterThan(1);
+      for (const [i, a] of links.entries()) {
+        expect(a.left, where).toBeGreaterThanOrEqual(0);
+        expect(a.right, where).toBeLessThanOrEqual(width);
+        expect(a.top, where).toBeGreaterThanOrEqual(header.top);
+        expect(a.bottom, where).toBeLessThanOrEqual(header.bottom);
+        for (const b of links.slice(i + 1)) {
+          const apart = a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top;
+          expect(apart, `${where}: two links overlap`).toBe(true);
+        }
+      }
+    }
   }
 });
 
