@@ -63,7 +63,10 @@ export interface Navigation {
   readonly home: string;
   /** One item per placed section whose view has a `title`, in page and section order. */
   readonly items: readonly NavItem[];
-  /** Pages configured with `footer: true`, in page order, labelled with their title (`id` is the page path). */
+  /**
+   * Pages configured with `footer: true`, in page order, labelled with their title (`id` is the page path), then the
+   * links plugins add with `hooks.footerLinks`.
+   */
   readonly footer: readonly NavItem[];
 }
 
@@ -94,6 +97,8 @@ export interface PluginHooks {
   head?(ctx: PageContext): readonly HeadTag[];
   /** Components rendered at the end of <body> of every page. */
   bodyEnd?(ctx: PageContext): readonly ComponentRef[];
+  /** Links added to the footer of every page, after the footer pages (e.g. "Manage cookies"). */
+  footerLinks?(ctx: RenderContext): readonly NavItem[];
 }
 
 /**
