@@ -11,6 +11,7 @@ test('home page renders the configured sections in order, in French by default',
   expect(ids).toEqual([
     'stats-title',
     'projects-title',
+    'blog-title',
     'work-title',
     'education-title',
     'volunteer-title',
@@ -75,6 +76,8 @@ test('every page has exactly one main heading', async ({ page }) => {
     ['/en/projects/bibliotheque/', 'Library manager'],
     ['/en/timeline/', 'My journey'],
     ['/timeline/', 'Mon parcours'],
+    ['/en/blog/', 'Blog'],
+    ['/en/blog/plugin-portfolio/', 'Building a plugin-based portfolio'],
   ];
   for (const [path, heading] of pages) {
     await page.goto(path!);
@@ -119,6 +122,7 @@ test('header links lead to each section, without the sticky header covering its 
     'Talks',
     'Languages',
     'Timeline',
+    'Articles',
   ]);
   await nav.getByRole('link', { name: 'Education' }).click();
   await expect(page).toHaveURL(/\/en\/#education$/);
@@ -204,7 +208,44 @@ test('each project card is a single link that covers the whole card', async ({ p
   await expect(page).toHaveURL(/\/en\/projects\/bibliotheque\/$/);
 });
 
-for (const path of ['/', '/en/', '/projects/bibliotheque/', '/en/timeline/']) {
+test('the blog lists articles, newest first, and each article has its own page', async ({ page }) => {
+  await page.goto('/en/');
+  // The home page shows a teaser of the latest articles.
+  await expect(page.locator('#blog h3')).toHaveText([
+    'Building a plugin-based portfolio',
+    'WCAG 2.2 in practice for students',
+  ]);
+
+  await page.goto('/en/blog/');
+  await page.getByRole('link', { name: 'Building a plugin-based portfolio' }).click();
+  await expect(page).toHaveURL(/\/en\/blog\/plugin-portfolio\/$/);
+  await expect(page.locator('time')).toHaveAttribute('datetime', '2026-11-07');
+  await expect(page.getByText('1 min read')).toBeVisible();
+
+  // The table of contents links to the article's sections.
+  const toc = page.getByRole('navigation', { name: 'On this page' });
+  await expect(toc.getByRole('link')).toHaveText([
+    'Why everything is a plugin',
+    'Content owned by plugins',
+    'Shared shapes',
+    'Lessons learned',
+  ]);
+  await toc.getByRole('link', { name: 'Shared shapes' }).click();
+  await expect(page).toHaveURL(/#shared-shapes$/);
+  await expect(page.getByRole('heading', { level: 2, name: 'Shared shapes' })).toBeInViewport();
+
+  await page.getByRole('link', { name: 'All articles' }).click();
+  await expect(page).toHaveURL(/\/en\/blog\/$/);
+});
+
+test('article headings in the table of contents are shown as written', async ({ page }) => {
+  await page.goto('/blog/plugin-portfolio/');
+  await expect(page.getByRole('navigation', { name: 'Sur cette page' }).getByRole('link').last()).toHaveText(
+    "Ce que j'en retiens",
+  );
+});
+
+for (const path of ['/', '/en/', '/projects/bibliotheque/', '/en/timeline/', '/blog/plugin-portfolio/']) {
   test(`no accessibility violations (WCAG 2.2 AA) on ${path}`, async ({ page }) => {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
@@ -243,7 +284,7 @@ test('no horizontal scrolling on a 320 px wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   const overflow = () =>
     page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  for (const path of ['/', '/en/projects/bibliotheque/']) {
+  for (const path of ['/', '/en/projects/bibliotheque/', '/blog/plugin-portfolio/']) {
     await page.goto(path);
     expect(await overflow(), path).toBeLessThanOrEqual(0);
     // Fallback fonts differ between machines (DejaVu Sans on Linux CI is wide). Widening every glyph

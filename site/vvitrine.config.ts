@@ -5,6 +5,7 @@
 import { defineConfig } from '@vvitrine/core';
 import {
   awards,
+  blog,
   certificates,
   education,
   hero,
@@ -34,6 +35,8 @@ export default defineConfig({
     yamlSource({ dir: 'content', file: 'resume' }),
     // One Markdown file per project in content/projects/ (front matter + write-up). Replaces "projects" from YAML.
     markdownSource({ dir: 'content/projects' }),
+    // One Markdown file per article in content/blog/ (a second instance, for the "posts" key).
+    markdownSource({ dir: 'content/blog', key: 'posts' }),
     // Exactly one theme. Override any design token here.
     corporate({ tokens: { light: { colorPrimary: '#1f3a5f' } } }),
     // Sections you can place on pages
@@ -52,6 +55,8 @@ export default defineConfig({
     references(),
     // One chronological list built from work, education and volunteer, plus its own milestones.
     timeline({ from: ['work', 'education', 'volunteer'] }),
+    // Articles live under /blog: place the blog section on that page.
+    blog({ path: '/blog' }),
     talks(), // a local plugin (see plugins/talks.ts)
     // Services and generators
     seo(),
@@ -68,6 +73,8 @@ export default defineConfig({
         'hero',
         { id: 'stats', nav: false },
         { id: 'projects', options: { limit: 6 } },
+        // The two latest articles; the header links to the /blog page instead.
+        { id: 'blog', nav: false, options: { limit: 2 } },
         'work',
         'education',
         // nav: false keeps a section out of the header menu (it stays on the page).
@@ -84,11 +91,12 @@ export default defineConfig({
     },
     // A second page: its sections get header links too (here /timeline/#timeline).
     { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
+    { path: '/blog', title: 'page.blog', sections: ['blog'] },
   ],
 
   // Override any text, or add your own (here the title of the /timeline page), in any language.
   messages: {
-    fr: { 'page.timeline': 'Mon parcours' },
-    en: { 'section.work.title': 'Experience', 'page.timeline': 'My journey' },
+    fr: { 'page.timeline': 'Mon parcours', 'page.blog': 'Blog' },
+    en: { 'section.work.title': 'Experience', 'page.timeline': 'My journey', 'page.blog': 'Blog' },
   },
 });
