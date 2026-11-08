@@ -140,6 +140,11 @@ export interface RouteContribution<TView = unknown> {
   /** Theme component key used to render it, e.g. 'projects:detail'. */
   readonly component: string;
   readonly view: TView;
+  /**
+   * Main heading (<h1>) for the layout to render, when the component does not render one itself (e.g. a list of
+   * projects for one technology). Leave it out when the component renders the <h1>, like a project page.
+   */
+  readonly heading?: string;
 }
 
 export interface SectionPlugin<TContent = unknown, TOptions = unknown, TView = unknown> extends BasePlugin {

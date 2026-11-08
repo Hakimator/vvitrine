@@ -217,6 +217,7 @@ export class Kernel {
           basics: content.basics,
           render,
           nav,
+          ...(contribution.heading ? { heading: contribution.heading } : {}),
         });
       }
     }
