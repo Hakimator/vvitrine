@@ -1,7 +1,13 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 /** Runs for both themes: the same content must behave the same whatever the theme. */
+
+/** Answers the cookie banner in advance (bold fixture), so it does not cover what a test clicks. */
+const rememberChoice = (page: Page, granted: boolean) =>
+  page.addInitScript((value) => {
+    localStorage.setItem('vvitrine:consent', JSON.stringify({ granted: value, at: Date.now() }));
+  }, granted);
 
 test('home page renders the configured sections in order, in French by default', async ({ page }) => {
   await page.goto('/');
@@ -364,11 +370,14 @@ test('the "message sent" page has a heading and leads back to the site', async (
   await expect(page).toHaveURL(/\/$/);
 });
 
-test('every page links to the privacy page from its footer, not from its header', async ({ page }) => {
+test('every page links to the privacy page from its footer, not from its header', async ({ page }, testInfo) => {
+  // The bold fixture has analytics, so its footer also offers to change the cookie choice.
+  const links = testInfo.project.name === 'bold' ? ['Privacy', 'Manage cookies'] : ['Privacy'];
+  await rememberChoice(page, false);
   for (const path of ['/en/', '/en/projects/bibliotheque/', '/en/blog/']) {
     await page.goto(path);
     const footer = page.getByRole('contentinfo');
-    await expect(footer.getByRole('navigation', { name: 'Footer links' }).getByRole('link')).toHaveText(['Privacy']);
+    await expect(footer.getByRole('navigation', { name: 'Footer links' }).getByRole('link')).toHaveText(links);
     await expect(footer).toContainText(`© ${new Date().getFullYear()} Jeanne Martin`);
     await expect(page.getByRole('banner').getByRole('link', { name: 'Privacy' })).toHaveCount(0);
   }
@@ -382,10 +391,17 @@ test('the privacy page lists what leaves the site, generated from the plugins', 
   await expect(section.getByRole('link', { name: 'GitHub Pages privacy statement' })).toBeVisible();
   await expect(section.locator('a[href^="mailto:"]')).toHaveText('jeanne.martin@example.dev', { useInnerText: true });
   if (testInfo.project.name === 'bold') {
-    // The bold fixture has a contact form key: Web3Forms is listed.
-    await expect(section).toContainText('This site sets no cookies. The services below receive data only');
-    const service = section.getByRole('article');
-    await expect(service.getByRole('heading', { level: 3 })).toHaveText('Web3Forms');
+    // The bold fixture has analytics and a contact form key: both services are listed.
+    await expect(section).toContainText('Some services below set cookies: they only do so with your consent.');
+    // In the order of the plugins in the configuration.
+    await expect(section.getByRole('article').getByRole('heading', { level: 3 })).toHaveText([
+      'Web3Forms',
+      'Google Analytics',
+    ]);
+    const analytics = section.getByRole('article').last();
+    await expect(analytics).toContainText('Only if you accept in the cookie banner');
+    await expect(analytics.getByRole('definition').last()).toHaveText('Yes');
+    const service = section.getByRole('article').first();
     await expect(service).toContainText('Only when you send the form');
     await expect(service).toContainText('Up to 3 years');
     await expect(service.getByRole('link', { name: 'Web3Forms terms' })).toHaveAttribute(
@@ -446,7 +462,8 @@ test('with JavaScript, the technology filter works in place and keeps a shareabl
   await expect(cards.filter({ visible: true })).toHaveCount(2);
 });
 
-test('the home page ships no JavaScript even with the filter on another page', async ({ page }) => {
+test('the home page ships no JavaScript even with the filter on another page', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'bold', 'The bold fixture adds analytics, which needs a consent script.');
   await page.goto('/projects/');
   await expect(page.locator('script:not([type="application/ld+json"])')).toHaveCount(1);
   await page.goto('/');
@@ -477,15 +494,117 @@ for (const path of [
   });
 }
 
-test('ships zero JavaScript and makes no third-party requests (privacy by default)', async ({ page, baseURL }) => {
+test('ships zero JavaScript and makes no third-party requests (privacy by default)', async ({
+  page,
+  baseURL,
+}, testInfo) => {
   const external: string[] = [];
   page.on('request', (r) => {
     if (!r.url().startsWith(baseURL!)) external.push(r.url());
   });
   await page.goto('/');
-  const scripts = await page.locator('script:not([type="application/ld+json"])').count();
-  expect(scripts).toBe(0);
+  // Even with analytics installed (bold fixture), nothing leaves the site before the visitor chooses.
   expect(external).toEqual([]);
+  if (testInfo.project.name !== 'bold') {
+    expect(await page.locator('script:not([type="application/ld+json"])').count()).toBe(0);
+  }
+});
+
+test.describe('consent banner (bold fixture, which has Google Analytics)', () => {
+  const google = /googletagmanager\.com|google-analytics\.com/;
+
+  test('asks first, with Refuse as easy as Accept, and loads nothing before a choice', async ({
+    page,
+    context,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'bold', 'Only the bold fixture has analytics.');
+    const requests: string[] = [];
+    await context.route(google, (route) => {
+      requests.push(route.request().url());
+      return route.fulfill({ contentType: 'text/javascript', body: '' });
+    });
+    await page.goto('/en/');
+    const banner = page.getByRole('region', { name: 'Cookies and statistics' });
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText('Google Analytics');
+    const accept = banner.getByRole('button', { name: 'Accept' });
+    const refuse = banner.getByRole('button', { name: 'Refuse' });
+    // Same size and same look.
+    const [a, r] = [await accept.boundingBox(), await refuse.boundingBox()];
+    expect(Math.round(a!.width)).toBe(Math.round(r!.width));
+    expect(Math.round(a!.height)).toBe(Math.round(r!.height));
+    const look = (button: typeof accept) =>
+      button.evaluate((e) => {
+        const style = getComputedStyle(e);
+        return [style.backgroundColor, style.color, style.fontSize, style.fontWeight];
+      });
+    expect(await look(accept)).toEqual(await look(refuse));
+    await expect(banner.getByRole('link', { name: 'Learn more' })).toHaveAttribute('href', '/en/privacy/');
+    await page.waitForTimeout(300);
+    expect(requests).toEqual([]);
+  });
+
+  test('refusing loads nothing, is remembered, and removes analytics cookies', async ({ page, context }, testInfo) => {
+    test.skip(testInfo.project.name !== 'bold', 'Only the bold fixture has analytics.');
+    const requests: string[] = [];
+    await context.route(google, (route) => {
+      requests.push(route.request().url());
+      return route.fulfill({ contentType: 'text/javascript', body: '' });
+    });
+    await page.goto('/en/');
+    await page.evaluate(() => {
+      document.cookie = '_ga=GA1.1.1; path=/';
+      document.cookie = '_ga_E2ETEST01=GS1; path=/';
+    });
+    await page.getByRole('button', { name: 'Refuse' }).click();
+    await expect(page.getByRole('region', { name: 'Cookies and statistics' })).toBeHidden();
+    expect(await page.evaluate(() => document.cookie)).not.toContain('_ga');
+    await page.reload();
+    await expect(page.getByRole('region', { name: 'Cookies and statistics' })).toBeHidden();
+    await page.waitForTimeout(300);
+    expect(requests).toEqual([]);
+  });
+
+  test('accepting loads Google Analytics, without advertising features, and can be undone from the footer', async ({
+    page,
+    context,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'bold', 'Only the bold fixture has analytics.');
+    const requests: string[] = [];
+    await context.route(google, (route) => {
+      requests.push(route.request().url());
+      return route.fulfill({ contentType: 'text/javascript', body: '' });
+    });
+    await page.goto('/en/');
+    await page.getByRole('button', { name: 'Accept' }).click();
+    await expect.poll(() => requests).toEqual(['https://www.googletagmanager.com/gtag/js?id=G-E2ETEST01']);
+    const layer = await page.evaluate(() =>
+      (window as unknown as { dataLayer: IArguments[] }).dataLayer.map((args) => JSON.stringify([...args])),
+    );
+    expect(layer[0]).toContain('"ad_storage":"denied"');
+    expect(layer[0]).toContain('"analytics_storage":"granted"');
+    expect(layer[2]).toContain('"allow_google_signals":false');
+
+    // The choice is remembered on the next page.
+    await page.goto('/en/projects/');
+    await expect(page.getByRole('region', { name: 'Cookies and statistics' })).toBeHidden();
+    // "Manage cookies" opens the banner again, with the focus on it.
+    await page.getByRole('contentinfo').getByRole('link', { name: 'Manage cookies' }).click();
+    const banner = page.getByRole('region', { name: 'Cookies and statistics' });
+    await expect(banner).toBeVisible();
+    await expect(banner).toBeFocused();
+    await banner.getByRole('button', { name: 'Refuse' }).click();
+    await expect(banner).toBeHidden();
+  });
+
+  test('without JavaScript there is no banner, and nothing can track the visitor', async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== 'bold', 'Only the bold fixture has analytics.');
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/en/');
+    await expect(page.locator('#vvitrine-consent')).toBeHidden();
+    await context.close();
+  });
 });
 
 test('skip link moves focus to the main content', async ({ page }) => {

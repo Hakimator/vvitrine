@@ -210,9 +210,15 @@ importers:
 
   site:
     dependencies:
+      '@vvitrine/analytics':
+        specifier: workspace:*
+        version: link:../packages/analytics
       '@vvitrine/astro':
         specifier: workspace:*
         version: link:../packages/astro
+      '@vvitrine/consent':
+        specifier: workspace:*
+        version: link:../packages/consent
       '@vvitrine/contact':
         specifier: workspace:*
         version: link:../packages/contact

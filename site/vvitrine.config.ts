@@ -2,6 +2,8 @@
  * Your portfolio configuration: the only file you need to change (with content/).
  * Everything is a plugin: add, remove or replace any line in `plugins`.
  */
+import { ga4 } from '@vvitrine/analytics';
+import consent from '@vvitrine/consent';
 import { contact, web3forms } from '@vvitrine/contact';
 import { defineConfig } from '@vvitrine/core';
 import {
@@ -30,6 +32,7 @@ import corporate from '@vvitrine/theme-corporate';
 import talks from './plugins/talks.ts';
 
 const accessKey = process.env.WEB3FORMS_ACCESS_KEY;
+const measurementId = process.env.GA_MEASUREMENT_ID;
 const GITHUB_PAGES = {
   name: 'GitHub Pages',
   url: 'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement',
@@ -75,6 +78,10 @@ export default defineConfig({
     // Services and generators
     seo(),
     sitemap(),
+    // Google Analytics, only after the visitor accepts: set GA_MEASUREMENT_ID (e.g. G-ABC123DEF4) when you build.
+    // The consent banner appears only when a plugin sets cookies, so it stays out of the way without analytics.
+    ...(measurementId ? [ga4({ measurementId })] : []),
+    consent(),
     // Responsive WebP variants and real sizes for the images in public/.
     images(),
   ],
