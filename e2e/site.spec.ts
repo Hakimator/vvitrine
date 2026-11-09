@@ -553,6 +553,46 @@ test('ships zero JavaScript and makes no third-party requests (privacy by defaul
   }
 });
 
+test.describe('light/dark switch (bold fixture, which turns it on)', () => {
+  test('follows the system first, then the visitor, on every page', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'bold', 'The demo keeps zero JavaScript: no switch.');
+    await rememberChoice(page, false);
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto('/en/');
+    const toggle = page.getByRole('banner').getByRole('button', { name: 'Dark mode' });
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    expect(await background()).toBe('rgb(255, 255, 255)');
+
+    // Remembered on the next page, and applied before the page is drawn (the script is first in <head>).
+    await page.goto('/en/projects/');
+    await expect(page.getByRole('banner').getByRole('button', { name: 'Dark mode' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(await background()).toBe('rgb(255, 255, 255)');
+    expect(await page.locator('head > script').first().textContent()).toContain('vvitrine:color-scheme');
+
+    // Paper stays light, whatever was chosen.
+    await page.getByRole('banner').getByRole('button', { name: 'Dark mode' }).click();
+    await page.emulateMedia({ media: 'print' });
+    expect(await background()).toBe('rgb(255, 255, 255)');
+  });
+
+  test('is hidden without JavaScript, and absent where the theme does not offer it', async ({ browser }, testInfo) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/en/');
+    const toggle = page.locator('[data-color-scheme-toggle]');
+    if (testInfo.project.name === 'bold') await expect(toggle).toBeHidden();
+    else await expect(toggle).toHaveCount(0);
+    await context.close();
+  });
+});
+
 test.describe('consent banner (bold fixture, which has Google Analytics)', () => {
   const google = /googletagmanager\.com|google-analytics\.com/;
 
