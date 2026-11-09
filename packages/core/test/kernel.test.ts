@@ -17,6 +17,7 @@ import {
   ThemeCountError,
   UnknownSectionError,
   type BuiltSite,
+  type GeneratorContext,
   type Plugin,
   type VVitrineConfig,
 } from '../src/index.ts';
@@ -634,6 +635,25 @@ describe('contributed routes, hooks and generators', () => {
     await expect(build({ ...base, plugins: [memorySource(data), t, projects, gen('g1'), gen('g2')] })).rejects.toThrow(
       /same file/,
     );
+  });
+
+  it('tells generators which page each route shows, and its sections with their views', async () => {
+    let seen: GeneratorContext['routes'] = [];
+    const reader: Plugin = {
+      name: 'reader',
+      kind: 'generator',
+      apiVersion: 1,
+      generate: async ({ routes }) => {
+        seen = routes;
+        return [];
+      },
+    };
+    await build({ ...base, plugins: [memorySource(data), t, projects, reader] });
+    const fr = seen.find((r) => r.path === '/fr/')!;
+    expect(fr.page).toBe('/');
+    expect(fr.sections.map((s) => s.id)).toEqual(['projects']);
+    expect(fr.sections[0]!.view).toMatchObject({ items: expect.any(Array) });
+    expect(seen.find((r) => r.path === '/fr/projects/app')!.page).toBe('/projects/app');
   });
 
   it('resolves the favicon with the base path, and allows disabling it', async () => {

@@ -349,7 +349,17 @@ export class Kernel {
         locales: this.config.locales,
         base: `${(this.options.base ?? '/').replace(/\/$/, '')}/`,
         ...(this.options.siteUrl ? { siteUrl: this.options.siteUrl.replace(/\/$/, '') } : {}),
-        routes: routes.map(({ path, href, locale, title }) => ({ path, href, locale, title })),
+        routes: routes.map(({ key, path, href, locale, title, sections }) => ({
+          path,
+          href,
+          page: key.slice(key.indexOf(':') + 1),
+          locale,
+          title,
+          sections: sections.map(({ id, view }) => {
+            const viewKind = this.registry.section(id)?.viewKind;
+            return { id, view, ...(viewKind ? { viewKind } : {}) };
+          }),
+        })),
       });
       for (const file of output) {
         if (paths.has(file.path)) throw new VVitrineError(`Two generators produce the same file "${file.path}".`);

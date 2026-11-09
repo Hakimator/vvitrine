@@ -254,7 +254,20 @@ export interface GeneratorContext {
   readonly base: string;
   readonly siteUrl?: string;
   /** `path` is without base; `href` is the internal link with base path and trailing slash. */
-  readonly routes: readonly { path: string; href: string; locale: Locale; title: string }[];
+  readonly routes: readonly GeneratorRoute[];
+}
+
+export interface GeneratorRoute {
+  /** Localized path without base, e.g. '/en/resume'. */
+  readonly path: string;
+  /** Internal link with base path and trailing slash. */
+  readonly href: string;
+  /** The page path as configured, the same in every locale, e.g. '/resume'. */
+  readonly page: string;
+  readonly locale: Locale;
+  readonly title: string;
+  /** What the page shows: each section's view, with its view kind when it has one (see views.ts). */
+  readonly sections: readonly { readonly id: string; readonly viewKind?: string; readonly view: unknown }[];
 }
 
 export interface GeneratorPlugin extends BasePlugin {
