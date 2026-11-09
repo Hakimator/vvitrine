@@ -23,8 +23,11 @@ export const Profile = z.object({
 export const Basics = z.object({
   name: z.string().min(1, { message: 'name is required' }),
   label: z.string().optional(),
-  image: z.string().optional(),
-  email: z.email({ message: 'expected an email address' }).optional(),
+  image: z.string().optional().describe('Your photo in public/, e.g. /photo.jpg; initials are shown without it.'),
+  email: z
+    .email({ message: 'expected an email address' })
+    .optional()
+    .describe('Never written plainly in the pages (protected from spam harvesters).'),
   url: Url.optional(),
   summary: z.string().optional(),
   location: z
@@ -37,7 +40,7 @@ export const Basics = z.object({
   profiles: z.array(Profile).default([]),
   'x-vvitrine': z
     .object({
-      availability: z.string().optional(),
+      availability: z.string().optional().describe('Shown under your name, e.g. "Looking for an internship".'),
     })
     .optional(),
 });

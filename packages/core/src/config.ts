@@ -50,40 +50,54 @@ const Path = z
   .string()
   .regex(/^\/[a-z0-9\-/]*$/, { message: 'expected a path like "/" or "/cv" (lowercase, no trailing slash)' });
 
-const ConfigSchema = z.object({
+export const ConfigSchema = z.object({
   site: z
     .object({
-      defaultLocale: Locale.default('en'),
-      locales: z.array(Locale).min(1).optional(),
+      defaultLocale: Locale.default('en').describe('Language of the site root, e.g. "fr": its pages have no prefix.'),
+      locales: z
+        .array(Locale)
+        .min(1)
+        .optional()
+        .describe('Every language of the site; the others live under /en/, /de/... Must include defaultLocale.'),
       favicon: z
         .union([z.string().regex(/^\//, { message: 'expected a path starting with /' }), z.literal(false)])
-        .default('/favicon.svg'),
+        .default('/favicon.svg')
+        .describe('Site icon in public/, or false for none.'),
     })
     .default({ defaultLocale: 'en', favicon: '/favicon.svg' })
     .refine((s) => !s.locales || s.locales.includes(s.defaultLocale), {
       message: 'site.locales must include site.defaultLocale',
-    }),
-  plugins: z.array(
-    z.custom<Plugin>((p) => typeof p === 'object' && p !== null && 'name' in p && 'kind' in p, {
-      message: 'expected a plugin object (did you forget to call the plugin factory, e.g. corporate()?)',
-    }),
-  ),
+    })
+    .describe('Languages and icon.'),
+  plugins: z
+    .array(
+      z.custom<Plugin>((p) => typeof p === 'object' && p !== null && 'name' in p && 'kind' in p, {
+        message: 'expected a plugin object (did you forget to call the plugin factory, e.g. corporate()?)',
+      }),
+    )
+    .describe('Plugin instances: sources, sections, exactly one theme, services, generators. Call the factories.'),
   pages: z
     .array(
       z.object({
-        path: Path,
-        title: z.string().optional(),
-        footer: z.boolean().optional(),
-        sections: z.array(
-          z.union([
-            z.string(),
-            z.object({ id: z.string(), options: z.unknown().optional(), nav: z.boolean().optional() }),
-          ]),
-        ),
+        path: Path.describe('Address without the language prefix, e.g. "/" or "/resume".'),
+        title: z.string().optional().describe('Message key or text; default: your name.'),
+        footer: z.boolean().optional().describe('Link the page from the footer instead of the header (e.g. privacy).'),
+        sections: z
+          .array(
+            z.union([
+              z.string(),
+              z.object({ id: z.string(), options: z.unknown().optional(), nav: z.boolean().optional() }),
+            ]),
+          )
+          .describe('Section ids in order, or { id, options, nav } to set options or leave out the header link.'),
       }),
     )
-    .optional(),
-  messages: z.record(z.string(), z.record(z.string(), z.string())).optional(),
+    .optional()
+    .describe('Pages and the sections on each. Default: one page with every section.'),
+  messages: z
+    .record(z.string(), z.record(z.string(), z.string()))
+    .optional()
+    .describe("Replace any text, per language: { en: { 'section.work.title': 'Career' } }."),
 });
 
 export interface ResolvedConfig {
