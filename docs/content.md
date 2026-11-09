@@ -14,6 +14,14 @@ The core validates `basics` (your identity). **Every other key is validated by t
 work section, `projects` by the projects section, `talks` by your own talks plugin, and so on. Unused keys produce a
 warning, never a silent error.
 
+Every field, with its type and default, is listed in the [reference](reference.md), generated from these schemas. Your
+editor can check your files as you type: with the YAML extension of VS Code (or any editor that reads JSON Schema), put
+this line at the top of a content file, with the path to [`content.schema.json`](content.schema.json):
+
+```yaml
+# yaml-language-server: $schema=../../docs/content.schema.json
+```
+
 ## Keys provided by the built-in sections
 
 | Key            | Section        | Main fields                                                                                                                                                    |

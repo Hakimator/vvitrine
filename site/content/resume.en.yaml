@@ -1,5 +1,7 @@
 # Fictional demo content. Replace this file with yours: no code to change.
 # JSON Resume compatible (https://jsonresume.org/schema). VVitrine-only fields: "x-vvitrine".
+# Checked as you type by editors that read JSON Schema (see docs/content.md):
+# yaml-language-server: $schema=../../docs/content.schema.json
 $schemaVersion: 1
 basics:
   name: Jeanne Martin
