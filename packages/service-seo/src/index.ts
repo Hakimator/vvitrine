@@ -4,16 +4,25 @@ import type { GeneratorPlugin, HeadTag, PageContext, ServicePlugin } from '@vvit
  * Service plugin: meta description, Open Graph, canonical URL, hreflang alternates and a
  * JSON-LD `Person`. Absolute URLs need the site URL (set by the deploy workflow via SITE_URL).
  */
-export function seo(): ServicePlugin {
+export interface SeoOptions {
+  /**
+   * Picture shown when a page is shared (Open Graph, 1200 × 630 px recommended): a file in public/ or produced by a
+   * generator, e.g. '/og-{locale}.png' (`{locale}` is the page language, as `@vvitrine/og-image` writes it). Needs
+   * the site URL: social networks only accept absolute addresses.
+   */
+  readonly image?: string;
+}
+
+export function seo(options: SeoOptions = {}): ServicePlugin {
   return {
     name: '@vvitrine/seo',
     kind: 'service',
     apiVersion: 1,
-    hooks: { head: headTags },
+    hooks: { head: (ctx) => headTags(ctx, options) },
   };
 }
 
-function headTags(ctx: PageContext): HeadTag[] {
+function headTags(ctx: PageContext, options: SeoOptions): HeadTag[] {
   const { basics, siteUrl } = ctx;
   const description = basics.summary ?? [basics.name, basics.label].filter(Boolean).join(' – ');
   const tags: HeadTag[] = [
@@ -37,6 +46,13 @@ function headTags(ctx: PageContext): HeadTag[] {
     const fallback = ctx.alternates.find((a) => a.locale === ctx.defaultLocale);
     if (fallback)
       tags.push({ tag: 'link', attrs: { rel: 'alternate', hreflang: 'x-default', href: absolute(fallback.href) } });
+    if (options.image) {
+      const image = absolute(ctx.asset(options.image.replaceAll('{locale}', ctx.locale)));
+      const alt = [basics.name, basics.label].filter(Boolean).join(' – ');
+      tags.push({ tag: 'meta', attrs: { property: 'og:image', content: image } });
+      tags.push({ tag: 'meta', attrs: { property: 'og:image:alt', content: alt } });
+      tags.push({ tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } });
+    }
   }
   if (ctx.path === '/' || /^\/[a-z]{2}(-[A-Z]{2})?\/$/.test(ctx.path)) {
     const person = {
