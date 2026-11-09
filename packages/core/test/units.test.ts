@@ -77,7 +77,7 @@ describe('design tokens', () => {
       { light: { colorPrimary: '#f00' } },
     );
     expect(tokensToCss(merged)).toBe(
-      ':root{--vv-color-primary:#f00;--vv-radius:4px}@media (prefers-color-scheme: dark){:root{--vv-color-primary:#eee}}',
+      ':root{--vv-color-primary:#f00;--vv-radius:4px}@media screen and (prefers-color-scheme: dark){:root{--vv-color-primary:#eee}}',
     );
   });
 

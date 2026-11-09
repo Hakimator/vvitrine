@@ -46,9 +46,12 @@ export function mergeTokens(defaults: ThemeTokens, overrides?: Partial<ThemeToke
   return { light: { ...defaults.light, ...overrides?.light }, ...(dark ? { dark } : {}) };
 }
 
-/** Build the `:root` CSS for a set of tokens, with an optional dark variant. */
+/**
+ * Build the `:root` CSS for a set of tokens, with an optional dark variant. The dark variant is for screens only:
+ * printing always uses the light colours (no dark background on paper).
+ */
 export function tokensToCss(tokens: ThemeTokens): string {
   const light = `:root{${declarations(tokens.light)}}`;
-  const dark = tokens.dark ? `@media (prefers-color-scheme: dark){:root{${declarations(tokens.dark)}}}` : '';
+  const dark = tokens.dark ? `@media screen and (prefers-color-scheme: dark){:root{${declarations(tokens.dark)}}}` : '';
   return light + dark;
 }
