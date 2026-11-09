@@ -227,7 +227,7 @@ export interface SectionPlugin<TContent = unknown, TOptions = unknown, TView = u
 export interface ThemePlugin extends BasePlugin {
   readonly kind: 'theme';
   /**
-   * Layout contract: props { lang, title, path, t, url, alternates, locales, siteName, nav },
+   * Layout contract: props { lang, title, path, t, url, alternates, locales, siteName, nav, heading?, colorScheme? },
    * slots: head, default (inside <main id="main">), body-end.
    */
   readonly layout: unknown;
