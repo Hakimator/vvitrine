@@ -36,6 +36,7 @@ const head = [`<style>${site.tokensCss}</style>`, icon, renderHeadTags(route.hea
   siteName={route.context.basics.name}
   nav={route.context.nav}
   heading={route.context.heading}
+  colorScheme={route.context.colorScheme}
 >
   <Fragment slot="head" set:html={head} />
   {route.sections.map(({ id, component, view }) => {

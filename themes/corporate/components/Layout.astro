@@ -12,8 +12,10 @@ interface Props {
   nav: Navigation;
   /** Set on pages where no section renders the <h1> (pages without a hero). */
   heading?: string | undefined;
+  /** Set when the theme offers the light/dark switch. */
+  colorScheme?: { label: string } | undefined;
 }
-const { lang, title, t, alternates, siteName, nav, heading } = Astro.props;
+const { lang, title, t, alternates, siteName, nav, heading, colorScheme } = Astro.props;
 // The switcher lists the other languages only: the current one needs no link.
 const otherLocales = alternates.filter((a) => a.locale !== lang);
 const year = new Date().getFullYear();
@@ -59,6 +61,21 @@ const year = new Date().getFullYear();
               ))}
             </ul>
           </nav>
+        )}
+        {colorScheme && (
+          // Shown by the colour scheme script: without JavaScript the system preference applies.
+          <button type="button" class="scheme-toggle" data-color-scheme-toggle aria-pressed="false" hidden>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+              <path
+                d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="visually-hidden">{colorScheme.label}</span>
+          </button>
         )}
         {nav.items.length > 0 && (
           <details class="nav-menu">
@@ -183,7 +200,7 @@ const year = new Date().getFullYear();
   .bar {
     display: flex;
     align-items: center;
-    gap: 1rem 1.5rem;
+    gap: 1rem clamp(0.6rem, 2.5vw, 1.5rem);
     max-width: var(--vv-content-width);
     min-height: 3.5rem;
     margin: 0 auto;
@@ -198,7 +215,8 @@ const year = new Date().getFullYear();
   }
   .brand {
     min-width: 0;
-    overflow-wrap: anywhere;
+    /* Break between words; inside a word only when a single word cannot fit. */
+    overflow-wrap: break-word;
     font-weight: 700;
     color: var(--vv-color-text);
     text-decoration: none;
@@ -234,6 +252,29 @@ const year = new Date().getFullYear();
   }
   .locales a:hover {
     border-color: var(--vv-color-primary);
+  }
+  .scheme-toggle {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 1px solid var(--vv-color-border);
+    border-radius: 50%;
+    background: none;
+    color: var(--vv-color-text);
+    cursor: pointer;
+  }
+  .scheme-toggle[hidden] {
+    display: none;
+  }
+  .scheme-toggle[aria-pressed='true'] {
+    background: var(--vv-color-surface);
+  }
+  .scheme-toggle:focus-visible {
+    outline: 3px solid var(--vv-color-accent);
+    outline-offset: 2px;
   }
   .nav-menu summary {
     display: grid;

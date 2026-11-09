@@ -81,6 +81,11 @@ export interface PageContext extends RenderContext {
    * `SectionPlugin.pageHeading`). Layouts render it at the top of the main content. Undefined otherwise.
    */
   readonly heading?: string;
+  /**
+   * Set when the theme offers a light/dark switch. Render a button with `data-color-scheme-toggle`, `hidden` and
+   * `aria-pressed="false"`, labelled with `label`: the script shows it and keeps `aria-pressed` true in dark mode.
+   */
+  readonly colorScheme?: { readonly label: string };
 }
 
 /** A component to render plus its props; used for body-end injections (banners, widgets). */
@@ -222,7 +227,7 @@ export interface SectionPlugin<TContent = unknown, TOptions = unknown, TView = u
 export interface ThemePlugin extends BasePlugin {
   readonly kind: 'theme';
   /**
-   * Layout contract: props { lang, title, path, t, url, alternates, locales, siteName, nav },
+   * Layout contract: props { lang, title, path, t, url, alternates, locales, siteName, nav, heading?, colorScheme? },
    * slots: head, default (inside <main id="main">), body-end.
    */
   readonly layout: unknown;
@@ -235,6 +240,11 @@ export interface ThemePlugin extends BasePlugin {
   /** Renders any section without a dedicated component. */
   readonly fallback?: unknown;
   readonly tokens: ThemeTokens;
+  /**
+   * Offer a light/dark switch: the kernel then adds a small inline script to every page and gives the layout
+   * `colorScheme` (see `PageContext`). Needs dark tokens. Off by default, so pages keep zero JavaScript.
+   */
+  readonly colorSchemeToggle?: boolean;
 }
 
 // ---------- Service & generator ----------

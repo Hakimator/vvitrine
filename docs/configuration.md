@@ -92,6 +92,19 @@ plugins: [/* ... */, ga4({ measurementId: 'G-ABC123DEF4' }), consent()],
 - `consent()` stays out of the way when no plugin sets cookies: no banner, no footer link, no JavaScript.
 - The demo reads the ID from the `GA_MEASUREMENT_ID` environment variable, so the published demo has no analytics.
 
+## Light and dark mode
+
+Both themes follow the visitor's system setting. To add a switch to the header as well:
+
+```ts
+plugins: [corporate({ colorSchemeToggle: true }) /* or bold({ ... }) */],
+```
+
+The choice is remembered in the visitor's browser (local storage, not a cookie) and applied before the page is drawn,
+so there is no flash of the wrong colours. Storing a display preference the visitor set themselves is generally treated
+as not needing consent, like a language choice. Off by default: it adds a 1 KB inline script to every page, and without
+JavaScript the button is not shown. Printing always uses the light colours.
+
 ## Rules checked at build time
 
 - exactly one theme plugin;

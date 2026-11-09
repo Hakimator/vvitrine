@@ -44,6 +44,8 @@ const defaults: ThemeTokens = {
 export interface CorporateOptions {
   /** Override any design token, e.g. { light: { colorPrimary: '#0b5' } }. */
   readonly tokens?: Partial<ThemeTokens>;
+  /** Add a light/dark switch to the header, remembered per visitor (adds a 1 KB inline script). Default false. */
+  readonly colorSchemeToggle?: boolean;
 }
 
 /** Classic, recruiter-friendly theme (default). */
@@ -70,6 +72,7 @@ export default function corporate(options: CorporateOptions = {}): ThemePlugin {
     },
     fallback: Generic,
     tokens: mergeTokens(defaults, options.tokens),
+    ...(options.colorSchemeToggle ? { colorSchemeToggle: true } : {}),
     messages: {
       fr: { 'theme.builtWith': 'Site réalisé avec {name}', 'theme.footerNav': 'Liens du pied de page' },
       en: { 'theme.builtWith': 'Built with {name}', 'theme.footerNav': 'Footer links' },

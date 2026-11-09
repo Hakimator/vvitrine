@@ -33,7 +33,8 @@ export default defineConfig({
     yamlSource(),
     markdownSource(),
     markdownSource({ dir: 'content/blog', key: 'posts' }),
-    bold(),
+    // The light/dark switch (off by default: it adds a small script to every page).
+    bold({ colorSchemeToggle: true }),
     withPhoto,
     ...allSections().filter((section) => section.id !== 'projects'),
     projects({ path: '/projects', tags: true }),
