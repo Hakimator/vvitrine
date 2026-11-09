@@ -31,9 +31,17 @@ export const HeroOptions = z.object({
    * CV file in public/ (e.g. '/cv.pdf') or a full URL. Adds a "Download CV" button. `{locale}` is replaced by the page
    * language, for one CV per language, e.g. '/cv-{locale}.pdf' (what `@vvitrine/resume-pdf` writes).
    */
-  cv: z.string().min(1).optional(),
+  cv: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('Adds a "Download CV" button: a file in public/ or a URL; {locale} becomes the page language.'),
   /** Target of the "Contact me" button. Defaults to a (protected) mailto: link to basics.email. */
-  contact: z.string().min(1).optional(),
+  contact: z
+    .string()
+    .min(1)
+    .optional()
+    .describe('Target of the "Contact me" button, e.g. #contact; default: your protected e-mail address.'),
 });
 export type HeroOptions = z.infer<typeof HeroOptions>;
 

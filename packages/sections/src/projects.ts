@@ -19,14 +19,24 @@ export const ProjectsContent = z
           slug: z
             .string()
             .regex(/^[a-z0-9-]+$/, { message: 'expected lowercase letters, digits and dashes' })
-            .optional(),
-          repository: Url.optional(),
-          featured: z.boolean().default(false),
+            .optional()
+            .describe('Address of the project page, /projects/<slug>; default: made from the name.'),
+          repository: Url.optional().describe('Source code, linked from the project page.'),
+          featured: z.boolean().default(false).describe('Shown first, with a "Featured" label.'),
           image: z
-            .object({ src: z.string(), alt: z.string().min(1, { message: 'alt text is required (accessibility)' }) })
+            .object({
+              src: z.string().describe('Picture in public/, e.g. /projects/app.png.'),
+              alt: z
+                .string()
+                .min(1, { message: 'alt text is required (accessibility)' })
+                .describe('What the picture shows, for people who cannot see it.'),
+            })
             .optional(),
           /** Long write-up in Markdown (case study), shown on the project page. */
-          body: z.string().optional(),
+          body: z
+            .string()
+            .optional()
+            .describe('Write-up in Markdown, shown on the project page (the text of a Markdown file).'),
         })
         .default({ featured: false }),
     }),
@@ -167,9 +177,12 @@ export const projects = (settings: ProjectsSettings = {}) => {
     id: 'projects',
     content: { key: 'projects', schema: ProjectsContent },
     optionsSchema: ListOptions.extend({
-      featuredOnly: z.boolean().default(false),
+      featuredOnly: z.boolean().default(false).describe('Show featured projects only.'),
       /** Show links that filter the projects by technology (needs `projects({ tags: true })`). */
-      filter: z.boolean().default(false),
+      filter: z
+        .boolean()
+        .default(false)
+        .describe('Show links that filter by technology; needs projects({ tags: true }).'),
     }),
     messages: {
       fr: {
