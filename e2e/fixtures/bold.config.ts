@@ -78,6 +78,21 @@ export default defineConfig({
       ],
     },
     { path: '/projects', title: 'page.projects', sections: [{ id: 'projects', options: { filter: true } }] },
+    // The resume: what a printed CV holds, from the same data. It prints on A4.
+    {
+      path: '/resume',
+      title: 'page.resume',
+      footer: true,
+      sections: [
+        { id: 'hero', options: { cv: '/cv.pdf' } },
+        'work',
+        'education',
+        'skills',
+        'certificates',
+        'languages',
+        'interests',
+      ],
+    },
     { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
     { path: '/blog', title: 'page.blog', sections: ['blog'] },
     // footer: true links the page from the footer of every page instead of the header.
@@ -89,12 +104,14 @@ export default defineConfig({
       'page.blog': 'Blog',
       'page.projects': 'Mes projets',
       'page.privacy': 'Confidentialité',
+      'page.resume': 'CV',
     },
     en: {
       'page.timeline': 'My journey',
       'page.blog': 'Blog',
       'page.projects': 'My projects',
       'page.privacy': 'Privacy',
+      'page.resume': 'Resume',
     },
   },
 });

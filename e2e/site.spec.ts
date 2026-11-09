@@ -88,6 +88,7 @@ test('every page has exactly one main heading', async ({ page }) => {
     ['/en/projects/', 'My projects'],
     ['/projects/tag/postgresql/', 'Projets avec PostgreSQL'],
     ['/en/privacy/', 'Privacy'],
+    ['/en/resume/', 'Jeanne Martin'],
   ];
   for (const [path, heading] of pages) {
     await page.goto(path!);
@@ -209,7 +210,8 @@ test('hero shows a photo or initials and its calls to action', async ({ page }, 
   } else {
     await expect(hero.getByRole('img')).toHaveCount(0);
     await expect(hero.locator('.initials')).toHaveText('JM');
-    await expect(hero.getByRole('link', { name: /CV/ })).toHaveCount(0);
+    // The demo links the PDF generated for the page language.
+    await expect(hero.getByRole('link', { name: 'Download CV (PDF)' })).toHaveAttribute('href', '/cv-en.pdf');
   }
 });
 
@@ -372,7 +374,7 @@ test('the "message sent" page has a heading and leads back to the site', async (
 
 test('every page links to the privacy page from its footer, not from its header', async ({ page }, testInfo) => {
   // The bold fixture has analytics, so its footer also offers to change the cookie choice.
-  const links = testInfo.project.name === 'bold' ? ['Privacy', 'Manage cookies'] : ['Privacy'];
+  const links = testInfo.project.name === 'bold' ? ['Resume', 'Privacy', 'Manage cookies'] : ['Resume', 'Privacy'];
   await rememberChoice(page, false);
   for (const path of ['/en/', '/en/projects/bibliotheque/', '/en/blog/']) {
     await page.goto(path);
@@ -412,6 +414,46 @@ test('the privacy page lists what leaves the site, generated from the plugins', 
     await expect(section).toContainText('This site sets no cookies and sends no data to third-party services');
     await expect(section.getByRole('article')).toHaveCount(0);
   }
+});
+
+test('the resume page prints on A4 in light colours, without navigation or buttons', async ({ page }) => {
+  await page.emulateMedia({ media: 'print', colorScheme: 'dark' });
+  await page.goto('/en/resume/');
+  for (const hidden of ['.site-header', '.site-footer', '.skip', '#hero .button']) {
+    await expect(page.locator(hidden).first(), hidden).toBeHidden();
+  }
+  const colours = await page.evaluate(() => {
+    const body = getComputedStyle(document.body);
+    return [body.backgroundColor, body.color];
+  });
+  expect(colours[0]).toBe('rgb(255, 255, 255)');
+  // Dark text on paper: each channel well under the middle.
+  expect(
+    colours[1]!
+      .match(/\d+/g)!
+      .slice(0, 3)
+      .every((c) => Number(c) < 100),
+  ).toBe(true);
+  await expect(page.locator('#work')).toBeVisible();
+  // The browser lays it out on A4 pages.
+  const pdf = await page.pdf({ preferCSSPageSize: true });
+  expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+});
+
+test('the CV is a PDF generated for each language', async ({ page, request }, testInfo) => {
+  test.skip(testInfo.project.name !== 'corporate', 'The demo generates the PDF; the bold fixture links a static file.');
+  for (const locale of ['fr', 'en']) {
+    const response = await request.get(`/cv-${locale}.pdf`);
+    expect(response.headers()['content-type']).toContain('application/pdf');
+    const body = await response.body();
+    expect(body.subarray(0, 8).toString()).toBe('%PDF-1.7');
+    expect(body.toString('latin1')).toContain(`/Lang (${locale})`);
+  }
+  await page.goto('/');
+  await expect(page.locator('#hero').getByRole('link', { name: 'Télécharger le CV (PDF)' })).toHaveAttribute(
+    'href',
+    '/cv-fr.pdf',
+  );
 });
 
 test('without JavaScript, the technology filter opens one page per technology', async ({ browser }) => {
@@ -479,6 +521,7 @@ for (const path of [
   '/en/projects/',
   '/projects/tag/postgresql/',
   '/privacy/',
+  '/resume/',
 ]) {
   test(`no accessibility violations (WCAG 2.2 AA) on ${path}`, async ({ page }) => {
     await page.goto(path);

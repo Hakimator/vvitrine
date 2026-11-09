@@ -253,6 +253,9 @@ importers:
       '@vvitrine/images':
         specifier: workspace:*
         version: link:../packages/images
+      '@vvitrine/resume-pdf':
+        specifier: workspace:*
+        version: link:../packages/resume-pdf
       '@vvitrine/sections':
         specifier: workspace:*
         version: link:../packages/sections
