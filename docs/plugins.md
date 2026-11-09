@@ -11,6 +11,11 @@ function. There are five kinds:
 | `service`   | Add behaviour to every page through hooks (head tags, body-end components)      | `seo()` in `@vvitrine/seo`                                                |
 | `generator` | Produce extra files at build time                                               | `sitemap()` in `@vvitrine/seo`                                            |
 
+To start your own, copy one of the [example plugins](../examples/plugins/): one of each kind (`source-github`,
+`section-now`, `theme-minimal`, `service-plausible`, `generator-vcard`), small, documented and tested, and written
+only against the public API of `@vvitrine/core`, as yours will be. The architecture check (`pnpm boundaries`) keeps
+them that way.
+
 ## Common fields
 
 ```ts

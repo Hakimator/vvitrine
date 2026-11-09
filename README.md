@@ -41,6 +41,7 @@ Everything else (`packages/`, `themes/`) is the framework.
 | [Writing content](docs/content.md)         | Resume format, projects, languages                                  |
 | [Configuration](docs/configuration.md)     | `vvitrine.config.ts` reference                                      |
 | [Plugins](docs/plugins.md)                 | Use and write source, section, theme, service and generator plugins |
+| [Example plugins](examples/plugins/)       | One small, tested plugin of each kind, to copy                      |
 | [Themes](docs/themes.md)                   | Switch theme, design tokens, write a theme                          |
 | [Deployment](docs/deployment.md)           | GitHub Pages, Cloudflare, Netlify, Vercel, any host                 |
 | [Upgrading](docs/upgrading.md)             | Get framework updates without conflicts                             |
