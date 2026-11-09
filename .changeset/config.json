@@ -7,6 +7,6 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["site"],
+  "ignore": ["site", "@vvitrine/scripts", "@vvitrine-examples/*"],
   "privatePackages": { "version": true, "tag": false }
 }
