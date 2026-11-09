@@ -1,6 +1,6 @@
 {
   "name": "@vvitrine/sections",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Built-in VVitrine section plugins (JSON Resume compatible). They use only the public API of @vvitrine/core.",
   "license": "AGPL-3.0-or-later",
   "type": "module",

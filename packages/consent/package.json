@@ -1,6 +1,6 @@
 {
   "name": "@vvitrine/consent",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "VVitrine consent banner: asks before any service that sets cookies (such as analytics) runs, with equal Accept and Refuse buttons.",
   "license": "AGPL-3.0-or-later",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@vvitrine/astro",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Astro integration for VVitrine: composition root. Loads vvitrine.config.ts, injects every route, renders what the kernel returns.",
   "license": "AGPL-3.0-or-later",
   "type": "module",

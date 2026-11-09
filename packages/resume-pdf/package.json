@@ -1,6 +1,6 @@
 {
   "name": "@vvitrine/resume-pdf",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "VVitrine generator: a tagged, accessible A4 PDF of your resume page, in every language, at build time.",
   "license": "AGPL-3.0-or-later",
   "type": "module",
