@@ -341,4 +341,47 @@ const year = new Date().getFullYear();
     border-radius: var(--vv-radius);
     padding: 1.5rem;
   }
+
+  /* Paper: A4, no navigation, no buttons, light colours (the tokens' dark variant is for screens only). */
+  @media print {
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+    html {
+      font-size: 10pt;
+    }
+    body {
+      background: #fff;
+    }
+    /* !important: print must win over each component's own display rules. */
+    .skip,
+    .site-header,
+    .site-footer,
+    .vv-consent,
+    form,
+    li:has(> .button) {
+      display: none !important;
+    }
+    main {
+      padding-block: 0;
+    }
+    section,
+    article,
+    li {
+      break-inside: avoid;
+    }
+    h2,
+    h3 {
+      break-after: avoid;
+    }
+    a {
+      color: inherit;
+    }
+    /* Profile links: show where they lead, since paper cannot be clicked. */
+    a[rel~='me']::after {
+      content: ' (' attr(href) ')';
+      font-size: 0.85em;
+    }
+  }
 </style>
