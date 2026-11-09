@@ -44,6 +44,8 @@ const defaults: ThemeTokens = {
 export interface BoldOptions {
   /** Override any design token, e.g. { light: { colorPrimary: '#0b5' } }. */
   readonly tokens?: Partial<ThemeTokens>;
+  /** Add a light/dark switch to the header, remembered per visitor (adds a 1 KB inline script). Default false. */
+  readonly colorSchemeToggle?: boolean;
 }
 
 /** Modern theme with strong colours and large type. */
@@ -70,6 +72,7 @@ export default function bold(options: BoldOptions = {}): ThemePlugin {
     },
     fallback: Generic,
     tokens: mergeTokens(defaults, options.tokens),
+    ...(options.colorSchemeToggle ? { colorSchemeToggle: true } : {}),
     messages: {
       fr: { 'theme.builtWith': 'Site réalisé avec {name}', 'theme.footerNav': 'Liens du pied de page' },
       en: { 'theme.builtWith': 'Built with {name}', 'theme.footerNav': 'Footer links' },
