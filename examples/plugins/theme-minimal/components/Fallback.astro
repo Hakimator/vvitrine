@@ -1,0 +1,44 @@
+---
+/**
+ * Any section without a component in this theme. Shows the title and the readable fields of each item. A hero view
+ * has a name instead of a title: it becomes the page's <h1>.
+ */
+const { sectionId, title, name, label, summary, items } = Astro.props as {
+  sectionId: string;
+  title?: string;
+  name?: string;
+  label?: string;
+  summary?: string;
+  items?: unknown[];
+};
+/** Common field names first (title or name, a link, a description); otherwise every short text field. */
+const read = (item: unknown) => {
+  if (typeof item === 'string') return { text: item };
+  const fields = item as Record<string, unknown>;
+  const pick = (...keys: string[]) => keys.map((k) => fields[k]).find((v): v is string => typeof v === 'string');
+  const main = pick('title', 'name', 'language');
+  if (main)
+    return { text: main, href: pick('href', 'url'), details: pick('summary', 'description', 'fluency', 'event') };
+  return {
+    text: Object.values(fields)
+      .filter((v) => typeof v === 'string' || typeof v === 'number')
+      .join(' · '),
+  };
+};
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  {name ? <h1 id={`${sectionId}-title`}>{name}</h1> : title && <h2 id={`${sectionId}-title`}>{title}</h2>}
+  {label && <p>{label}</p>}
+  {summary && <p>{summary}</p>}
+  {Array.isArray(items) && (
+    <ul>
+      {items.map(read).map((item) => (
+        <li>
+          {item.href ? <a href={item.href}>{item.text}</a> : item.text}
+          {item.details && <span>: {item.details}</span>}
+        </li>
+      ))}
+    </ul>
+  )}
+</section>
