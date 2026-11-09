@@ -5,6 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
  *   site/dist       corporate theme, served at /
  *   site/dist-bold  bold theme (e2e/fixtures/bold.config.ts)
  *   site/dist-base  corporate theme under a base path, like GitHub project pages
+ *   site/dist-minimal  the example theme and section (examples/plugins)
  */
 const serve = (dir: string, port: number, base = '') => ({
   command: `node e2e/serve.mjs site/${dir} ${port} ${base}`,
@@ -19,18 +20,32 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: { trace: 'retain-on-failure' },
-  webServer: [serve('dist', 4321), serve('dist-bold', 4322), serve('dist-base', 4323, '/demo')],
+  webServer: [
+    serve('dist', 4321),
+    serve('dist-bold', 4322),
+    serve('dist-base', 4323, '/demo'),
+    serve('dist-minimal', 4324),
+  ],
   projects: [
     {
       name: 'corporate',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4321' },
-      testIgnore: /base-path/,
+      testIgnore: /base-path|examples/,
     },
-    { name: 'bold', use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4322' }, testIgnore: /base-path/ },
+    {
+      name: 'bold',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4322' },
+      testIgnore: /base-path|examples/,
+    },
     {
       name: 'base-path',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4323' },
       testMatch: /base-path/,
+    },
+    {
+      name: 'minimal',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4324' },
+      testMatch: /examples/,
     },
   ],
 });
