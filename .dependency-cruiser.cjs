@@ -31,10 +31,10 @@ module.exports = {
       comment: 'A plugin package must not import another plugin package (themes may import section view types).',
       severity: 'error',
       from: {
-        path: '^packages/(sections|seo|source-yaml|source-markdown|service-seo|images|contact|consent|analytics|resume-pdf)/',
+        path: '^packages/(sections|seo|source-yaml|source-markdown|service-seo|images|contact|consent|analytics|resume-pdf|og-image)/',
       },
       to: {
-        path: '^(packages/(sections|seo|source-yaml|source-markdown|service-seo|images|contact|consent|analytics|resume-pdf|astro)/|themes/)',
+        path: '^(packages/(sections|seo|source-yaml|source-markdown|service-seo|images|contact|consent|analytics|resume-pdf|og-image|astro)/|themes/)',
         pathNot: '^packages/$1',
       },
     },
