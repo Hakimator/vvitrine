@@ -604,6 +604,32 @@ describe('contributed routes, hooks and generators', () => {
     expect(seen).toEqual([['stats', 'fr']]);
   });
 
+  it('adds the light/dark switch only when the theme offers it and has dark colours', async () => {
+    const themed = (extra: object) => ({ ...stringTheme({}, 'Any'), ...extra });
+    const dark = { tokens: { light: { colorPrimary: '#000000' }, dark: { colorPrimary: '#ffffff' } } };
+    const pages = [{ path: '/', sections: [] }];
+    const run = (theme: object) => build({ ...base, pages, plugins: [memorySource(data), theme as never, seoLike] });
+    const seoLike: Plugin = {
+      name: 'seo-like',
+      kind: 'service',
+      apiVersion: 1,
+      hooks: { head: () => [{ tag: 'meta', attrs: { name: 'x', content: 'y' } }] },
+    };
+
+    const on = (await run(themed({ ...dark, colorSchemeToggle: true }))).routes.find((r) => r.key === 'fr:/')!;
+    expect(on.context.colorScheme).toEqual({ label: 'Mode sombre' });
+    // First in <head>, before anything is drawn.
+    expect(on.head[0]).toMatchObject({ tag: 'script' });
+    expect((on.head[0] as { content: string }).content).toContain('vvitrine:color-scheme');
+    expect(on.head).toHaveLength(2);
+
+    for (const theme of [themed(dark), themed({ colorSchemeToggle: true })]) {
+      const route = (await run(theme)).routes[0]!;
+      expect(route.context.colorScheme).toBeUndefined();
+      expect(route.head.map((tag) => tag.tag)).toEqual(['meta']);
+    }
+  });
+
   it('gives sections the absolute site URL when it is known', async () => {
     const seen: (string | undefined)[] = [];
     const probe = defineSection({
@@ -670,7 +696,7 @@ describe('contributed routes, hooks and generators', () => {
 
   it('exposes theme tokens as CSS custom properties', async () => {
     const site = await build({ ...base, plugins: [memorySource(data), t, projects] });
-    expect(site.tokensCss).toBe(':root{--vv-color-primary:#000000}');
+    expect(site.tokensCss).toBe(':root{color-scheme:light;--vv-color-primary:#000000}');
   });
 });
 

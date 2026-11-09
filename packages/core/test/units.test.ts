@@ -77,8 +77,13 @@ describe('design tokens', () => {
       { light: { colorPrimary: '#f00' } },
     );
     expect(tokensToCss(merged)).toBe(
-      ':root{--vv-color-primary:#f00;--vv-radius:4px}@media screen and (prefers-color-scheme: dark){:root{--vv-color-primary:#eee}}',
+      ':root{color-scheme:light;--vv-color-primary:#f00;--vv-radius:4px}' +
+        // System preference, unless the visitor chose light with the switch.
+        '@media screen and (prefers-color-scheme: dark){:root:not([data-color-scheme=light]){color-scheme:dark;--vv-color-primary:#eee}}' +
+        // The visitor chose dark. Paper stays light either way.
+        '@media screen{:root[data-color-scheme=dark]{color-scheme:dark;--vv-color-primary:#eee}}',
     );
+    expect(tokensToCss({ light: { radius: '2px' } })).toBe(':root{color-scheme:light;--vv-radius:2px}');
   });
 
   it('rejects values that could break out of the style block', () => {

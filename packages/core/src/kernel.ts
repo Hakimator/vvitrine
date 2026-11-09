@@ -12,6 +12,7 @@ import { coreMessages } from './i18n/core-messages.ts';
 import { formatPartialDate, formatPeriod } from './i18n/dates.ts';
 import { Translator, type Locale } from './i18n/translator.ts';
 import type { HeadTag } from './render/head.ts';
+import { colorSchemeScript } from './render/color-scheme.browser.ts';
 import { tokensToCss } from './render/tokens.ts';
 import type { ImageProvider, ResponsiveImage } from './images.ts';
 import { viewKindKey } from './views.ts';
@@ -302,6 +303,9 @@ export class Kernel {
   }
 
   private finalize(pending: readonly PendingRoute[]): BuiltRoute[] {
+    const theme = this.registry.theme;
+    // A switch needs dark colours to switch to.
+    const toggle = theme.colorSchemeToggle === true && theme.tokens.dark !== undefined;
     const seen = new Set<string>();
     const localesByPath = new Map<string, Locale[]>();
     for (const route of pending) {
@@ -325,6 +329,7 @@ export class Kernel {
         alternates,
         nav: route.nav,
         ...(route.heading ? { heading: route.heading } : {}),
+        ...(toggle ? { colorScheme: { label: route.render.t('common.darkMode') } } : {}),
       };
       const plugins = this.registry.all();
       return {
@@ -334,7 +339,11 @@ export class Kernel {
         locale: route.locale,
         title: route.title,
         sections: route.sections,
-        head: plugins.flatMap((p) => p.hooks?.head?.(context) ?? []),
+        // The colour scheme script comes first: it must run before the page is drawn.
+        head: [
+          ...(toggle ? [{ tag: 'script' as const, content: colorSchemeScript }] : []),
+          ...plugins.flatMap((p) => p.hooks?.head?.(context) ?? []),
+        ],
         bodyEnd: plugins.flatMap((p) => p.hooks?.bodyEnd?.(context) ?? []),
         context,
       };

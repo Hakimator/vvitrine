@@ -47,11 +47,17 @@ export function mergeTokens(defaults: ThemeTokens, overrides?: Partial<ThemeToke
 }
 
 /**
- * Build the `:root` CSS for a set of tokens, with an optional dark variant. The dark variant is for screens only:
- * printing always uses the light colours (no dark background on paper).
+ * Build the `:root` CSS for a set of tokens, with an optional dark variant. The dark variant follows the system
+ * preference, unless the visitor chose with the theme's switch (`data-color-scheme` on <html>). It is for screens
+ * only: printing always uses the light colours (no dark background on paper).
  */
 export function tokensToCss(tokens: ThemeTokens): string {
-  const light = `:root{${declarations(tokens.light)}}`;
-  const dark = tokens.dark ? `@media screen and (prefers-color-scheme: dark){:root{${declarations(tokens.dark)}}}` : '';
-  return light + dark;
+  const light = `:root{color-scheme:light;${declarations(tokens.light)}}`;
+  if (!tokens.dark) return light;
+  const dark = `color-scheme:dark;${declarations(tokens.dark)}`;
+  return (
+    light +
+    `@media screen and (prefers-color-scheme: dark){:root:not([data-color-scheme=light]){${dark}}}` +
+    `@media screen{:root[data-color-scheme=dark]{${dark}}}`
+  );
 }
