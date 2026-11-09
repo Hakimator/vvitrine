@@ -1,5 +1,7 @@
 # Contenu fictif de démonstration. Remplacez ce fichier par le vôtre : aucun code à modifier.
 # Format compatible JSON Resume (https://jsonresume.org/schema). Champs VVitrine : "x-vvitrine".
+# Vérifié pendant la saisie par les éditeurs qui lisent JSON Schema (voir docs/content.md) :
+# yaml-language-server: $schema=../../docs/content.schema.json
 $schemaVersion: 1
 basics:
   name: Jeanne Martin

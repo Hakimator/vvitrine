@@ -41,7 +41,9 @@ export const ReferencesContent = z
       name: z.string().min(1),
       reference: z.string().min(1),
       /** VVitrine extension: who the person is, e.g. "Team lead at Acme". */
-      'x-vvitrine': z.object({ role: z.string().optional() }).optional(),
+      'x-vvitrine': z
+        .object({ role: z.string().optional().describe('Who the person is, e.g. "Team lead at Acme".') })
+        .optional(),
     }),
   )
   .default([]);

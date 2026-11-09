@@ -16,15 +16,16 @@ export const PostsContent = z
       summary: z.string().optional(),
       tags: z.array(z.string().min(1)).default([]),
       /** Drafts are never published. */
-      draft: z.boolean().default(false),
+      draft: z.boolean().default(false).describe('Keep the article out of the site.'),
       'x-vvitrine': z
         .object({
           slug: z
             .string()
             .regex(/^[a-z0-9-]+$/, { message: 'lowercase letters, digits and dashes only' })
-            .optional(),
+            .optional()
+            .describe('Address of the article, /blog/<slug>; default: the file name.'),
           /** The article, in Markdown. */
-          body: z.string().optional(),
+          body: z.string().optional().describe('The article in Markdown (the text of the Markdown file).'),
         })
         .default({}),
     }),

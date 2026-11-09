@@ -39,7 +39,9 @@ export const privacy = (settings: PrivacySettings = {}) =>
     kind: 'section',
     apiVersion: 1,
     id: 'privacy',
-    optionsSchema: z.object({ title: z.string().optional() }),
+    optionsSchema: z.object({
+      title: z.string().optional().describe('Heading of the section, instead of the default one.'),
+    }),
     messages: {
       fr: {
         'section.privacy.title': 'Vos données personnelles',

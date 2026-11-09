@@ -31,6 +31,9 @@ builds and the end-to-end tests (including accessibility). CI runs the same step
   to fix), no `console.log`.
 - **Tests:** every behaviour change comes with a unit test; user-visible changes with an end-to-end test.
   Coverage thresholds: 80 % lines and functions.
+- **Reference:** when you change a schema (configuration, content, options), run `pnpm reference` to update
+  `docs/reference.md` and `docs/content.schema.json`, and describe new fields with `.describe()`. A test fails when the
+  reference is out of date.
 - **i18n:** never hard-code a visible string. Add it to the plugin `messages` for every supported locale (fr, en).
 - **Accessibility:** WCAG 2.2 AA. axe must report no violations in light and dark mode.
 - **Commits and PR titles:** [Conventional Commits](https://www.conventionalcommits.org), e.g.

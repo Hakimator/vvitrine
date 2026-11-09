@@ -82,7 +82,9 @@ export const contact = (settings: ContactSettings = {}) => {
     kind: 'section',
     apiVersion: 1,
     id: 'contact',
-    optionsSchema: z.object({ title: z.string().optional() }),
+    optionsSchema: z.object({
+      title: z.string().optional().describe('Heading of the section, instead of the default one.'),
+    }),
     messages: {
       fr: {
         'section.contact.title': 'Contact',

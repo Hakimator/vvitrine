@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 /** Options shared by list sections. `title` overrides the translated default title. */
 export const ListOptions = z.object({
-  title: z.string().optional(),
-  limit: z.number().int().positive().optional(),
+  title: z.string().optional().describe('Heading of the section, instead of the default one.'),
+  limit: z.number().int().positive().optional().describe('Show at most this many items.'),
 });
 export type ListOptions = z.infer<typeof ListOptions>;
 

@@ -39,7 +39,8 @@ Everything else (`packages/`, `themes/`) is the framework.
 | ------------------------------------------ | ------------------------------------------------------------------- |
 | [Getting started](docs/getting-started.md) | Install, run, deploy                                                |
 | [Writing content](docs/content.md)         | Resume format, projects, languages                                  |
-| [Configuration](docs/configuration.md)     | `vvitrine.config.ts` reference                                      |
+| [Configuration](docs/configuration.md)     | `vvitrine.config.ts` guide                                          |
+| [Reference](docs/reference.md)             | Every configuration, content and option field, from the schemas     |
 | [Plugins](docs/plugins.md)                 | Use and write source, section, theme, service and generator plugins |
 | [Example plugins](examples/plugins/)       | One small, tested plugin of each kind, to copy                      |
 | [Themes](docs/themes.md)                   | Switch theme, design tokens, write a theme                          |

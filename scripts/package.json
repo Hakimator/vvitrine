@@ -1,0 +1,17 @@
+{
+  "name": "@vvitrine/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Maintenance scripts of the VVitrine repository (not published).",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vvitrine/contact": "workspace:*",
+    "@vvitrine/core": "workspace:*",
+    "@vvitrine/sections": "workspace:*",
+    "zod": "4.6.7"
+  }
+}
