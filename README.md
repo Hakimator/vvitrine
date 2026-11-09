@@ -6,8 +6,24 @@ pick a theme, choose your sections, and deploy a fast, accessible, bilingual por
 - **Content, not code.** Your resume lives in `site/content/` (JSON Resume compatible). You never edit framework code.
 - **Everything is a plugin.** Data sources, sections, themes, services (SEO, analytics...) and generators (sitemap, PDF...) all use the same public API, built-ins included.
 - **Multilingual.** French and English out of the box; add a language with one file.
-- **Fast and accessible by default.** Static HTML, zero JavaScript (the optional project filter adds 1 KB inline), WCAG 2.2 AA checked in CI, Lighthouse 100.
+- **Fast and accessible by default.** Static HTML and zero JavaScript unless you turn on a feature that needs it
+  (each adds a small inline script, only where used). WCAG 2.2 AA and Lighthouse 95+ are checked in CI.
+- **Private by default.** No cookie and no third-party request until a visitor chooses; the privacy page writes itself
+  from the plugins you install.
 - **Free hosting.** One push deploys to GitHub Pages; any static host works.
+
+## What a portfolio gets
+
+|                |                                                                                                                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Resume**     | Every JSON Resume section (experience, education, skills, languages, certificates, awards, volunteering, publications, interests, references), a timeline, key figures and testimonials |
+| **Projects**   | Cards, a page per project written in Markdown, a technology filter, optimised images                                                                                                    |
+| **Writing**    | A blog with reading time, tags and a table of contents                                                                                                                                  |
+| **Recruiters** | A printable resume page and an accessible PDF CV in each language, generated at build time                                                                                              |
+| **Contact**    | A form that works without JavaScript (Web3Forms), and an e-mail address hidden from spam bots                                                                                           |
+| **Sharing**    | SEO tags, sitemap, and a generated share picture for social networks                                                                                                                    |
+| **Privacy**    | A generated privacy page; optional Google Analytics behind a consent banner, or a cookie-free tool (Plausible example)                                                                  |
+| **Look**       | Two themes (Corporate and Bold), design tokens, automatic dark mode and an optional switch                                                                                              |
 
 > VVitrine is pronounced "vitrine" (French for _shop window_), spelled with a double V.
 
