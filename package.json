@@ -45,6 +45,7 @@
     "@vvitrine/sections": "workspace:*",
     "@vvitrine/seo": "workspace:*",
     "@vvitrine/images": "workspace:*",
+    "@vvitrine/og-image": "workspace:*",
     "@vvitrine/resume-pdf": "workspace:*",
     "@vvitrine/source-markdown": "workspace:*",
     "@vvitrine/source-yaml": "workspace:*",

@@ -3,6 +3,7 @@
  * Everything is a plugin: add, remove or replace any line in `plugins`.
  */
 import { ga4 } from '@vvitrine/analytics';
+import ogImage from '@vvitrine/og-image';
 import resumePdf from '@vvitrine/resume-pdf';
 import consent from '@vvitrine/consent';
 import { contact, web3forms } from '@vvitrine/contact';
@@ -77,7 +78,9 @@ export default defineConfig({
     // Privacy page, generated from what the plugins above declare. Name your host: it sees every visit.
     privacy({ host: GITHUB_PAGES }),
     // Services and generators
-    seo(),
+    // The picture shown when a page is shared, drawn by og-image below (needs SITE_URL, set by the deploy workflow).
+    seo({ image: '/og-{locale}.png' }),
+    ogImage({ background: '#1f3a5f' }),
     sitemap(),
     // A PDF of the /resume page in each language (cv-fr.pdf, cv-en.pdf), linked from the hero.
     resumePdf({ page: '/resume', accent: '#1f3a5f' }),

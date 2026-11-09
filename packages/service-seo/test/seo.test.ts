@@ -4,11 +4,11 @@ import { memorySource, stringTheme } from '@vvitrine/core/testing';
 import { seo, sitemap } from '../src/index.ts';
 
 const data = { basics: { name: 'Jane', label: 'Dev', profiles: [{ network: 'GitHub', url: 'https://github.com/j' }] } };
-const build = (siteUrl?: string, base = '/') =>
+const build = (siteUrl?: string, base = '/', options = {}) =>
   createKernel(
     {
       site: { defaultLocale: 'fr', locales: ['fr', 'en'] },
-      plugins: [memorySource({ fr: data, en: data }), stringTheme(), seo(), sitemap()],
+      plugins: [memorySource({ fr: data, en: data }), stringTheme(), seo(options), sitemap()],
       pages: [{ path: '/', sections: [] }],
     },
     { root: '/', base, ...(siteUrl ? { siteUrl } : {}), logger: { info: () => {}, warn: () => {} } },
@@ -33,6 +33,20 @@ describe('@vvitrine/seo', () => {
       jobTitle: 'Dev',
       sameAs: ['https://github.com/j'],
     });
+  });
+
+  it('adds a share picture per language, with its text alternative', async () => {
+    const site = await build('https://jane.dev', '/portfolio/', { image: '/og-{locale}.png' });
+    const meta = (locale: string, key: string) =>
+      site.routes.find((r) => r.locale === locale)!.head.find((t) => (t.attrs?.property ?? t.attrs?.name) === key)
+        ?.attrs?.content;
+    expect(meta('en', 'og:image')).toBe('https://jane.dev/portfolio/og-en.png');
+    expect(meta('fr', 'og:image')).toBe('https://jane.dev/portfolio/og-fr.png');
+    expect(meta('en', 'og:image:alt')).toBe('Jane – Dev');
+    expect(meta('en', 'twitter:card')).toBe('summary_large_image');
+    // No absolute address without the site URL: social networks would ignore a relative one.
+    const local = await build(undefined, '/', { image: '/og.png' });
+    expect(local.routes[0]!.head.some((t) => t.attrs?.property === 'og:image')).toBe(false);
   });
 
   it('omits absolute URLs when the site URL is unknown', async () => {
