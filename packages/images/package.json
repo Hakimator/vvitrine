@@ -1,6 +1,6 @@
 {
   "name": "@vvitrine/images",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "VVitrine image plugin: responsive WebP variants and real dimensions for images in public/, generated at build time.",
   "license": "AGPL-3.0-or-later",
   "type": "module",

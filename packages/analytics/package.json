@@ -1,6 +1,6 @@
 {
   "name": "@vvitrine/analytics",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "VVitrine analytics adapters: Google Analytics 4, loaded only after the visitor's consent.",
   "license": "AGPL-3.0-or-later",
   "type": "module",

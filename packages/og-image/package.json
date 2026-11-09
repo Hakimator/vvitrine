@@ -1,6 +1,6 @@
 {
   "name": "@vvitrine/og-image",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "VVitrine generator: the picture shown when your site is shared on social networks, in every language, at build time.",
   "license": "AGPL-3.0-or-later",
   "type": "module",
