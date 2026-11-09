@@ -92,6 +92,22 @@ plugins: [/* ... */, ga4({ measurementId: 'G-ABC123DEF4' }), consent()],
 - `consent()` stays out of the way when no plugin sets cookies: no banner, no footer link, no JavaScript.
 - The demo reads the ID from the `GA_MEASUREMENT_ID` environment variable, so the published demo has no analytics.
 
+## Share picture (Open Graph)
+
+```ts
+import ogImage from '@vvitrine/og-image';
+import { seo } from '@vvitrine/seo';
+// ...
+plugins: [/* ... */, seo({ image: '/og-{locale}.png' }), ogImage({ background: '#1f3a5f' })],
+```
+
+- `ogImage()` draws, at build time, the 1200 × 630 picture social networks and messaging apps show with a link: your
+  initials, name and title (from the hero of the home page) and the site address, one PNG per language. Colours:
+  `background`, `color` and `accent`; keep enough contrast between the first two.
+- `seo({ image })` adds `og:image`, its text alternative and the large Twitter/X card to every page. A file of your
+  own in `public/` works too (`image: '/share.png'`). Social networks need absolute addresses, so the tags appear only
+  when `SITE_URL` is set (the deploy workflow sets it).
+
 ## Light and dark mode
 
 Both themes follow the visitor's system setting. To add a switch to the header as well:
