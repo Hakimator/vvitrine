@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - themes/*
+  - examples/plugins/*
   - site
 
 # Lighthouse CI dependency that uses tslib without declaring it (pnpm is strict about this).

@@ -1,0 +1,23 @@
+{
+  "name": "@vvitrine-examples/theme-minimal",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Example theme plugin: the smallest complete theme.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "astro": "^7.4.0"
+  },
+  "dependencies": {
+    "@vvitrine/core": "workspace:*"
+  },
+  "devDependencies": {
+    "astro": "7.4.7"
+  }
+}

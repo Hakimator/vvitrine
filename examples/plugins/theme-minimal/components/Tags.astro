@@ -1,0 +1,26 @@
+---
+/** The `tags` view kind: skills, interests... */
+import type { TagsView } from '@vvitrine/core';
+type Props = TagsView & { sectionId: string };
+const { title, groups, sectionId } = Astro.props;
+---
+
+<section id={sectionId} aria-labelledby={`${sectionId}-title`}>
+  <h2 id={`${sectionId}-title`}>{title}</h2>
+  <dl>
+    {groups.map((group) => (
+      <>
+        <dt>{group.level ? `${group.name} (${group.level})` : group.name}</dt>
+        <dd>{group.keywords.join(', ')}</dd>
+      </>
+    ))}
+  </dl>
+</section>
+<style>
+  dt {
+    font-weight: 700;
+  }
+  dd {
+    margin: 0 0 0.5rem;
+  }
+</style>

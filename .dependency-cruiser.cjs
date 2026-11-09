@@ -23,7 +23,7 @@ module.exports = {
       name: 'no-dependency-on-user-site',
       comment: 'Framework code must never import from the user site.',
       severity: 'error',
-      from: { path: '^(packages|themes)/' },
+      from: { path: '^(packages|themes|examples)/' },
       to: { path: '^site/' },
     },
     {
@@ -37,6 +37,13 @@ module.exports = {
         path: '^(packages/(sections|seo|source-yaml|source-markdown|service-seo|images|contact|consent|analytics|resume-pdf|og-image|astro)/|themes/)',
         pathNot: '^packages/$1',
       },
+    },
+    {
+      name: 'examples-use-public-api-only',
+      comment: 'Example plugins show what any author can do: they import @vvitrine/core and nothing else of VVitrine.',
+      severity: 'error',
+      from: { path: '^examples/' },
+      to: { path: '^(packages/(?!core/src/(index|testing)\\.ts$)|themes/|site/)' },
     },
     {
       name: 'no-circular',

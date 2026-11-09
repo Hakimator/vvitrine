@@ -1,0 +1,155 @@
+---
+/**
+ * The layout contract (see ThemePlugin.layout): the props below, and three slots: head, default (the sections, inside
+ * <main id="main">) and body-end.
+ */
+import type { Navigation, Translate } from '@vvitrine/core';
+interface Props {
+  lang: string;
+  title: string;
+  t: Translate;
+  alternates: readonly { locale: string; href: string }[];
+  siteName: string;
+  nav: Navigation;
+  heading?: string | undefined;
+}
+const { lang, title, t, alternates, siteName, nav, heading } = Astro.props;
+const otherLocales = alternates.filter((a) => a.locale !== lang);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip" href="#main">
+      {t('common.skipToContent')}
+    </a>
+    <header>
+      <a class="brand" href={nav.home}>
+        {siteName}
+      </a>
+      {nav.items.length > 0 && (
+        <nav aria-label={t('common.mainNav')}>
+          <ul>
+            {nav.items.map((item) => (
+              <li>
+                <a href={item.href}>{item.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+      {otherLocales.length > 0 && (
+        <nav aria-label={t('common.language')}>
+          <ul>
+            {otherLocales.map((a) => (
+              <li>
+                <a href={a.href} hreflang={a.locale} lang={a.locale}>
+                  {t(`locale.${a.locale}`)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+    </header>
+    <main id="main">
+      {heading && <h1>{heading}</h1>}
+      <slot />
+    </main>
+    <footer>
+      {nav.footer.length > 0 && (
+        <ul>
+          {nav.footer.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </footer>
+    <slot name="body-end" />
+  </body>
+</html>
+<style is:global>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    background: var(--vv-color-background);
+    color: var(--vv-color-text);
+    font: 1rem / 1.6 var(--vv-font-body);
+    overflow-wrap: break-word;
+  }
+  header,
+  main,
+  footer {
+    max-width: var(--vv-content-width);
+    margin: 0 auto;
+    padding: 1rem;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    align-items: center;
+    border-bottom: 1px solid var(--vv-color-border);
+  }
+  header ul,
+  footer ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  footer {
+    border-top: 1px solid var(--vv-color-border);
+  }
+  a {
+    color: var(--vv-color-primary);
+  }
+  a:focus-visible {
+    outline: 3px solid var(--vv-color-accent);
+    outline-offset: 2px;
+  }
+  .brand {
+    margin-right: auto;
+    color: var(--vv-color-text);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--vv-font-heading);
+    line-height: 1.25;
+  }
+  .skip {
+    position: absolute;
+    left: -9999px;
+  }
+  .skip:focus {
+    left: 1rem;
+    top: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--vv-color-background);
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>
