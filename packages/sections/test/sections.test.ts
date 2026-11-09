@@ -126,6 +126,10 @@ describe('built-in sections', () => {
       { id: 'contact', label: 'Me contacter', href: '#contact' },
     ]);
     await expect(build(withEmail, placed({ cv: '' }))).rejects.toThrow(InvalidPluginOptionsError);
+    // One CV per language.
+    const perLocale = await build(withEmail, placed({ cv: '/cv-{locale}.pdf' }));
+    expect(view<HeroView>(perLocale, 'fr:/', 'hero').actions[0]!.href).toBe('/cv-fr.pdf');
+    expect(view<HeroView>(perLocale, 'en:/', 'hero').actions[0]!.href).toBe('/cv-en.pdf');
   });
 
   it('work is ordered with ongoing jobs first, localized titles and periods', async () => {
