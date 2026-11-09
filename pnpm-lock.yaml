@@ -274,6 +274,9 @@ importers:
       '@vvitrine/images':
         specifier: workspace:*
         version: link:../packages/images
+      '@vvitrine/og-image':
+        specifier: workspace:*
+        version: link:../packages/og-image
       '@vvitrine/resume-pdf':
         specifier: workspace:*
         version: link:../packages/resume-pdf

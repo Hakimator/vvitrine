@@ -18,3 +18,22 @@ test('canonical, hreflang and sitemap use the absolute site URL', async ({ page,
   const sitemap = await (await request.get('/demo/sitemap.xml')).text();
   expect(sitemap).toContain('<loc>https://example.github.io/demo/en/projects/bibliotheque/</loc>');
 });
+
+test('pages have a share picture per language, generated at build time', async ({ page, request }) => {
+  await page.goto('/demo/en/projects/bibliotheque/');
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+    'content',
+    'https://example.github.io/demo/og-en.png',
+  );
+  await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute(
+    'content',
+    'Jeanne Martin – Computer engineering student',
+  );
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
+  const png = await request.get('/demo/og-fr.png');
+  expect(png.headers()['content-type']).toBe('image/png');
+  const body = await png.body();
+  // PNG signature, then the width and height stored in the IHDR chunk.
+  expect(body.subarray(1, 4).toString()).toBe('PNG');
+  expect([body.readUInt32BE(16), body.readUInt32BE(20)]).toEqual([1200, 630]);
+});

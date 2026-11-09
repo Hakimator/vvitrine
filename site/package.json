@@ -16,6 +16,7 @@
     "@vvitrine/contact": "workspace:*",
     "@vvitrine/core": "workspace:*",
     "@vvitrine/images": "workspace:*",
+    "@vvitrine/og-image": "workspace:*",
     "@vvitrine/resume-pdf": "workspace:*",
     "@vvitrine/sections": "workspace:*",
     "@vvitrine/seo": "workspace:*",
