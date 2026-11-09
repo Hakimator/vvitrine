@@ -16,6 +16,7 @@ const types = {
   '.txt': 'text/plain; charset=utf-8',
   '.png': 'image/png',
   '.webp': 'image/webp',
+  '.pdf': 'application/pdf',
 };
 
 createServer((req, res) => {

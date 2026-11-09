@@ -27,7 +27,10 @@ export interface HeroView {
 }
 
 export const HeroOptions = z.object({
-  /** CV file in public/ (e.g. '/cv.pdf') or a full URL. Adds a "Download CV" button. */
+  /**
+   * CV file in public/ (e.g. '/cv.pdf') or a full URL. Adds a "Download CV" button. `{locale}` is replaced by the page
+   * language, for one CV per language, e.g. '/cv-{locale}.pdf' (what `@vvitrine/resume-pdf` writes).
+   */
   cv: z.string().min(1).optional(),
   /** Target of the "Contact me" button. Defaults to a (protected) mailto: link to basics.email. */
   contact: z.string().min(1).optional(),
@@ -76,11 +79,12 @@ export const hero = () =>
       const availability = basics['x-vvitrine']?.availability;
       const actions: HeroAction[] = [];
       if (options.cv) {
+        const cv = options.cv.replaceAll('{locale}', ctx.locale);
         actions.push({
           id: 'cv',
           label: ctx.t('section.hero.cv'),
-          href: ctx.asset(options.cv),
-          ...(isFullUrl(options.cv) ? {} : { download: true }),
+          href: ctx.asset(cv),
+          ...(isFullUrl(cv) ? {} : { download: true }),
         });
       }
       const email = basics.email ? protectEmail(basics.email) : undefined;

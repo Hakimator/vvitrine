@@ -135,6 +135,9 @@ const jsonResume = (): GeneratorPlugin => ({
 });
 ```
 
+Each route gives its `page` (the configured path, the same in every language) and its `sections`, each with its `view`
+and `viewKind`: a generator can lay out what a page shows without knowing the sections (see `@vvitrine/resume-pdf`).
+
 ## Testing helpers
 
 `@vvitrine/core/testing` exports `memorySource()`, `stringTheme()` and `checkSourceContract()`. See the tests in

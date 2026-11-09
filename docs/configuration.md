@@ -53,6 +53,27 @@ names your host, which sees every visit, the person responsible (`basics.name`) 
 the right to complain to a data protection authority. Add a plugin and the page updates itself. It is a starting point,
 not legal advice: read it before you publish.
 
+## Resume page and PDF
+
+```ts
+import resumePdf from '@vvitrine/resume-pdf';
+// ...
+plugins: [/* ... */, resumePdf({ page: '/resume', accent: '#1f3a5f' })],
+pages: [
+  { path: '/', sections: [{ id: 'hero', options: { cv: '/cv-{locale}.pdf' } }, /* ... */] },
+  { path: '/resume', title: 'page.resume', footer: true, sections: ['hero', 'work', 'education', 'skills', 'languages'] },
+],
+```
+
+- The `/resume` page shows what a printed CV holds. Every page prints on A4 in light colours, without the header,
+  footer, buttons or cookie banner.
+- `resumePdf()` turns that page into `cv-fr.pdf`, `cv-en.pdf`... at build time, from the same data: the hero (name,
+  title, e-mail, profiles, summary), then each section of the list (`entries`) and keyword (`tags`) kinds, and languages.
+  Testimonials, figures and projects stay on the website.
+- The PDF is tagged for accessibility: document language and title, headings, lists and links in its structure, and an
+  embedded font (Inter, latin characters; pass `fonts: { regular, bold }` with your own font files for other scripts).
+- `cv: '/cv-{locale}.pdf'` in the hero links the PDF of the page language.
+
 ## Analytics and cookie consent
 
 ```ts

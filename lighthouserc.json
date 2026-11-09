@@ -8,7 +8,8 @@
         "http://localhost/en/projects/bibliotheque/index.html",
         "http://localhost/en/blog/plugin-portfolio/index.html",
         "http://localhost/en/projects/index.html",
-        "http://localhost/en/privacy/index.html"
+        "http://localhost/en/privacy/index.html",
+        "http://localhost/en/resume/index.html"
       ],
       "numberOfRuns": 3,
       "settings": { "chromeFlags": "--no-sandbox --headless=new" }

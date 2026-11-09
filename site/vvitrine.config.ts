@@ -3,6 +3,7 @@
  * Everything is a plugin: add, remove or replace any line in `plugins`.
  */
 import { ga4 } from '@vvitrine/analytics';
+import resumePdf from '@vvitrine/resume-pdf';
 import consent from '@vvitrine/consent';
 import { contact, web3forms } from '@vvitrine/contact';
 import { defineConfig } from '@vvitrine/core';
@@ -78,6 +79,8 @@ export default defineConfig({
     // Services and generators
     seo(),
     sitemap(),
+    // A PDF of the /resume page in each language (cv-fr.pdf, cv-en.pdf), linked from the hero.
+    resumePdf({ page: '/resume', accent: '#1f3a5f' }),
     // Google Analytics, only after the visitor accepts: set GA_MEASUREMENT_ID (e.g. G-ABC123DEF4) when you build.
     // The consent banner appears only when a plugin sets cookies, so it stays out of the way without analytics.
     ...(measurementId ? [ga4({ measurementId })] : []),
@@ -92,7 +95,7 @@ export default defineConfig({
       path: '/',
       sections: [
         // The "Contact me" button leads to the contact section below (by default it opens an e-mail).
-        { id: 'hero', options: { contact: '#contact' } },
+        { id: 'hero', options: { cv: '/cv-{locale}.pdf', contact: '#contact' } },
         { id: 'stats', nav: false },
         // The latest projects; the header links to the /projects page, which has the technology filter.
         { id: 'projects', nav: false, options: { limit: 6 } },
@@ -115,6 +118,21 @@ export default defineConfig({
     },
     { path: '/projects', title: 'page.projects', sections: [{ id: 'projects', options: { filter: true } }] },
     // A second page: its sections get header links too (here /timeline/#timeline).
+    // The resume: what a printed CV holds, from the same data. It prints on A4, and resume-pdf turns it into a PDF.
+    {
+      path: '/resume',
+      title: 'page.resume',
+      footer: true,
+      sections: [
+        { id: 'hero', options: { cv: '/cv-{locale}.pdf' } },
+        'work',
+        'education',
+        'skills',
+        'certificates',
+        'languages',
+        'interests',
+      ],
+    },
     { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
     { path: '/blog', title: 'page.blog', sections: ['blog'] },
     // footer: true links the page from the footer of every page instead of the header.
@@ -128,6 +146,7 @@ export default defineConfig({
       'page.blog': 'Blog',
       'page.projects': 'Mes projets',
       'page.privacy': 'Confidentialité',
+      'page.resume': 'CV',
     },
     en: {
       'section.work.title': 'Experience',
@@ -135,6 +154,7 @@ export default defineConfig({
       'page.blog': 'Blog',
       'page.projects': 'My projects',
       'page.privacy': 'Privacy',
+      'page.resume': 'Resume',
     },
   },
 });
