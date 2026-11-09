@@ -45,6 +45,11 @@ const { id, title, text, accept, refuse, privacy, script } = Astro.props;
   .vv-consent[hidden] {
     display: none;
   }
+  @media print {
+    .vv-consent {
+      display: none;
+    }
+  }
   .vv-consent:focus-visible {
     outline: 3px solid var(--vv-color-accent);
     outline-offset: 3px;
