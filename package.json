@@ -19,7 +19,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "boundaries": "depcruise packages themes site --config .dependency-cruiser.cjs",
+    "boundaries": "depcruise packages themes examples site --config .dependency-cruiser.cjs",
     "e2e": "playwright test",
     "lhci": "lhci autorun",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm boundaries && pnpm test:coverage && pnpm build:all && pnpm e2e && pnpm e2e:dev",
