@@ -42,7 +42,12 @@ A theme plugin provides:
 - `components`: one component per view kind (`kind:entries`, `kind:tags`, `kind:quotes`, `kind:figures`, see below), per section id
   when a section needs its own layout (`hero`, `projects`, `languages`, `contact`, `privacy`) and per contributed page (`projects:detail`, `contact:sent`, and `blog:post`, which receives `ArticleView` from `@vvitrine/sections`);
 - `fallback`: a component for sections it does not know (custom sections then still render);
-- `tokens`: default values for every design token, light and dark.
+- `tokens`: default values for every design token, light and dark;
+- `colorSchemeToggle` (optional): offer a light/dark switch. The kernel then adds a small inline script first in
+  `<head>` and gives the layout a `colorScheme` prop (`{ label }`). Render a button with `data-color-scheme-toggle`,
+  `hidden` and `aria-pressed="false"`, named with the label: the script shows it, keeps `aria-pressed` true in dark
+  mode, and saves the visitor's choice. The dark tokens then apply when the system prefers dark and the visitor did not
+  choose light, or when the visitor chose dark (`data-color-scheme` on `<html>`); never on paper.
 
 ### View kinds
 
