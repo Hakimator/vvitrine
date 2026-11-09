@@ -14,6 +14,7 @@
     "build:bold": "cross-env VVITRINE_CONFIG=../e2e/fixtures/bold.config.ts pnpm --filter site exec astro build --outDir dist-bold",
     "preview": "pnpm --filter site preview",
     "test": "vitest run",
+    "reference": "vitest run scripts/reference --update",
     "test:coverage": "vitest run --coverage",
     "typecheck": "pnpm -r --parallel typecheck",
     "lint": "eslint .",
