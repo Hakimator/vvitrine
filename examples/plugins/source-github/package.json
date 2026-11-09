@@ -1,0 +1,18 @@
+{
+  "name": "@vvitrine-examples/source-github",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Example source plugin: your public GitHub repositories as projects.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vvitrine/core": "workspace:*",
+    "zod": "4.6.7"
+  }
+}
