@@ -13,6 +13,14 @@ module.exports = {
       to: { path: ['node_modules/astro', '^packages/(?!core/)', '^themes/', '^site/', 'node:fs', '^fs$'] },
     },
     {
+      name: 'sources-read-through-ctx-files',
+      comment:
+        'Source plugins read files through ctx.files (ProjectFiles), so they also work on files that are not on disk.',
+      severity: 'error',
+      from: { path: '^packages/source-[^/]+/src' },
+      to: { path: ['node:fs', '^fs$', 'node:fs/promises', '^fs/promises$'] },
+    },
+    {
       name: 'plugins-use-public-api-only',
       comment: 'Plugins and themes import @vvitrine/core, never its internal files.',
       severity: 'error',
