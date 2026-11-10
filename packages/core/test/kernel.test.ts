@@ -21,7 +21,7 @@ import {
   type Plugin,
   type VVitrineConfig,
 } from '../src/index.ts';
-import { memorySource, stringTheme } from '../src/testing.ts';
+import { memoryFiles, memorySource, stringTheme } from '../src/testing.ts';
 
 const silent = { info: () => {}, warn: () => {} };
 
@@ -201,6 +201,28 @@ describe('layout file (ADR-016)', () => {
   it('accepts an empty layout file', async () => {
     const site = await build(config(), layout(null));
     expect(site.routes).toHaveLength(2);
+  });
+});
+
+describe('project files', () => {
+  const reader = (path: string): Plugin => ({
+    name: 'file-reader',
+    kind: 'source',
+    apiVersion: 1,
+    load: async ({ files }) => ({ data: { basics: { name: (await files.read(path)) ?? 'none' } } }),
+  });
+  const plugins = (path: string) => [reader(path), theme, hero];
+
+  it('gives sources the files of the build', async () => {
+    const files = memoryFiles({ 'content/name.txt': 'From a file' });
+    const site = await build({ plugins: plugins('content/name.txt') }, { files });
+    expect(site.routes[0]!.sections[0]!.view).toEqual({ name: 'From a file' });
+  });
+
+  it('says so when a build gives no file access and a source needs a file', async () => {
+    await expect(build({ plugins: plugins('content/name.txt') })).rejects.toThrow(
+      'Cannot read content/name.txt: this build gives sources no file access.',
+    );
   });
 });
 

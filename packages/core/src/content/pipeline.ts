@@ -1,5 +1,5 @@
 import { InvalidContentError, type ContentIssue } from '../errors.ts';
-import type { Logger } from '../plugin.ts';
+import type { Logger, ProjectFiles } from '../plugin.ts';
 import type { PluginRegistry } from '../registry.ts';
 import { Basics, RESERVED_KEYS } from './schemas.ts';
 import { toIssues } from './zod-issues.ts';
@@ -17,7 +17,7 @@ export interface ValidatedContent {
  */
 export async function loadContent(
   registry: PluginRegistry,
-  ctx: { locale: string; defaultLocale: string; root: string; logger: Logger },
+  ctx: { locale: string; defaultLocale: string; root: string; logger: Logger; files: ProjectFiles },
 ): Promise<ValidatedContent> {
   const raw: Record<string, unknown> = {};
   const origin: Record<string, string> = {};

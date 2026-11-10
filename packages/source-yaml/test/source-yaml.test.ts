@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fileURLToPath } from 'node:url';
-import { checkSourceContract } from '@vvitrine/core/testing';
+import { checkSourceContract, memoryFiles } from '@vvitrine/core/testing';
 import yamlSource from '../src/index.ts';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
@@ -9,6 +9,7 @@ const ctx = (locale: string, logger = { info: () => {}, warn: () => {} }) => ({
   defaultLocale: 'en',
   root,
   logger,
+  files: memoryFiles({}),
 });
 
 describe('@vvitrine/source-yaml', () => {
