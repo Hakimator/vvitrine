@@ -20,7 +20,8 @@
     "astro": "^7.4.0"
   },
   "dependencies": {
-    "@vvitrine/core": "workspace:*"
+    "@vvitrine/core": "workspace:*",
+    "yaml": "2.9.1"
   },
   "devDependencies": {
     "astro": "7.4.7"

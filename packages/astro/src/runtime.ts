@@ -1,4 +1,5 @@
 import { createKernel, VVitrineError, type BuiltSite, type VVitrineConfig } from '@vvitrine/core';
+import layout from 'virtual:vvitrine/layout';
 import { base, dev, root, siteUrl } from 'virtual:vvitrine/runtime';
 
 let cached: Promise<BuiltSite> | undefined;
@@ -15,7 +16,12 @@ export function getSite(config: VVitrineConfig): Promise<BuiltSite> {
 
 async function build(config: VVitrineConfig): Promise<BuiltSite> {
   try {
-    return await createKernel(config, { root, base, ...(siteUrl ? { siteUrl } : {}) }).build();
+    return await createKernel(config, {
+      root,
+      base,
+      ...(siteUrl ? { siteUrl } : {}),
+      ...(layout ? { layout } : {}),
+    }).build();
   } catch (error) {
     if (error instanceof VVitrineError) {
       // Our messages are self-explanatory: hide the internal stack trace (spike finding F2).
