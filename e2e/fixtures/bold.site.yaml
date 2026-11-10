@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=../../docs/layout.schema.json
+# Layout of the Bold e2e build (see build:bold in package.json): the theme is chosen here, as an adopter would in
+# site.yaml. The e2e suite checks that the other theme leaks no CSS into this build.
+theme:
+  use: '@vvitrine/theme-bold'
+  # The light/dark switch (off by default: it adds a small script to every page).
+  options: { colorSchemeToggle: true }
