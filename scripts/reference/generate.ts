@@ -1,10 +1,10 @@
 /**
- * Builds the configuration reference (docs/reference.md) and the content JSON Schema (docs/content.schema.json) from
- * the zod schemas themselves, so the documentation cannot drift from the code. Run `pnpm reference` to update them;
+ * Builds the configuration reference (docs/reference.md) and the JSON Schemas of the content files
+ * (docs/content.schema.json) and of the layout file (docs/layout.schema.json) from the zod schemas themselves, so the documentation cannot drift from the code. Run `pnpm reference` to update them;
  * the test next to this file fails when they are out of date.
  */
 import { z } from 'zod';
-import { Basics, ConfigSchema, type SectionPlugin } from '@vvitrine/core';
+import { Basics, ConfigSchema, LayoutSchema, type SectionPlugin } from '@vvitrine/core';
 import { contact } from '@vvitrine/contact';
 import { allSections, privacy, timeline } from '@vvitrine/sections';
 
@@ -109,6 +109,7 @@ export function generateReference() {
     owners[s.content.key] = s.id;
   }
 
+  const layoutJson = toJson(LayoutSchema);
   const md: string[] = [
     '# Configuration reference',
     '',
@@ -119,7 +120,17 @@ export function generateReference() {
     '',
     '## `vvitrine.config.ts`',
     '',
+    'The plugins, and the options that need code. `site`, `pages` and `messages` can live here or in `site.yaml`,',
+    'not in both.',
+    '',
     table(rows(toJson(ConfigSchema), '', true)),
+    '## `site.yaml`',
+    '',
+    'The layout of the site, as plain data: languages, pages, texts and design tokens. It sits next to',
+    '`vvitrine.config.ts` (`site.yaml`, `site.yml` or `site.json`). Editors can check it with',
+    '[`layout.schema.json`](layout.schema.json): add `# yaml-language-server: $schema=<path to it>` at the top.',
+    '',
+    table(rows(layoutJson, '', true)),
     '## Content',
     '',
     'Each key of your content files is owned and checked by one section. Fields of the',
@@ -157,5 +168,15 @@ export function generateReference() {
       ]),
     ),
   };
-  return { markdown: md.join('\n'), schema: `${JSON.stringify(schema, null, 2)}\n` };
+  const layout = {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    title: 'VVitrine layout file',
+    description: 'The layout file (site.yaml or site.json). Generated from the schemas by `pnpm reference`.',
+    ...Object.fromEntries(Object.entries(layoutJson).filter(([name]) => name !== '$schema')),
+  };
+  return {
+    markdown: md.join('\n'),
+    schema: `${JSON.stringify(schema, null, 2)}\n`,
+    layoutSchema: `${JSON.stringify(layout, null, 2)}\n`,
+  };
 }

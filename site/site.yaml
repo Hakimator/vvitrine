@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../docs/layout.schema.json
 # The layout of your site: languages, pages and the order of their sections, texts and colours.
 # Plain data: edit it by hand or with the Studio. Plugins are installed in vvitrine.config.ts.
 
