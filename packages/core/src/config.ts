@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { toIssues } from './content/zod-issues.ts';
 import { InvalidConfigError } from './errors.ts';
 import type { Messages } from './i18n/translator.ts';
-import type { Plugin } from './plugin.ts';
+import type { Plugin, ThemePlugin } from './plugin.ts';
 import { TokenValuesSchema, type ThemeTokens } from './render/tokens.ts';
 
 /**
@@ -110,6 +110,17 @@ export const LayoutSchema = z.strictObject({
   site: SiteSchema.optional(),
   theme: z
     .strictObject({
+      use: z
+        .string()
+        .min(1)
+        .optional()
+        .describe(
+          'The theme to use: an installed package ("@vvitrine/theme-bold") or a file next to this one ("./plugins/my-theme.ts"). Only this theme is loaded. Leave it out to use the theme in vvitrine.config.ts.',
+        ),
+      options: z
+        .record(z.string(), z.unknown())
+        .optional()
+        .describe('Options of that theme, e.g. { colorSchemeToggle: true }.'),
       tokens: z
         .strictObject({ light: TokenValuesSchema.optional(), dark: TokenValuesSchema.optional() })
         .optional()
@@ -128,6 +139,11 @@ export interface LayoutFile {
   readonly data: unknown;
   /** File name shown in errors, e.g. 'site.yaml'. */
   readonly origin: string;
+  /**
+   * The theme named by `theme.use`, loaded by the composition root. Only the composition root imports it: a theme
+   * that is imported ships its CSS on every page, even when it is not used.
+   */
+  readonly theme?: ThemePlugin;
 }
 
 export interface ResolvedConfig {
@@ -165,8 +181,32 @@ export function resolveConfig(config: VVitrineConfig, layoutFile?: LayoutFile): 
       );
     }
   }
+  const use = layout.theme?.use;
+  let allPlugins = config.plugins;
+  if (use !== undefined && layoutFile) {
+    const inConfig = config.plugins.filter((plugin) => plugin?.kind === 'theme').map((plugin) => plugin.name);
+    if (inConfig.length > 0) {
+      throw new InvalidConfigError(
+        [
+          {
+            path: 'theme.use',
+            message: `${layoutFile.origin} uses "${use}", and vvitrine.config.ts installs ${inConfig.join(', ')}; remove the theme from "plugins" (a theme that is imported ships its CSS)`,
+          },
+        ],
+        `vvitrine.config.ts and ${layoutFile.origin}`,
+      );
+    }
+    if (!layoutFile.theme) {
+      throw new InvalidConfigError(
+        [{ path: 'theme.use', message: `the theme "${use}" was not loaded (the composition root loads it)` }],
+        layoutFile.origin,
+      );
+    }
+    allPlugins = [...config.plugins, layoutFile.theme];
+  }
   const merged = {
     ...config,
+    plugins: allPlugins,
     ...Object.fromEntries(SHARED_KEYS.filter((key) => layout[key] !== undefined).map((key) => [key, layout[key]])),
   };
   const result = ConfigSchema.safeParse(merged);

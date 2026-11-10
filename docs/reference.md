@@ -37,6 +37,8 @@ The layout of the site, as plain data: languages, pages, texts and design tokens
 | `site.locales` | list of text |  |  | Every language of the site; the others live under /en/, /de/... Must include defaultLocale. |
 | `site.favicon` | text or `false` |  | `"/favicon.svg"` | Site icon in public/, or false for none. |
 | `theme` | object |  |  | Look of the site, whatever the theme. |
+| `theme.use` | text |  |  | The theme to use: an installed package ("@vvitrine/theme-bold") or a file next to this one ("./plugins/my-theme.ts"). Only this theme is loaded. Leave it out to use the theme in vvitrine.config.ts. |
+| `theme.options` | map |  |  | Options of that theme, e.g. { colorSchemeToggle: true }. |
 | `theme.tokens` | object |  |  | Design token overrides, applied over the active theme, for light and dark mode. |
 | `theme.tokens.light` | object |  |  | Design tokens: colorPrimary, colorAccent, colorText, colorMuted, colorBackground, colorSurface, colorBorder, colorOnPrimary, fontBody, fontHeading, radius, contentWidth. |
 | `theme.tokens.light.colorPrimary` | text |  |  |  |

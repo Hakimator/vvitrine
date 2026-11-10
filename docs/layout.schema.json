@@ -43,6 +43,19 @@
       "description": "Look of the site, whatever the theme.",
       "type": "object",
       "properties": {
+        "use": {
+          "description": "The theme to use: an installed package (\"@vvitrine/theme-bold\") or a file next to this one (\"./plugins/my-theme.ts\"). Only this theme is loaded. Leave it out to use the theme in vvitrine.config.ts.",
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "description": "Options of that theme, e.g. { colorSchemeToggle: true }.",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
         "tokens": {
           "description": "Design token overrides, applied over the active theme, for light and dark mode.",
           "type": "object",

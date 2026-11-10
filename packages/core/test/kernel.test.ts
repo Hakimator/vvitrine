@@ -179,6 +179,25 @@ describe('layout file (ADR-016)', () => {
     expect(site.tokensCss).toContain('[data-color-scheme=dark]{color-scheme:dark;--vv-color-primary:#abcdef}');
   });
 
+  it('uses the theme the layout file names, loaded by the composition root', async () => {
+    const plugins = [memorySource(content), hero, work];
+    const other = { ...stringTheme({ hero: 'Other hero', work: 'Other work' }), name: 'theme-other' };
+    const site = await build(
+      { plugins },
+      { layout: { data: { theme: { use: 'theme-other' } }, origin: 'site.yaml', theme: other } },
+    );
+    expect(site.theme.name).toBe('theme-other');
+  });
+
+  it('refuses a theme named in the layout file when vvitrine.config.ts installs one too', () => {
+    const data = { theme: { use: '@vvitrine/theme-bold' } };
+    expect(() =>
+      createKernel(code, { root: '/', logger: silent, layout: { data, origin: 'site.yaml', theme } }),
+    ).toThrow(/theme\.use: site\.yaml uses "@vvitrine\/theme-bold", and vvitrine\.config\.ts installs/);
+    const plugins = [memorySource(content), hero, work];
+    expect(() => createKernel({ plugins }, { root: '/', logger: silent, ...layout(data) })).toThrow(/was not loaded/);
+  });
+
   it('accepts an empty layout file', async () => {
     const site = await build(config(), layout(null));
     expect(site.routes).toHaveLength(2);
