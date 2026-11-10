@@ -7,7 +7,7 @@ A "now" section: what you are doing at the moment, and when you last updated it 
 import now from './plugins/section-now/src/index.ts';
 
 plugins: [/* ... */, now()],
-pages: [{ path: '/', sections: ['hero', { id: 'now', options: { limit: 3 } }, 'projects'] }],
+// site.yaml: pages: [{ path: /, sections: [hero, { id: now, options: { limit: 3 } }, projects] }]
 ```
 
 ```yaml

@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VVitrine layout file",
+  "description": "The layout file (site.yaml or site.json). Generated from the schemas by `pnpm reference`.",
+  "type": "object",
+  "properties": {
+    "site": {
+      "type": "object",
+      "properties": {
+        "defaultLocale": {
+          "default": "en",
+          "description": "Language of the site root, e.g. \"fr\": its pages have no prefix.",
+          "type": "string",
+          "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+        },
+        "locales": {
+          "description": "Every language of the site; the others live under /en/, /de/... Must include defaultLocale.",
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+          }
+        },
+        "favicon": {
+          "default": "/favicon.svg",
+          "description": "Site icon in public/, or false for none.",
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^\\/"
+            },
+            {
+              "type": "boolean",
+              "const": false
+            }
+          ]
+        }
+      },
+      "description": "Languages and icon."
+    },
+    "theme": {
+      "description": "Look of the site, whatever the theme.",
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "description": "Design token overrides, applied over the active theme, for light and dark mode.",
+          "type": "object",
+          "properties": {
+            "light": {
+              "type": "object",
+              "properties": {
+                "colorPrimary": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorAccent": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorText": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorMuted": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorBackground": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorSurface": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorBorder": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorOnPrimary": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "fontBody": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "fontHeading": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "radius": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "contentWidth": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Design tokens: colorPrimary, colorAccent, colorText, colorMuted, colorBackground, colorSurface, colorBorder, colorOnPrimary, fontBody, fontHeading, radius, contentWidth."
+            },
+            "dark": {
+              "type": "object",
+              "properties": {
+                "colorPrimary": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorAccent": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorText": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorMuted": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorBackground": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorSurface": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorBorder": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "colorOnPrimary": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "fontBody": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "fontHeading": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "radius": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                },
+                "contentWidth": {
+                  "type": "string",
+                  "pattern": "^[^;{}<>]*$"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Design tokens: colorPrimary, colorAccent, colorText, colorMuted, colorBackground, colorSurface, colorBorder, colorOnPrimary, fontBody, fontHeading, radius, contentWidth."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "pages": {
+      "description": "Pages and the sections on each. Default: one page with every section.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\/[a-z0-9\\-/]*$",
+            "description": "Address without the language prefix, e.g. \"/\" or \"/resume\"."
+          },
+          "title": {
+            "description": "Message key or text; default: your name.",
+            "type": "string"
+          },
+          "footer": {
+            "description": "Link the page from the footer instead of the header (e.g. privacy).",
+            "type": "boolean"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "options": {},
+                    "nav": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              ]
+            },
+            "description": "Section ids in order, or { id, options, nav } to set options or leave out the header link."
+          }
+        },
+        "required": [
+          "path",
+          "sections"
+        ]
+      }
+    },
+    "messages": {
+      "description": "Replace any text, per language: { en: { 'section.work.title': 'Career' } }.",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

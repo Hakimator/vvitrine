@@ -6,7 +6,7 @@ short version.
 ## Layers
 
 ```
-site/ (user)            vvitrine.config.ts, content/, plugins/, public/
+site/ (user)            site.yaml, vvitrine.config.ts, content/, plugins/, public/
 packages/astro          composition root: loads the config, injects routes, renders the kernel output
 themes/*                theme plugins (Astro components)
 packages/sections, seo, source-*  plugins
@@ -17,7 +17,8 @@ Dependencies point inward only; `pnpm boundaries` enforces it.
 
 ## Build flow
 
-1. Astro starts; `@vvitrine/astro` resolves `vvitrine.config.ts` and injects two routes (pages, generated files).
+1. Astro starts; `@vvitrine/astro` resolves `vvitrine.config.ts` and the layout file (`site.yaml`), and injects two routes
+   (pages, generated files).
 2. The kernel validates the config and registers plugins (API version, uniqueness, one theme, capabilities, content ownership).
 3. For each locale: sources load raw content, `contentLoaded` hooks run, each key is validated by its owner.
 4. Pages and plugin-contributed routes are resolved; each section presents a view model; components are picked

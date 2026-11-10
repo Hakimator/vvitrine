@@ -1,4 +1,11 @@
-import { resolveConfig, type PageConfig, type ResolvedConfig, type SectionRef, type VVitrineConfig } from './config.ts';
+import {
+  resolveConfig,
+  type LayoutFile,
+  type PageConfig,
+  type ResolvedConfig,
+  type SectionRef,
+  type VVitrineConfig,
+} from './config.ts';
 import { loadContent, type ValidatedContent } from './content/pipeline.ts';
 import { toIssues } from './content/zod-issues.ts';
 import {
@@ -13,7 +20,7 @@ import { formatPartialDate, formatPeriod } from './i18n/dates.ts';
 import { Translator, type Locale } from './i18n/translator.ts';
 import type { HeadTag } from './render/head.ts';
 import { colorSchemeScript } from './render/color-scheme.browser.ts';
-import { tokensToCss } from './render/tokens.ts';
+import { mergeTokens, tokensToCss, type ThemeTokens } from './render/tokens.ts';
 import type { ImageProvider, ResponsiveImage } from './images.ts';
 import { viewKindKey } from './views.ts';
 import type {
@@ -42,6 +49,8 @@ export interface KernelOptions {
   /** Absolute site URL, e.g. 'https://jane.dev'. Needed for canonical URLs and sitemaps. */
   readonly siteUrl?: string;
   readonly logger?: Logger;
+  /** The layout file (site.yaml or site.json), read by the composition root (ADR-016). */
+  readonly layout?: LayoutFile;
 }
 
 export interface BuiltSection {
@@ -108,7 +117,7 @@ export class Kernel {
   constructor(userConfig: VVitrineConfig, options: KernelOptions) {
     this.options = options;
     this.logger = options.logger ?? consoleLogger;
-    this.config = resolveConfig(userConfig);
+    this.config = resolveConfig(userConfig, options.layout);
     this.registry = new PluginRegistry(this.config.plugins);
     this.checkReads();
     const imagePlugins = this.registry.ofKind('generator').filter((g) => g.images);
@@ -125,6 +134,11 @@ export class Kernel {
     this.translator.add(coreMessages);
     for (const plugin of this.registry.all()) this.translator.add(plugin.messages);
     this.translator.add(this.config.messages);
+  }
+
+  /** The active theme's tokens with the layout file's overrides. */
+  private get tokens(): ThemeTokens {
+    return mergeTokens(this.registry.theme.tokens, this.config.tokens);
   }
 
   get locales(): readonly Locale[] {
@@ -147,7 +161,7 @@ export class Kernel {
     return {
       theme,
       favicon: this.config.favicon ? `${base}${this.config.favicon}` : null,
-      tokensCss: tokensToCss(theme.tokens),
+      tokensCss: tokensToCss(this.tokens),
       defaultLocale: this.config.defaultLocale,
       locales: this.config.locales,
       routes,
@@ -305,7 +319,7 @@ export class Kernel {
   private finalize(pending: readonly PendingRoute[]): BuiltRoute[] {
     const theme = this.registry.theme;
     // A switch needs dark colours to switch to.
-    const toggle = theme.colorSchemeToggle === true && theme.tokens.dark !== undefined;
+    const toggle = theme.colorSchemeToggle === true && this.tokens.dark !== undefined;
     const seen = new Set<string>();
     const localesByPath = new Map<string, Locale[]>();
     for (const route of pending) {

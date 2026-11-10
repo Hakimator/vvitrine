@@ -103,10 +103,14 @@ plugins: [
   blog({ path: '/blog' }),
   /* ... */
 ],
-pages: [
-  { path: '/', sections: ['hero', { id: 'blog', nav: false, options: { limit: 2 } }, /* ... */] },
-  { path: '/blog', title: 'page.blog', sections: ['blog'] },
-],
+```
+
+```yaml
+# site/site.yaml
+pages:
+  - path: /
+    sections: [hero, { id: blog, nav: false, options: { limit: 2 } }] # ...
+  - { path: /blog, title: page.blog, sections: [blog] }
 ```
 
 ```markdown

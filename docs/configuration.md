@@ -1,27 +1,58 @@
-# Configuration reference (`site/vvitrine.config.ts`)
+# Configuration (`site/site.yaml` and `site/vvitrine.config.ts`)
+
+Your site is configured in two files, next to each other:
+
+- **`site.yaml`**, the layout, as plain data: languages, pages and the order of their sections, texts and design
+  tokens. You (or a tool) can edit it without touching code.
+- **`vvitrine.config.ts`**, the code: the plugins your site uses, and their options that need code or secrets (such as an
+  access key read from an environment variable).
+
+```yaml
+# site/site.yaml
+# yaml-language-server: $schema=../docs/layout.schema.json
+site: { defaultLocale: fr, locales: [fr, en], favicon: /favicon.svg }
+theme:
+  tokens:
+    light: { colorPrimary: '#1f3a5f' }
+pages:
+  - path: /
+    title: optional title or message key
+    sections:
+      - hero
+      - { id: work, options: { limit: 3 } }
+messages:
+  en: { section.work.title: Career }
+```
 
 ```ts
+// site/vvitrine.config.ts
 import { defineConfig } from '@vvitrine/core';
 
 export default defineConfig({
-  site: { defaultLocale: 'fr', locales: ['fr', 'en'], favicon: '/favicon.svg' },
   plugins: [/* source, exactly one theme, sections, services, generators */],
-  pages: [
-    { path: '/', title: 'optional title or message key', sections: ['hero', { id: 'work', options: { limit: 3 } }] },
-  ],
-  messages: { en: { 'section.work.title': 'Career' } },
 });
 ```
 
-| Field                | Default                          | Description                                                                                                                        |
-| -------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `site.defaultLocale` | `'en'`                           | Language served at `/`. Other languages are served at `/<locale>/`.                                                                |
-| `site.locales`       | `[defaultLocale]`                | Must include `defaultLocale`.                                                                                                      |
-| `site.favicon`       | `'/favicon.svg'`                 | File in `public/`, or `false`.                                                                                                     |
-| `plugins`            | (required)                       | Plugin instances. Call the factories: `corporate()`, not `corporate`.                                                              |
-| `pages`              | one home page with every section | Each page: `path` (`/` or `/cv`), optional `title`, ordered `sections`. A page without a hero shows its title as its main heading. |
-| `pages[].sections[]` |                                  | A section id, or `{ id, options, nav }`. Options are validated by the section.                                                     |
-| `messages`           |                                  | Overrides of any UI string, per locale, and your own texts (e.g. a page title key).                                                |
+| Field                | Where                | Default                          | Description                                                                                                                        |
+| -------------------- | -------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `site.defaultLocale` | layout               | `'en'`                           | Language served at `/`. Other languages are served at `/<locale>/`.                                                                |
+| `site.locales`       | layout               | `[defaultLocale]`                | Must include `defaultLocale`.                                                                                                      |
+| `site.favicon`       | layout               | `'/favicon.svg'`                 | File in `public/`, or `false`.                                                                                                     |
+| `theme.tokens`       | layout only          | the theme's values               | Design token overrides for `light` and `dark`, whatever the theme (see [Themes](themes.md)).                                       |
+| `pages`              | layout               | one home page with every section | Each page: `path` (`/` or `/cv`), optional `title`, ordered `sections`. A page without a hero shows its title as its main heading. |
+| `pages[].sections[]` | layout               |                                  | A section id, or `{ id, options, nav }`. Options are validated by the section.                                                     |
+| `messages`           | layout               |                                  | Overrides of any UI string, per locale, and your own texts (e.g. a page title key).                                                |
+| `plugins`            | `vvitrine.config.ts` | (required)                       | Plugin instances. Call the factories: `corporate()`, not `corporate`.                                                              |
+
+- `site`, `pages` and `messages` may also be written in `vvitrine.config.ts` (as before version 1.1), but each in one
+  place only: the build stops if both files set the same one.
+- The layout file may be `site.yaml`, `site.yml` or `site.json`. Without one, everything comes from
+  `vvitrine.config.ts`.
+- [`layout.schema.json`](layout.schema.json) lets editors check the file as you type (the first line above, for VS Code
+  with the YAML extension). Every field is listed in the [reference](reference.md).
+- `pnpm dev` reloads the page when you save `site.yaml`.
+
+The examples below show the layout in YAML and the plugins in TypeScript.
 
 ## Navigation
 
@@ -29,8 +60,8 @@ The header links are generated from your pages: every placed section that has a 
 order (the hero has no title, so it gets none). Links on other pages lead back to the right page and section. To hide a
 section from the header, set `nav: false`:
 
-```ts
-sections: ['hero', 'projects', { id: 'languages', nav: false }],
+```yaml
+sections: [hero, projects, { id: languages, nav: false }]
 ```
 
 ## Footer and privacy page
@@ -40,11 +71,15 @@ header. The demo uses it for the privacy page:
 
 ```ts
 plugins: [/* ... */, privacy({ host: { name: 'GitHub Pages', url: '<its privacy statement>' } })],
-pages: [
-  /* ... */
-  { path: '/privacy', title: 'page.privacy', footer: true, sections: ['privacy'] },
-],
-messages: { fr: { 'page.privacy': 'Confidentialité' }, en: { 'page.privacy': 'Privacy' } },
+```
+
+```yaml
+pages:
+  # ...
+  - { path: /privacy, title: page.privacy, footer: true, sections: [privacy] }
+messages:
+  fr: { page.privacy: Confidentialité }
+  en: { page.privacy: Privacy }
 ```
 
 The `privacy` section writes the page from what your plugins declare: each service that receives visitor data (the
@@ -59,10 +94,16 @@ not legal advice: read it before you publish.
 import resumePdf from '@vvitrine/resume-pdf';
 // ...
 plugins: [/* ... */, resumePdf({ page: '/resume', accent: '#1f3a5f' })],
-pages: [
-  { path: '/', sections: [{ id: 'hero', options: { cv: '/cv-{locale}.pdf' } }, /* ... */] },
-  { path: '/resume', title: 'page.resume', footer: true, sections: ['hero', 'work', 'education', 'skills', 'languages'] },
-],
+```
+
+```yaml
+pages:
+  - path: /
+    sections: [{ id: hero, options: { cv: '/cv-{locale}.pdf' } }] # ...
+  - path: /resume
+    title: page.resume
+    footer: true
+    sections: [hero, work, education, skills, languages]
 ```
 
 - The `/resume` page shows what a printed CV holds. Every page prints on A4 in light colours, without the header,
@@ -123,6 +164,7 @@ JavaScript the button is not shown. Printing always uses the light colours.
 
 ## Rules checked at build time
 
+- each of `site`, `pages` and `messages` set in one file only;
 - exactly one theme plugin;
 - unique plugin names and section ids;
 - one owner per content key;
@@ -149,10 +191,15 @@ the demo puts it on its own page.
 
 ```ts
 plugins: [/* ... */, projects({ path: '/projects', tags: true })],
-pages: [
-  { path: '/', sections: ['hero', { id: 'projects', nav: false, options: { limit: 6 } }] },
-  { path: '/projects', title: 'page.projects', sections: [{ id: 'projects', options: { filter: true } }] },
-],
+```
+
+```yaml
+pages:
+  - path: /
+    sections: [hero, { id: projects, nav: false, options: { limit: 6 } }]
+  - path: /projects
+    title: page.projects
+    sections: [{ id: projects, options: { filter: true } }]
 ```
 
 - `path` is the page that lists every project: "All projects" links lead there (default `/`, the home page).
@@ -172,7 +219,12 @@ pages: [
 import { contact, web3forms } from '@vvitrine/contact';
 // ...
 plugins: [/* ... */, contact({ provider: web3forms({ accessKey: '<your key>' }) })],
-pages: [{ path: '/', sections: [{ id: 'hero', options: { contact: '#contact' } }, /* ... */, 'contact'] }],
+```
+
+```yaml
+pages:
+  - path: /
+    sections: [{ id: hero, options: { contact: '#contact' } }, contact] # and your other sections
 ```
 
 - The form is plain HTML: it works without JavaScript, and nothing is sent to a third party until the visitor presses

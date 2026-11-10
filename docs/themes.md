@@ -15,11 +15,17 @@ styles. The build refuses two themes for this reason.
 
 ## Change colours and fonts
 
-Every theme uses the same design tokens. Override them through the theme options:
+Every theme uses the same design tokens. Override them in `site/site.yaml`, whatever the theme:
 
-```ts
-corporate({ tokens: { light: { colorPrimary: '#0b6e4f' }, dark: { colorPrimary: '#7fd1b0' } } });
+```yaml
+theme:
+  tokens:
+    light: { colorPrimary: '#0b6e4f' }
+    dark: { colorPrimary: '#7fd1b0' }
 ```
+
+The theme options take the same values (`corporate({ tokens: { light: { colorPrimary: '#0b6e4f' } } })`); the layout
+file's values apply on top of them.
 
 | Token                                                              | CSS variable                          |
 | ------------------------------------------------------------------ | ------------------------------------- |

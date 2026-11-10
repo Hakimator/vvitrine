@@ -10,3 +10,10 @@ declare module 'virtual:vvitrine/runtime' {
   export const siteUrl: string | null;
   export const dev: boolean;
 }
+
+declare module 'virtual:vvitrine/layout' {
+  import type { LayoutFile } from '@vvitrine/core';
+  /** The layout file (site.yaml or site.json), or null when the site has none. */
+  const layout: LayoutFile | null;
+  export default layout;
+}

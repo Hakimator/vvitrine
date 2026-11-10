@@ -7,6 +7,9 @@ them: [Configuration](configuration.md), [Content](content.md), [Themes](themes.
 
 ## `vvitrine.config.ts`
 
+The plugins, and the options that need code. `site`, `pages` and `messages` can live here or in `site.yaml`,
+not in both.
+
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `site` | object |  | `{"defaultLocale":"en","favicon":"/favicon.svg"}` | Languages and icon. |
@@ -14,6 +17,53 @@ them: [Configuration](configuration.md), [Content](content.md), [Themes](themes.
 | `site.locales` | list of text |  |  | Every language of the site; the others live under /en/, /de/... Must include defaultLocale. |
 | `site.favicon` | text or `false` |  | `"/favicon.svg"` | Site icon in public/, or false for none. |
 | `plugins` | list of any | yes |  | Plugin instances: sources, sections, exactly one theme, services, generators. Call the factories. |
+| `pages` | list of object |  |  | Pages and the sections on each. Default: one page with every section. |
+| `pages[].path` | text | yes |  | Address without the language prefix, e.g. "/" or "/resume". |
+| `pages[].title` | text |  |  | Message key or text; default: your name. |
+| `pages[].footer` | `true` or `false` |  |  | Link the page from the footer instead of the header (e.g. privacy). |
+| `pages[].sections` | list of text or object | yes |  | Section ids in order, or { id, options, nav } to set options or leave out the header link. |
+| `messages` | map |  |  | Replace any text, per language: { en: { 'section.work.title': 'Career' } }. |
+
+## `site.yaml`
+
+The layout of the site, as plain data: languages, pages, texts and design tokens. It sits next to
+`vvitrine.config.ts` (`site.yaml`, `site.yml` or `site.json`). Editors can check it with
+[`layout.schema.json`](layout.schema.json): add `# yaml-language-server: $schema=<path to it>` at the top.
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `site` | object |  |  | Languages and icon. |
+| `site.defaultLocale` | text |  | `"en"` | Language of the site root, e.g. "fr": its pages have no prefix. |
+| `site.locales` | list of text |  |  | Every language of the site; the others live under /en/, /de/... Must include defaultLocale. |
+| `site.favicon` | text or `false` |  | `"/favicon.svg"` | Site icon in public/, or false for none. |
+| `theme` | object |  |  | Look of the site, whatever the theme. |
+| `theme.tokens` | object |  |  | Design token overrides, applied over the active theme, for light and dark mode. |
+| `theme.tokens.light` | object |  |  | Design tokens: colorPrimary, colorAccent, colorText, colorMuted, colorBackground, colorSurface, colorBorder, colorOnPrimary, fontBody, fontHeading, radius, contentWidth. |
+| `theme.tokens.light.colorPrimary` | text |  |  |  |
+| `theme.tokens.light.colorAccent` | text |  |  |  |
+| `theme.tokens.light.colorText` | text |  |  |  |
+| `theme.tokens.light.colorMuted` | text |  |  |  |
+| `theme.tokens.light.colorBackground` | text |  |  |  |
+| `theme.tokens.light.colorSurface` | text |  |  |  |
+| `theme.tokens.light.colorBorder` | text |  |  |  |
+| `theme.tokens.light.colorOnPrimary` | text |  |  |  |
+| `theme.tokens.light.fontBody` | text |  |  |  |
+| `theme.tokens.light.fontHeading` | text |  |  |  |
+| `theme.tokens.light.radius` | text |  |  |  |
+| `theme.tokens.light.contentWidth` | text |  |  |  |
+| `theme.tokens.dark` | object |  |  | Design tokens: colorPrimary, colorAccent, colorText, colorMuted, colorBackground, colorSurface, colorBorder, colorOnPrimary, fontBody, fontHeading, radius, contentWidth. |
+| `theme.tokens.dark.colorPrimary` | text |  |  |  |
+| `theme.tokens.dark.colorAccent` | text |  |  |  |
+| `theme.tokens.dark.colorText` | text |  |  |  |
+| `theme.tokens.dark.colorMuted` | text |  |  |  |
+| `theme.tokens.dark.colorBackground` | text |  |  |  |
+| `theme.tokens.dark.colorSurface` | text |  |  |  |
+| `theme.tokens.dark.colorBorder` | text |  |  |  |
+| `theme.tokens.dark.colorOnPrimary` | text |  |  |  |
+| `theme.tokens.dark.fontBody` | text |  |  |  |
+| `theme.tokens.dark.fontHeading` | text |  |  |  |
+| `theme.tokens.dark.radius` | text |  |  |  |
+| `theme.tokens.dark.contentWidth` | text |  |  |  |
 | `pages` | list of object |  |  | Pages and the sections on each. Default: one page with every section. |
 | `pages[].path` | text | yes |  | Address without the language prefix, e.g. "/" or "/resume". |
 | `pages[].title` | text |  |  | Message key or text; default: your name. |

@@ -1,7 +1,9 @@
+import { z } from 'zod';
+
 /**
  * Design token contract shared by every theme (ADR-010). Themes declare default values; users
- * override them through the theme options. The kernel is the only place that writes the CSS
- * custom properties, so a theme never has to know about user overrides.
+ * override them through the theme options or the layout file (`theme.tokens`, for any theme). The kernel is the
+ * only place that writes the CSS custom properties, so a theme never has to know about user overrides.
  */
 export const TOKEN_NAMES = [
   'colorPrimary',
@@ -30,6 +32,13 @@ export interface ThemeTokens {
 export const cssVariable = (name: TokenName): string => `--vv-${name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
 
 const SAFE_VALUE = /^[^;{}<>]*$/;
+
+const TokenValue = z.string().regex(SAFE_VALUE, { message: 'a CSS value without ; { } < or >' });
+
+/** Token values as data (the layout file): only known token names, safe CSS values. */
+export const TokenValuesSchema = z
+  .strictObject(Object.fromEntries(TOKEN_NAMES.map((name) => [name, TokenValue.optional()])))
+  .describe(`Design tokens: ${TOKEN_NAMES.join(', ')}.`);
 
 function declarations(values: TokenValues): string {
   return TOKEN_NAMES.filter((name) => values[name] !== undefined)
