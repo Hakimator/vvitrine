@@ -41,8 +41,8 @@ Full guide: [docs/getting-started.md](docs/getting-started.md).
 
 ```
 site/
-  site.yaml            languages, pages and their sections, texts, colours (plain data)
-  vvitrine.config.ts   plugins and theme
+  site.yaml            languages, pages and their sections, theme, texts, colours (plain data)
+  vvitrine.config.ts   plugins
   content/             your resume and projects (YAML or JSON, one file per language)
   plugins/             your own plugins (optional)
   public/              images, favicon, CNAME

@@ -12,6 +12,7 @@ Your site is configured in two files, next to each other:
 # yaml-language-server: $schema=../docs/layout.schema.json
 site: { defaultLocale: fr, locales: [fr, en], favicon: /favicon.svg }
 theme:
+  use: '@vvitrine/theme-corporate'
   tokens:
     light: { colorPrimary: '#1f3a5f' }
 pages:
@@ -29,7 +30,7 @@ messages:
 import { defineConfig } from '@vvitrine/core';
 
 export default defineConfig({
-  plugins: [/* source, exactly one theme, sections, services, generators */],
+  plugins: [/* sources, sections, services, generators (and the theme, if site.yaml does not name one) */],
 });
 ```
 
@@ -38,6 +39,8 @@ export default defineConfig({
 | `site.defaultLocale` | layout               | `'en'`                           | Language served at `/`. Other languages are served at `/<locale>/`.                                                                |
 | `site.locales`       | layout               | `[defaultLocale]`                | Must include `defaultLocale`.                                                                                                      |
 | `site.favicon`       | layout               | `'/favicon.svg'`                 | File in `public/`, or `false`.                                                                                                     |
+| `theme.use`          | layout only          | the theme in `plugins`           | The theme: an installed package (`'@vvitrine/theme-bold'`) or a file. Only this theme is loaded (see [Themes](themes.md)).         |
+| `theme.options`      | layout only          | `{}`                             | Options of that theme, e.g. `{ colorSchemeToggle: true }`.                                                                         |
 | `theme.tokens`       | layout only          | the theme's values               | Design token overrides for `light` and `dark`, whatever the theme (see [Themes](themes.md)).                                       |
 | `pages`              | layout               | one home page with every section | Each page: `path` (`/` or `/cv`), optional `title`, ordered `sections`. A page without a hero shows its title as its main heading. |
 | `pages[].sections[]` | layout               |                                  | A section id, or `{ id, options, nav }`. Options are validated by the section.                                                     |
@@ -153,8 +156,10 @@ plugins: [/* ... */, seo({ image: '/og-{locale}.png' }), ogImage({ background: '
 
 Both themes follow the visitor's system setting. To add a switch to the header as well:
 
-```ts
-plugins: [corporate({ colorSchemeToggle: true }) /* or bold({ ... }) */],
+```yaml
+theme:
+  use: '@vvitrine/theme-corporate' # or '@vvitrine/theme-bold'
+  options: { colorSchemeToggle: true }
 ```
 
 The choice is remembered in the visitor's browser (local storage, not a cookie) and applied before the page is drawn,
@@ -165,7 +170,7 @@ JavaScript the button is not shown. Printing always uses the light colours.
 ## Rules checked at build time
 
 - each of `site`, `pages` and `messages` set in one file only;
-- exactly one theme plugin;
+- exactly one theme, from `plugins` or `theme.use`;
 - unique plugin names and section ids;
 - one owner per content key;
 - every `requires` capability is provided by some plugin (e.g. an analytics plugin that requires `consent`);

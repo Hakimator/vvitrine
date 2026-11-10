@@ -32,7 +32,7 @@ In `site/site.yaml` (plain data):
 
 - `pages` places sections on pages, in order, with options (`{ id: projects, options: { limit: 6 } }`).
 - `messages` overrides any text (`en: { section.work.title: Career }`).
-- `theme.tokens` changes colours and fonts.
+- `theme.use` chooses the theme (`'@vvitrine/theme-bold'`), and `theme.tokens` changes colours and fonts.
 
 In `site/vvitrine.config.ts`, `plugins` lists everything the site can use: the source, **one** theme, the sections,
 services and generators.
