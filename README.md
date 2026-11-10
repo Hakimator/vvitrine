@@ -32,7 +32,7 @@ pick a theme, choose your sections, and deploy a fast, accessible, bilingual por
 1. Click **Use this template** on GitHub (or clone the repository).
 2. Install [Node.js 22+](https://nodejs.org) and pnpm (`npm install -g pnpm`), then run `pnpm install`.
 3. Run `pnpm dev` and open http://localhost:4321.
-4. Edit `site/content/resume.fr.yaml` and `site/content/resume.en.yaml`, and `site/vvitrine.config.ts`.
+4. Edit `site/content/resume.fr.yaml` and `site/content/resume.en.yaml`, and `site/site.yaml` (pages, texts, colours).
 5. Push to `main`. Enable **Settings > Pages > Source: GitHub Actions** once, and your site is live.
 
 Full guide: [docs/getting-started.md](docs/getting-started.md).
@@ -41,7 +41,8 @@ Full guide: [docs/getting-started.md](docs/getting-started.md).
 
 ```
 site/
-  vvitrine.config.ts   plugins, theme, pages, sections, texts
+  site.yaml            languages, pages and their sections, texts, colours (plain data)
+  vvitrine.config.ts   plugins and theme
   content/             your resume and projects (YAML or JSON, one file per language)
   plugins/             your own plugins (optional)
   public/              images, favicon, CNAME
@@ -55,7 +56,7 @@ Everything else (`packages/`, `themes/`) is the framework.
 | ------------------------------------------ | ------------------------------------------------------------------- |
 | [Getting started](docs/getting-started.md) | Install, run, deploy                                                |
 | [Writing content](docs/content.md)         | Resume format, projects, languages                                  |
-| [Configuration](docs/configuration.md)     | `vvitrine.config.ts` guide                                          |
+| [Configuration](docs/configuration.md)     | `site.yaml` and `vvitrine.config.ts` guide                          |
 | [Reference](docs/reference.md)             | Every configuration, content and option field, from the schemas     |
 | [Plugins](docs/plugins.md)                 | Use and write source, section, theme, service and generator plugins |
 | [Example plugins](examples/plugins/)       | One small, tested plugin of each kind, to copy                      |

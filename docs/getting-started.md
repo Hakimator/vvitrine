@@ -10,13 +10,13 @@ pnpm install
 pnpm dev
 ```
 
-Open http://localhost:4321. The page reloads when you save a content file.
+Open http://localhost:4321. The page reloads when you save a content file or `site/site.yaml`.
 
 ## 2. Put in your content
 
 Edit `site/content/resume.fr.yaml` and `site/content/resume.en.yaml` (see [Writing content](content.md)).
-Only want one language? Set `site: { defaultLocale: 'en', locales: ['en'] }` in `site/vvitrine.config.ts` and keep a
-single `resume.yaml`.
+Only want one language? Set `site: { defaultLocale: en, locales: [en] }` in `site/site.yaml` and keep a single
+`resume.yaml`.
 
 If something is wrong, the build stops and tells you the file, the field and how to fix it:
 
@@ -28,11 +28,14 @@ Invalid content for locale "en" (1 problem):
 
 ## 3. Choose your sections and theme
 
-In `site/vvitrine.config.ts`:
+In `site/site.yaml` (plain data):
 
-- `plugins` lists everything the site can use: the source, **one** theme, the sections, services and generators.
-- `pages` places sections on pages, in order, with options (`{ id: 'projects', options: { limit: 6 } }`).
-- `messages` overrides any text (`{ en: { 'section.work.title': 'Career' } }`).
+- `pages` places sections on pages, in order, with options (`{ id: projects, options: { limit: 6 } }`).
+- `messages` overrides any text (`en: { section.work.title: Career }`).
+- `theme.tokens` changes colours and fonts.
+
+In `site/vvitrine.config.ts`, `plugins` lists everything the site can use: the source, **one** theme, the sections,
+services and generators.
 
 See [Configuration](configuration.md).
 

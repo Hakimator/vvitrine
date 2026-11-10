@@ -1,6 +1,7 @@
 # Upgrading
 
-Your portfolio only lives in `site/vvitrine.config.ts`, `site/content/`, `site/plugins/` and `site/public/`. Framework
+Your portfolio only lives in `site/site.yaml`, `site/vvitrine.config.ts`, `site/content/`, `site/plugins/` and
+`site/public/`. Framework
 files (`packages/`, `themes/`, root configuration) are never edited by users, so updates merge without conflicts.
 
 ## From the template repository
