@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { readLayout } from '../src/index.ts';
+import { layoutModule, readLayout } from '../src/index.ts';
 
 describe('layout file', () => {
   let root: string;
@@ -29,5 +29,27 @@ describe('layout file', () => {
   it('gives the file name and the line of a syntax error', async () => {
     const broken = await write('broken.yaml', 'pages:\n  - path: /\n   sections: [hero\n');
     await expect(readLayout(broken, root)).rejects.toThrow(/broken\.yaml is not valid YAML: .*line 3/s);
+  });
+
+  it('imports only the theme the layout names, with its options', async () => {
+    const pkg = await write(
+      'bold.yaml',
+      'theme:\n  use: "@vvitrine/theme-bold"\n  options: { colorSchemeToggle: true }\n',
+    );
+    const code = await layoutModule(pkg, root);
+    expect(code.match(/^import /gm)).toHaveLength(1);
+    expect(code).toContain('import * as themeModule from "@vvitrine/theme-bold";');
+    expect(code).toContain('themeModule.default({"colorSchemeToggle":true})');
+
+    const local = await write('local.yaml', 'theme: { use: ./plugins/theme.ts }\n');
+    expect(await layoutModule(local, root)).toContain(
+      `from ${JSON.stringify(join(root, 'plugins/theme.ts').replaceAll('\\', '/'))}`,
+    );
+  });
+
+  it('imports no theme when the layout names none, and exports null without a layout file', async () => {
+    const plain = await write('plain.yaml', 'theme: { tokens: { light: { colorPrimary: "#000" } } }\n');
+    expect(await layoutModule(plain, root)).not.toContain('import');
+    expect(await layoutModule(undefined, root)).toBe('export default null;');
   });
 });

@@ -2,16 +2,20 @@
 
 ## Switch theme
 
-Replace the theme in `plugins` (exactly one theme is allowed):
+Name the theme in `site/site.yaml`, with its options:
 
-```ts
-import bold from '@vvitrine/theme-bold';
-// ...
-plugins: [yamlSource(), bold(), hero(), /* ... */],
+```yaml
+theme:
+  use: '@vvitrine/theme-bold' # or '@vvitrine/theme-corporate', or your own: './plugins/my-theme.ts'
+  options: { colorSchemeToggle: true }
 ```
 
-Import only the theme you use: Astro ships the CSS of every imported component, so importing two themes would mix their
-styles. The build refuses two themes for this reason.
+- `use` is an installed package or a file next to `site.yaml`. Its default export creates the theme, and `options` is
+  passed to it.
+- Only that theme is loaded. Astro ships the CSS of every theme that is imported, even an unused one, so the build never
+  imports the others: you can keep both themes installed and switch with one line.
+- You can still put the theme in `plugins` (`plugins: [bold(), /* ... */]`) and leave `use` out. The build refuses a
+  theme in both places, and more than one theme in `plugins`.
 
 ## Change colours and fonts
 

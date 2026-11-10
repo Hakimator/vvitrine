@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "pnpm --filter site dev",
     "build": "pnpm --filter site build",
-    "build:bold": "cross-env VVITRINE_CONFIG=../e2e/fixtures/bold.config.ts pnpm --filter site exec astro build --outDir dist-bold",
+    "build:bold": "cross-env VVITRINE_CONFIG=../e2e/fixtures/bold.config.ts VVITRINE_LAYOUT=../e2e/fixtures/bold.site.yaml pnpm --filter site exec astro build --outDir dist-bold",
     "preview": "pnpm --filter site preview",
     "test": "vitest run",
     "reference": "vitest run scripts/reference --update",

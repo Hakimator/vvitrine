@@ -30,7 +30,6 @@ import { seo, sitemap } from '@vvitrine/seo';
 import images from '@vvitrine/images';
 import markdownSource from '@vvitrine/source-markdown';
 import yamlSource from '@vvitrine/source-yaml';
-import corporate from '@vvitrine/theme-corporate';
 import talks from './plugins/talks.ts';
 
 const accessKey = process.env.WEB3FORMS_ACCESS_KEY;
@@ -50,8 +49,7 @@ export default defineConfig({
     markdownSource({ dir: 'content/projects' }),
     // One Markdown file per article in content/blog/ (a second instance, for the "posts" key).
     markdownSource({ dir: 'content/blog', key: 'posts' }),
-    // Exactly one theme. Its colours and fonts can be changed in site.yaml (theme.tokens).
-    corporate(),
+    // The theme is chosen in site.yaml (theme.use), with its colours and fonts.
     // Sections you can place on pages
     hero(),
     stats(),

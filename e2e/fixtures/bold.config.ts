@@ -1,5 +1,5 @@
 /**
- * E2E fixture: the demo content rendered with the Bold theme.
+ * E2E fixture: the demo content rendered with the Bold theme (chosen in bold.site.yaml).
  * It must NOT import site/vvitrine.config.ts: that file imports the Corporate theme, and Astro
  * ships the CSS of every imported component (spike finding F1). The e2e suite checks for leaks.
  */
@@ -12,7 +12,6 @@ import { seo, sitemap } from '@vvitrine/seo';
 import images from '@vvitrine/images';
 import markdownSource from '@vvitrine/source-markdown';
 import yamlSource from '@vvitrine/source-yaml';
-import bold from '@vvitrine/theme-bold';
 import talks from '../../site/plugins/talks.ts';
 
 /** The demo has no photo (corporate shows initials); this build adds one to cover both cases. */
@@ -33,8 +32,7 @@ export default defineConfig({
     yamlSource(),
     markdownSource(),
     markdownSource({ dir: 'content/blog', key: 'posts' }),
-    // The light/dark switch (off by default: it adds a small script to every page).
-    bold({ colorSchemeToggle: true }),
+    // The theme (Bold, with its light/dark switch) is chosen in bold.site.yaml.
     withPhoto,
     ...allSections().filter((section) => section.id !== 'projects'),
     projects({ path: '/projects', tags: true }),
