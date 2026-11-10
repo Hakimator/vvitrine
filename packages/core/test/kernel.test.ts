@@ -131,6 +131,60 @@ describe('pages and sections', () => {
   });
 });
 
+describe('layout file (ADR-016)', () => {
+  const layout = (data: unknown) => ({ layout: { data, origin: 'site.yaml' } });
+  // The code part only: plugins, without languages or pages.
+  const code: VVitrineConfig = { plugins: config().plugins };
+
+  it('takes the languages, pages and texts from the layout file', async () => {
+    const data = {
+      site: { defaultLocale: 'fr', locales: ['fr', 'en'] },
+      pages: [{ path: '/', sections: ['work'] }],
+      messages: { en: { 'section.work.title': 'Career' } },
+    };
+    const site = await build(code, layout(data));
+    expect(site.routes.map((r) => r.path)).toEqual(['/', '/en/']);
+    const en = site.routes.find((r) => r.key === 'en:/')!;
+    expect(en.sections.map((s) => s.id)).toEqual(['work']);
+    expect((en.sections[0]!.view as { title: string }).title).toBe('Career');
+  });
+
+  it('builds the same site as the same settings written in vvitrine.config.ts', async () => {
+    const { site, pages } = config();
+    const fromLayout = await build(code, layout({ site, pages }));
+    const fromCode = await build(config());
+    expect(fromLayout.routes.map((r) => [r.key, r.sections.map((s) => s.view)])).toEqual(
+      fromCode.routes.map((r) => [r.key, r.sections.map((s) => s.view)]),
+    );
+  });
+
+  it('refuses a setting written in both places, naming both files', () => {
+    expect(() => createKernel(config(), { root: '/', logger: silent, ...layout({ pages: [] }) })).toThrow(
+      /Invalid vvitrine\.config\.ts and site\.yaml:\n {2}- pages: set in both vvitrine\.config\.ts and site\.yaml/,
+    );
+  });
+
+  it('names the layout file and the field when the layout is wrong, and refuses unknown keys', () => {
+    const run = (data: unknown) => () => createKernel(code, { root: '/', logger: silent, ...layout(data) });
+    expect(run({ pages: [{ path: 'no-slash', sections: [] }] })).toThrow(/Invalid site\.yaml:\n {2}- pages\[0\]\.path/);
+    expect(run({ plugins: [] })).toThrow(InvalidConfigError);
+    expect(run({ theme: { tokens: { light: { colourPrimary: '#000' } } } })).toThrow(/theme\.tokens\.light/);
+    expect(run({ theme: { tokens: { light: { colorPrimary: 'red;}body{' } } } })).toThrow(/CSS value/);
+  });
+
+  it('applies design token overrides over the theme, for light and dark', async () => {
+    const tokens = { light: { colorPrimary: '#123456' }, dark: { colorPrimary: '#abcdef' } };
+    const site = await build({ ...code, pages: [{ path: '/', sections: [] }] }, layout({ theme: { tokens } }));
+    expect(site.tokensCss).toContain('--vv-color-primary:#123456');
+    expect(site.tokensCss).toContain('[data-color-scheme=dark]{color-scheme:dark;--vv-color-primary:#abcdef}');
+  });
+
+  it('accepts an empty layout file', async () => {
+    const site = await build(config(), layout(null));
+    expect(site.routes).toHaveLength(2);
+  });
+});
+
 describe('navigation', () => {
   it('links every placed section that has a title, in order, with locale and base path', async () => {
     const site = await build(config(), { base: '/demo/' });

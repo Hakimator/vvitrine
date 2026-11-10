@@ -38,8 +38,8 @@ export class InvalidContentError extends VVitrineError {
 }
 
 export class InvalidConfigError extends VVitrineError {
-  constructor(issues: readonly ContentIssue[]) {
-    super(['Invalid vvitrine.config:', ...issues.map((i) => `  - ${i.path}: ${i.message}`)].join('\n'));
+  constructor(issues: readonly ContentIssue[], where = 'vvitrine.config') {
+    super([`Invalid ${where}:`, ...issues.map((i) => `  - ${i.path}: ${i.message}`)].join('\n'));
   }
 }
 

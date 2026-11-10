@@ -16,6 +16,7 @@ export { coreMessages } from './i18n/core-messages.ts';
 export { renderHeadTag, renderHeadTags, type HeadTag } from './render/head.ts';
 export {
   TOKEN_NAMES,
+  TokenValuesSchema,
   cssVariable,
   mergeTokens,
   tokensToCss,
