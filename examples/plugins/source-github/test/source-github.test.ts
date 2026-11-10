@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { InvalidPluginOptionsError } from '@vvitrine/core';
-import { checkSourceContract } from '@vvitrine/core/testing';
+import { checkSourceContract, memoryFiles } from '@vvitrine/core/testing';
 import githubSource from '../src/index.ts';
 
 const repo = (name: string, extra: object = {}) => ({
@@ -19,7 +19,13 @@ const repo = (name: string, extra: object = {}) => ({
 
 const api = (repositories: object[], status = 200) =>
   vi.fn(async () => new Response(JSON.stringify(repositories), { status }));
-const ctx = (locale = 'en') => ({ locale, defaultLocale: 'en', root: '/', logger: { info: () => {}, warn: () => {} } });
+const ctx = (locale = 'en') => ({
+  locale,
+  defaultLocale: 'en',
+  root: '/',
+  logger: { info: () => {}, warn: () => {} },
+  files: memoryFiles({}),
+});
 
 describe('example source-github', () => {
   it('turns repositories into projects, most recently updated first', async () => {

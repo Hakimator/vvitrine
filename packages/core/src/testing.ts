@@ -1,5 +1,5 @@
 import type { Locale } from './i18n/translator.ts';
-import type { RawContent, SourcePlugin, ThemePlugin } from './plugin.ts';
+import type { ProjectFiles, RawContent, SourcePlugin, ThemePlugin } from './plugin.ts';
 
 /**
  * Test helpers for plugin authors (exported as `@vvitrine/core/testing`).
@@ -22,6 +22,24 @@ export function memorySource(
   };
 }
 
+/**
+ * Project files in memory, keyed by their path relative to the project root: `{ 'content/resume.yaml': 'basics: ...' }`.
+ * Folders exist when a file is inside them. For tests of sources, and for content that does not come from a disk.
+ */
+export function memoryFiles(files: Readonly<Record<string, string>>): ProjectFiles {
+  const clean = (path: string) => path.replace(/^\.\//, '').replace(/\/+$/, '');
+  const all = new Map(Object.entries(files).map(([path, text]) => [clean(path), text]));
+  return {
+    read: async (path) => all.get(clean(path)),
+    list: async (dir) => {
+      const prefix = clean(dir) === '' ? '' : `${clean(dir)}/`;
+      const names = new Set<string>();
+      for (const path of all.keys()) if (path.startsWith(prefix)) names.add(path.slice(prefix.length).split('/')[0]!);
+      return names.size > 0 ? [...names].sort() : undefined;
+    },
+  };
+}
+
 /** Minimal theme whose "components" are strings, so tests can assert which one was chosen. */
 export function stringTheme(components: Record<string, string> = {}, fallback?: string): ThemePlugin {
   return {
@@ -39,7 +57,10 @@ export function stringTheme(components: Record<string, string> = {}, fallback?: 
  * Contract test for source plugins (Liskov substitution): any source must return an object of
  * content keys for every configured locale and never throw for a missing optional file.
  */
-export async function checkSourceContract(source: SourcePlugin, ctx: { root: string; locales: readonly Locale[] }) {
+export async function checkSourceContract(
+  source: SourcePlugin,
+  ctx: { root: string; locales: readonly Locale[]; files?: ProjectFiles },
+) {
   const problems: string[] = [];
   if (source.kind !== 'source') problems.push('kind must be "source"');
   for (const locale of ctx.locales) {
@@ -48,6 +69,7 @@ export async function checkSourceContract(source: SourcePlugin, ctx: { root: str
       defaultLocale: ctx.locales[0]!,
       root: ctx.root,
       logger: { info: () => {}, warn: () => {} },
+      files: ctx.files ?? memoryFiles({}),
     });
     if (typeof result !== 'object' || result === null || typeof result.data !== 'object') {
       problems.push(`load() for "${locale}" must return { data: object }`);

@@ -12,7 +12,7 @@ import {
   tokensToCss,
   Translator,
 } from '../src/index.ts';
-import { checkSourceContract, memorySource } from '../src/testing.ts';
+import { checkSourceContract, memoryFiles, memorySource } from '../src/testing.ts';
 
 describe('protected e-mail addresses', () => {
   it('percent-encodes the link and hides decoys in the text', () => {
@@ -121,5 +121,26 @@ describe('testing helpers', () => {
     expect(
       await checkSourceContract(memorySource({ en: { basics: { name: 'X' } } }), { root: '/', locales: ['en', 'fr'] }),
     ).toEqual([]);
+  });
+});
+
+describe('project files in memory', () => {
+  const files = memoryFiles({
+    'content/resume.yaml': 'a',
+    './content/projects/b.md': 'b',
+    'content/projects/a.md': 'c',
+  });
+
+  it('reads files by their path from the project root', async () => {
+    expect(await files.read('content/resume.yaml')).toBe('a');
+    expect(await files.read('./content/projects/b.md')).toBe('b');
+    expect(await files.read('content/missing.yaml')).toBeUndefined();
+  });
+
+  it('lists the files and folders of a folder, sorted, and nothing for a missing folder', async () => {
+    expect(await files.list('content')).toEqual(['projects', 'resume.yaml']);
+    expect(await files.list('content/projects/')).toEqual(['a.md', 'b.md']);
+    expect(await files.list('')).toEqual(['content']);
+    expect(await files.list('elsewhere')).toBeUndefined();
   });
 });

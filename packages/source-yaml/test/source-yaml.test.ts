@@ -1,14 +1,22 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fileURLToPath } from 'node:url';
-import { checkSourceContract } from '@vvitrine/core/testing';
+import { checkSourceContract, memoryFiles } from '@vvitrine/core/testing';
 import yamlSource from '../src/index.ts';
 
-const root = fileURLToPath(new URL('.', import.meta.url));
+const root = '/project';
+// The files of the tests, as a project would have them.
+const files = memoryFiles({
+  'fixtures/resume.yaml': 'basics:\n  name: Default\n',
+  'fixtures/resume.fr.yaml': 'basics:\n  name: Français\n',
+  'fixtures/other.json': '{ "basics": { "name": "JSON" } }',
+  'fixtures/broken.yaml': 'basics: [unclosed\n',
+  'fixtures/list.yaml': '- a list\n',
+});
 const ctx = (locale: string, logger = { info: () => {}, warn: () => {} }) => ({
   locale,
   defaultLocale: 'en',
   root,
   logger,
+  files,
 });
 
 describe('@vvitrine/source-yaml', () => {
@@ -50,6 +58,15 @@ describe('@vvitrine/source-yaml', () => {
   });
 
   it('satisfies the source contract', async () => {
-    expect(await checkSourceContract(yamlSource({ dir: 'fixtures' }), { root, locales: ['en', 'fr'] })).toEqual([]);
+    expect(await checkSourceContract(yamlSource({ dir: 'fixtures' }), { root, locales: ['en', 'fr'], files })).toEqual(
+      [],
+    );
+  });
+
+  it('reads only through ctx.files, with the folder as given', async () => {
+    const read: string[] = [];
+    const spy = { read: async (path: string) => (read.push(path), files.read(path)), list: files.list };
+    await yamlSource({ dir: 'fixtures/' }).load({ ...ctx('fr'), files: spy });
+    expect(read).toEqual(['fixtures/resume.fr.yaml']);
   });
 });

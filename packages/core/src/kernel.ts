@@ -31,6 +31,7 @@ import type {
   NavItem,
   Plugin,
   PageContext,
+  ProjectFiles,
   RenderContext,
   SectionInput,
   SectionPlugin,
@@ -51,7 +52,15 @@ export interface KernelOptions {
   readonly logger?: Logger;
   /** The layout file (site.yaml or site.json), read by the composition root (ADR-016). */
   readonly layout?: LayoutFile;
+  /** The project's files, given to sources (`ctx.files`). Without it, a source that reads a file fails clearly. */
+  readonly files?: ProjectFiles;
 }
+
+/** For builds that give no file access: a source that needs files says so instead of failing obscurely. */
+const noFiles: ProjectFiles = {
+  read: (path) => Promise.reject(new VVitrineError(`Cannot read ${path}: this build gives sources no file access.`)),
+  list: (dir) => Promise.reject(new VVitrineError(`Cannot list ${dir}/: this build gives sources no file access.`)),
+};
 
 export interface BuiltSection {
   readonly id: string;
@@ -203,6 +212,7 @@ export class Kernel {
       defaultLocale: this.config.defaultLocale,
       root: this.options.root,
       logger: this.logger,
+      files: this.options.files ?? noFiles,
     });
     const render = this.renderContext(locale);
     const pages = this.config.pages ?? [{ path: '/', sections: this.registry.sectionIds() }];

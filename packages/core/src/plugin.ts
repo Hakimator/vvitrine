@@ -149,12 +149,26 @@ export interface BasePlugin {
 
 // ---------- Source ----------
 
+/**
+ * The project's files, as sources see them (a port: the composition root gives the implementation). At build time and
+ * in `astro dev` they are the files on disk; tests use `memoryFiles()`; the Studio can give files from elsewhere (a
+ * Git repository). Sources that read through it work everywhere, which `node:fs` would not.
+ */
+export interface ProjectFiles {
+  /** Text of a file (UTF-8), or undefined when there is none. `path` is relative to the project root, with `/`. */
+  read(path: string): Promise<string | undefined>;
+  /** Names of the files and folders in a folder, sorted, or undefined when there is no such folder. */
+  list(dir: string): Promise<readonly string[] | undefined>;
+}
+
 export interface SourceContext {
   readonly locale: Locale;
   readonly defaultLocale: Locale;
   /** Absolute path of the user's project. */
   readonly root: string;
   readonly logger: Logger;
+  /** Read the project's files through this, not `node:fs` (see `ProjectFiles`). */
+  readonly files: ProjectFiles;
 }
 
 export interface RawContent {

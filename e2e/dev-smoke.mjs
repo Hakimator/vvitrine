@@ -50,6 +50,24 @@ try {
     }
     if (!seen) failure = 'a change to the layout file did not show in dev';
   }
+
+  // Saving a content file tells the open page to reload. The file is written back with the same bytes.
+  if (!failure) {
+    const client = await (await fetch(`http://localhost:${port}/@vite/client`)).text();
+    const token = /wsToken = "([^"]+)"/.exec(client)?.[1] ?? '';
+    const socket = new WebSocket(`ws://localhost:${port}/?token=${token}`, 'vite-hmr');
+    const reloaded = new Promise((resolve) => {
+      socket.addEventListener('message', (event) => {
+        if (JSON.parse(String(event.data)).type === 'full-reload') resolve(true);
+      });
+      setTimeout(() => resolve(false), 10_000);
+    });
+    await new Promise((resolve) => socket.addEventListener('open', resolve));
+    const content = new URL('../site/content/resume.en.yaml', import.meta.url);
+    writeFileSync(content, readFileSync(content));
+    if (!(await reloaded)) failure = 'saving a content file did not reload the page in dev';
+    socket.close();
+  }
 } finally {
   astro('dev', 'stop');
   rmSync(folder, { recursive: true, force: true });

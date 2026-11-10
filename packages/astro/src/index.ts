@@ -8,7 +8,10 @@ import { parse } from 'yaml';
 export interface VVitrineIntegrationOptions {
   /** Path of the VVitrine config, relative to the project root. Overridden by the VVITRINE_CONFIG env variable. */
   readonly config?: string;
-  /** Folder watched in dev mode to reload the page when content changes. */
+  /**
+   * An extra folder to watch in dev mode, for content kept outside the project. Files inside the project are always
+   * watched: the page reloads when any file that is not code changes.
+   */
   readonly contentDir?: string;
   /**
    * Layout file (ADR-016), relative to the project root. Overridden by the VVITRINE_LAYOUT env variable.
@@ -74,8 +77,11 @@ const RESOLVED_LAYOUT_ID = '\0vvitrine-layout';
 
 interface DevModuleGraph {
   getModuleById(id: string): unknown;
+  getModulesByFile(file: string): { size: number } | undefined;
   invalidateModule(module: never): void;
 }
+
+export { diskFiles } from './files.ts';
 
 /**
  * Composition root (ADR-009). Users never write pages: this integration injects one catch-all
@@ -95,7 +101,8 @@ export default function vvitrine(options: VVitrineIntegrationOptions = {}): Astr
             `VVitrine config not found: ${configFile}. Create it at the root of your site (see docs/getting-started.md).`,
           );
         }
-        const contentDir = resolve(root, options.contentDir ?? 'content');
+        const extraDir = options.contentDir ? resolve(root, options.contentDir) : undefined;
+        const outDir = fileURLToPath(config.outDir);
         const layoutPath = findLayout(root, configPath, options.layout);
         const runtime = {
           root,
@@ -129,20 +136,28 @@ export default function vvitrine(options: VVitrineIntegrationOptions = {}): Astr
                   ws: { send(m: { type: string }): void };
                   environments?: Record<string, { moduleGraph: DevModuleGraph }>;
                 }) {
-                  server.watcher.add(contentDir);
+                  if (extraDir) server.watcher.add(extraDir);
                   if (layoutPath) server.watcher.add(layoutPath);
-                  server.watcher.on('change', (file) => {
+                  const environments = Object.values(server.environments ?? {});
+                  // Code is reloaded by Vite itself; any other file may be content a source reads (wherever its
+                  // folder is), so its change reloads the page. Built files are left out.
+                  const isCode = (file: string) =>
+                    environments.some((environment) => (environment.moduleGraph.getModulesByFile(file)?.size ?? 0) > 0);
+                  const reload = (file: string) => {
                     const changed = resolve(file);
                     if (changed === layoutPath) {
                       // The layout module is virtual: drop it so the next request reads the file again.
-                      for (const environment of Object.values(server.environments ?? {})) {
+                      for (const environment of environments) {
                         const module = environment.moduleGraph.getModuleById(RESOLVED_LAYOUT_ID);
                         if (module) environment.moduleGraph.invalidateModule(module as never);
                       }
+                    } else if (changed.startsWith(outDir) || /[\\/]\.astro[\\/]/.test(changed) || isCode(changed)) {
+                      return;
                     }
-                    if (changed === layoutPath || changed.startsWith(contentDir))
-                      server.ws.send({ type: 'full-reload' });
-                  });
+                    server.ws.send({ type: 'full-reload' });
+                  };
+                  // New and deleted files count too (a new project page, a removed article).
+                  for (const event of ['change', 'add', 'unlink']) server.watcher.on(event, reload);
                 },
               },
             ],

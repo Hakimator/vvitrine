@@ -1,6 +1,7 @@
 import { createKernel, VVitrineError, type BuiltSite, type VVitrineConfig } from '@vvitrine/core';
 import layout from 'virtual:vvitrine/layout';
 import { base, dev, root, siteUrl } from 'virtual:vvitrine/runtime';
+import { diskFiles } from './files.ts';
 
 let cached: Promise<BuiltSite> | undefined;
 
@@ -19,6 +20,7 @@ async function build(config: VVitrineConfig): Promise<BuiltSite> {
     return await createKernel(config, {
       root,
       base,
+      files: diskFiles(root),
       ...(siteUrl ? { siteUrl } : {}),
       ...(layout ? { layout } : {}),
     }).build();
