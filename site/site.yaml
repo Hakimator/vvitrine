@@ -6,8 +6,13 @@ site:
   defaultLocale: fr
   locales: [fr, en]
 
-# Design tokens, whatever the theme: colours, fonts, corner radius, page width.
 theme:
+  # The theme: @vvitrine/theme-corporate or @vvitrine/theme-bold (both installed), or your own.
+  # Only this one is loaded, so the others add nothing to your pages.
+  use: '@vvitrine/theme-corporate'
+  # A light/dark switch in the header (adds a 1 KB script to every page):
+  # options: { colorSchemeToggle: true }
+  # Design tokens, whatever the theme: colours, fonts, corner radius, page width.
   tokens:
     light:
       colorPrimary: '#1f3a5f'
