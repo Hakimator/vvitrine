@@ -92,6 +92,27 @@ const notion = (): SourcePlugin => ({
 Several sources can be combined; later ones override keys of earlier ones. Test any source with
 `checkSourceContract()` from `@vvitrine/core/testing`.
 
+A source that reads files uses `ctx.files`, not `node:fs`:
+
+```ts
+const csv = (): SourcePlugin => ({
+  name: 'source-csv',
+  kind: 'source',
+  apiVersion: 1,
+  load: async ({ files }) => {
+    const text = await files.read('content/skills.csv'); // undefined when the file does not exist
+    return { data: text ? { skills: parseCsv(text) } : {}, origin: { skills: 'content/skills.csv' } };
+  },
+});
+```
+
+- `files.read(path)` gives a file's text and `files.list(dir)` the names in a folder (sorted); both give `undefined` when
+  there is nothing. Paths are relative to the project root, with `/`.
+- The build gives the files on disk, and `pnpm dev` reloads the page when they change. Tests give files in memory with
+  `memoryFiles({ 'content/skills.csv': '...' })`. The Studio will give files from elsewhere, such as a Git repository.
+  A source written this way works in all these places; one that uses `node:fs` would only work on disk (the built-in
+  sources are checked for this by `pnpm boundaries`).
+
 ## Write a service
 
 ```ts
@@ -145,5 +166,5 @@ and `viewKind`: a generator can lay out what a page shows without knowing the se
 
 ## Testing helpers
 
-`@vvitrine/core/testing` exports `memorySource()`, `stringTheme()` and `checkSourceContract()`. See the tests in
+`@vvitrine/core/testing` exports `memorySource()`, `memoryFiles()`, `stringTheme()` and `checkSourceContract()`. See the tests in
 `packages/*/test/` for examples.
