@@ -1,16 +1,27 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fileURLToPath } from 'node:url';
 import { InvalidPluginOptionsError } from '@vvitrine/core';
 import { checkSourceContract, memoryFiles } from '@vvitrine/core/testing';
 import markdownSource from '../src/index.ts';
 
-const root = fileURLToPath(new URL('.', import.meta.url));
+const root = '/project';
+// The files of the tests, as a project would have them.
+const files = memoryFiles({
+  'fixtures/bad-yaml/oops.md': '---\nname: [unclosed\n---\n\nText\n',
+  'fixtures/broken/oops.md': 'No front matter here.\n',
+  'fixtures/not-object/list.md': '---\n- a list\n---\n',
+  'fixtures/projects/alpha.fr.md':
+    '---\nname: Alpha (FR)\nx-vvitrine: { featured: true, slug: alpha-fr }\n---\n\nTexte en français.\n',
+  'fixtures/projects/alpha.md':
+    '---\nname: Alpha\nstartDate: 2025-10\nkeywords: [Astro]\n---\n\n# Context\n\nShared write-up.\n',
+  'fixtures/projects/beta.en.md': '---\nname: Beta\n---\n',
+  'fixtures/projects/notes.txt': 'Not a Markdown file: ignored.\n',
+});
 const ctx = (locale: string, logger = { info: () => {}, warn: () => {} }) => ({
   locale,
   defaultLocale: 'en',
   root,
   logger,
-  files: memoryFiles({}),
+  files,
 });
 
 describe('@vvitrine/source-markdown', () => {
@@ -79,7 +90,7 @@ describe('@vvitrine/source-markdown', () => {
 
   it('honours the source contract', async () => {
     expect(
-      await checkSourceContract(markdownSource({ dir: 'fixtures/projects' }), { root, locales: ['en', 'fr'] }),
+      await checkSourceContract(markdownSource({ dir: 'fixtures/projects' }), { root, locales: ['en', 'fr'], files }),
     ).toEqual([]);
   });
 });

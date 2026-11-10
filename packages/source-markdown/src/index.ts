@@ -1,6 +1,3 @@
-import { existsSync } from 'node:fs';
-import { readdir, readFile } from 'node:fs/promises';
-import { isAbsolute, join, relative } from 'node:path';
 import {
   InvalidPluginOptionsError,
   toIssues,
@@ -31,6 +28,7 @@ const FRONT_MATTER = /^---\n(?<data>[\s\S]*?)\n---\n?(?<body>[\s\S]*)$/;
  * Reads one Markdown file per item. For locale "en", `name.en.md` wins over `name.md`; files for other locales are
  * ignored. The YAML front matter holds the item's fields; the text below it becomes `x-vvitrine.body` and the file
  * name the default `x-vvitrine.slug`. The key it provides replaces the same key from earlier sources.
+ * Files are read through `ctx.files`, so the source works wherever the files are (disk, memory, a repository).
  */
 export default function markdownSource(options: MarkdownSourceOptions = {}): SourcePlugin {
   const parsed = Options.safeParse(options);
@@ -43,14 +41,15 @@ export default function markdownSource(options: MarkdownSourceOptions = {}): Sou
     kind: 'source',
     apiVersion: 1,
     async load(ctx: SourceContext): Promise<RawContent> {
-      const folder = isAbsolute(dir) ? dir : join(ctx.root, dir);
-      if (!existsSync(folder)) {
+      const folder = dir.replace(/[\\/]+$/, '');
+      const names = await ctx.files.list(folder);
+      if (!names) {
         ctx.logger.info(`No folder ${dir}/: "${key}" comes from the other sources.`);
         return { data: {} };
       }
 
       const chosen = new Map<string, string>();
-      for (const name of (await readdir(folder)).sort()) {
+      for (const name of [...names].sort()) {
         const match = FILE.exec(name)?.groups;
         if (!match?.slug) continue;
         if (match.locale === ctx.locale || (!match.locale && !chosen.has(match.slug))) chosen.set(match.slug, name);
@@ -58,10 +57,9 @@ export default function markdownSource(options: MarkdownSourceOptions = {}): Sou
 
       const items = await Promise.all(
         [...chosen].map(async ([slug, name]) => {
-          const path = join(folder, name);
-          const shown = relative(ctx.root, path).replaceAll('\\', '/');
+          const shown = `${folder}/${name}`.replaceAll('\\', '/');
           // Windows checkouts may use CRLF line endings: normalise so the result is the same everywhere.
-          const text = (await readFile(path, 'utf8')).replaceAll('\r\n', '\n');
+          const text = ((await ctx.files.read(`${folder}/${name}`)) ?? '').replaceAll('\r\n', '\n');
           const parts = FRONT_MATTER.exec(text)?.groups;
           if (!parts) throw new Error(`${shown} must start with front matter between two "---" lines.`);
           let data: unknown;
@@ -83,7 +81,7 @@ export default function markdownSource(options: MarkdownSourceOptions = {}): Sou
       );
 
       if (items.length === 0) return { data: {} };
-      return { data: { [key]: items }, origin: { [key]: relative(ctx.root, folder).replaceAll('\\', '/') } };
+      return { data: { [key]: items }, origin: { [key]: folder.replaceAll('\\', '/') } };
     },
   };
 }
