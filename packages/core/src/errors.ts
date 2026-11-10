@@ -94,7 +94,8 @@ export class ThemeCountError extends VVitrineError {
       names.length === 0
         ? 'No theme plugin registered. Add exactly one theme to "plugins", e.g. corporate().'
         : `Exactly one theme must be registered, found ${names.length}: ${names.join(', ')}.\n` +
-            '  hint: importing several themes also ships their CSS. Keep one, or use one config file per theme.',
+            '  hint: importing a theme ships its CSS on every page. Keep one, or remove them from "plugins" and choose one\n' +
+            '  in site.yaml (theme: { use: "@vvitrine/theme-bold" }): only that one is loaded.',
     );
   }
 }
