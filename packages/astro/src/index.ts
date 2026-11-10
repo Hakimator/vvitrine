@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { dirname, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
 import { parse } from 'yaml';
@@ -28,6 +28,29 @@ function findLayout(root: string, configPath: string, option?: string): string |
     return path;
   }
   return LAYOUT_NAMES.map((name) => resolve(dirname(configPath), name)).find((path) => existsSync(path));
+}
+
+/**
+ * The code of the layout module: the file's data and, when it names one (`theme.use`), the theme, created with its
+ * options. This module is the only place the theme is imported: Astro ships the CSS of every imported theme, so the
+ * themes that are installed but not chosen must never be imported.
+ */
+export async function layoutModule(path: string | undefined, root: string): Promise<string> {
+  if (!path) return 'export default null;';
+  const layout = await readLayout(path, root);
+  const theme = (layout.data as { theme?: { use?: unknown; options?: unknown } } | null)?.theme;
+  if (typeof theme?.use !== 'string' || theme.use === '') return `export default ${JSON.stringify(layout)};`;
+  // A file next to the layout ("./plugins/my-theme.ts") or an installed package ("@vvitrine/theme-bold").
+  const local = theme.use.startsWith('.') || isAbsolute(theme.use);
+  const specifier = local ? resolve(dirname(path), theme.use).replaceAll('\\', '/') : theme.use;
+  return [
+    `import * as themeModule from ${JSON.stringify(specifier)};`,
+    `const layout = ${JSON.stringify(layout)};`,
+    `if (typeof themeModule.default !== 'function') {`,
+    `  throw new Error(${JSON.stringify(`${layout.origin}: theme.use "${theme.use}" has no default export that creates the theme.`)});`,
+    `}`,
+    `export default { ...layout, theme: themeModule.default(${JSON.stringify(theme.options ?? {})}) };`,
+  ].join('\n');
 }
 
 /** Parse the layout file as JSON or YAML (by extension), with the file name and position in syntax errors. */
@@ -94,10 +117,8 @@ export default function vvitrine(options: VVitrineIntegrationOptions = {}): Astr
                   return undefined;
                 },
                 async load(id: string) {
-                  if (id === RESOLVED_LAYOUT_ID) {
-                    // Plain data for the kernel: { data, origin }, or null without a layout file.
-                    return `export default ${layoutPath ? JSON.stringify(await readLayout(layoutPath, root)) : 'null'};`;
-                  }
+                  // { data, origin, theme? } for the kernel, or null without a layout file.
+                  if (id === RESOLVED_LAYOUT_ID) return layoutModule(layoutPath, root);
                   if (id !== RESOLVED_RUNTIME_ID) return undefined;
                   return Object.entries(runtime)
                     .map(([key, value]) => `export const ${key} = ${JSON.stringify(value)};`)
