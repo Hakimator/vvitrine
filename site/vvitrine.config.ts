@@ -1,5 +1,5 @@
 /**
- * Your portfolio configuration: the only file you need to change (with content/).
+ * Your portfolio configuration: the plugins your site uses (with site.yaml and content/).
  * Everything is a plugin: add, remove or replace any line in `plugins`.
  */
 import { ga4 } from '@vvitrine/analytics';
@@ -40,9 +40,9 @@ const GITHUB_PAGES = {
   url: 'https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement',
 };
 
+// Languages, pages, texts and colours live in site.yaml, next to this file: plain data that you (or the Studio) can
+// edit without touching code. This file installs the plugins.
 export default defineConfig({
-  site: { defaultLocale: 'fr', locales: ['fr', 'en'] },
-
   plugins: [
     // Where content comes from: content/resume.fr.yaml, content/resume.en.yaml
     yamlSource({ dir: 'content', file: 'resume' }),
@@ -50,8 +50,8 @@ export default defineConfig({
     markdownSource({ dir: 'content/projects' }),
     // One Markdown file per article in content/blog/ (a second instance, for the "posts" key).
     markdownSource({ dir: 'content/blog', key: 'posts' }),
-    // Exactly one theme. Override any design token here.
-    corporate({ tokens: { light: { colorPrimary: '#1f3a5f' } } }),
+    // Exactly one theme. Its colours and fonts can be changed in site.yaml (theme.tokens).
+    corporate(),
     // Sections you can place on pages
     hero(),
     stats(),
@@ -91,73 +91,4 @@ export default defineConfig({
     // Responsive WebP variants and real sizes for the images in public/.
     images(),
   ],
-
-  // Pages and the order of their sections. Remove this block to show every section on one page.
-  pages: [
-    {
-      path: '/',
-      sections: [
-        // The "Contact me" button leads to the contact section below (by default it opens an e-mail).
-        { id: 'hero', options: { cv: '/cv-{locale}.pdf', contact: '#contact' } },
-        { id: 'stats', nav: false },
-        // The latest projects; the header links to the /projects page, which has the technology filter.
-        { id: 'projects', nav: false, options: { limit: 6 } },
-        // The two latest articles; the header links to the /blog page instead.
-        { id: 'blog', nav: false, options: { limit: 2 } },
-        'work',
-        'education',
-        // nav: false keeps a section out of the header menu (it stays on the page).
-        { id: 'volunteer', nav: false },
-        'skills',
-        { id: 'certificates', nav: false },
-        { id: 'awards', nav: false },
-        'talks',
-        'languages',
-        { id: 'interests', nav: false },
-        { id: 'testimonials', nav: false },
-        { id: 'references', nav: false },
-        { id: 'contact', nav: false },
-      ],
-    },
-    { path: '/projects', title: 'page.projects', sections: [{ id: 'projects', options: { filter: true } }] },
-    // A second page: its sections get header links too (here /timeline/#timeline).
-    // The resume: what a printed CV holds, from the same data. It prints on A4, and resume-pdf turns it into a PDF.
-    {
-      path: '/resume',
-      title: 'page.resume',
-      footer: true,
-      sections: [
-        { id: 'hero', options: { cv: '/cv-{locale}.pdf' } },
-        'work',
-        'education',
-        'skills',
-        'certificates',
-        'languages',
-        'interests',
-      ],
-    },
-    { path: '/timeline', title: 'page.timeline', sections: ['timeline'] },
-    { path: '/blog', title: 'page.blog', sections: ['blog'] },
-    // footer: true links the page from the footer of every page instead of the header.
-    { path: '/privacy', title: 'page.privacy', footer: true, sections: ['privacy'] },
-  ],
-
-  // Override any text, or add your own (here the title of the /timeline page), in any language.
-  messages: {
-    fr: {
-      'page.timeline': 'Mon parcours',
-      'page.blog': 'Blog',
-      'page.projects': 'Mes projets',
-      'page.privacy': 'Confidentialité',
-      'page.resume': 'CV',
-    },
-    en: {
-      'section.work.title': 'Experience',
-      'page.timeline': 'My journey',
-      'page.blog': 'Blog',
-      'page.projects': 'My projects',
-      'page.privacy': 'Privacy',
-      'page.resume': 'Resume',
-    },
-  },
 });

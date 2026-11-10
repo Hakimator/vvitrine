@@ -1,0 +1,93 @@
+# The layout of your site: languages, pages and the order of their sections, texts and colours.
+# Plain data: edit it by hand or with the Studio. Plugins are installed in vvitrine.config.ts.
+
+site:
+  defaultLocale: fr
+  locales: [fr, en]
+
+# Design tokens, whatever the theme: colours, fonts, corner radius, page width.
+theme:
+  tokens:
+    light:
+      colorPrimary: '#1f3a5f'
+
+# Pages and the order of their sections. Remove this block to show every section on one page.
+pages:
+  - path: /
+    sections:
+      # The "Contact me" button leads to the contact section below (by default it opens an e-mail).
+      - id: hero
+        options: { cv: '/cv-{locale}.pdf', contact: '#contact' }
+      - { id: stats, nav: false }
+      # The latest projects; the header links to the /projects page, which has the technology filter.
+      - id: projects
+        nav: false
+        options: { limit: 6 }
+      # The two latest articles; the header links to the /blog page instead.
+      - id: blog
+        nav: false
+        options: { limit: 2 }
+      - work
+      - education
+      # nav: false keeps a section out of the header menu (it stays on the page).
+      - { id: volunteer, nav: false }
+      - skills
+      - { id: certificates, nav: false }
+      - { id: awards, nav: false }
+      - talks
+      - languages
+      - { id: interests, nav: false }
+      - { id: testimonials, nav: false }
+      - { id: references, nav: false }
+      - { id: contact, nav: false }
+
+  - path: /projects
+    title: page.projects
+    sections:
+      - id: projects
+        options: { filter: true }
+
+  # The resume: what a printed CV holds, from the same data. It prints on A4, and resume-pdf turns it into a PDF.
+  - path: /resume
+    title: page.resume
+    footer: true
+    sections:
+      - id: hero
+        options: { cv: '/cv-{locale}.pdf' }
+      - work
+      - education
+      - skills
+      - certificates
+      - languages
+      - interests
+
+  # A second page: its sections get header links too (here /timeline/#timeline).
+  - path: /timeline
+    title: page.timeline
+    sections: [timeline]
+
+  - path: /blog
+    title: page.blog
+    sections: [blog]
+
+  # footer: true links the page from the footer of every page instead of the header.
+  - path: /privacy
+    title: page.privacy
+    footer: true
+    sections: [privacy]
+
+# Override any text, or add your own (here the title of the /timeline page), in any language.
+messages:
+  fr:
+    page.timeline: Mon parcours
+    page.blog: Blog
+    page.projects: Mes projets
+    page.privacy: Confidentialité
+    page.resume: CV
+  en:
+    section.work.title: Experience
+    page.timeline: My journey
+    page.blog: Blog
+    page.projects: My projects
+    page.privacy: Privacy
+    page.resume: Resume
