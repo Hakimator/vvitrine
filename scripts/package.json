@@ -9,9 +9,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@vvitrine/astro": "workspace:*",
     "@vvitrine/contact": "workspace:*",
     "@vvitrine/core": "workspace:*",
     "@vvitrine/sections": "workspace:*",
+    "@vvitrine/source-markdown": "workspace:*",
+    "@vvitrine/source-yaml": "workspace:*",
     "zod": "4.6.7"
   }
 }
