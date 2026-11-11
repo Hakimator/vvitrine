@@ -113,6 +113,28 @@ const csv = (): SourcePlugin => ({
   A source written this way works in all these places; one that uses `node:fs` would only work on disk (the built-in
   sources are checked for this by `pnpm boundaries`).
 
+### Make a source writable
+
+The Studio saves content through the source that provides it, in that source's format. A source becomes writable with
+two optional members:
+
+```ts
+save: async (changes, { files, locale }) => {
+  // changes: { op: 'set' | 'remove' | 'insert' | 'move', path: ['skills', 0, 'name'], ... }[], for your keys only
+  const text = (await files.read('content/skills.csv')) ?? '';
+  await files.write('content/skills.csv', writeCsv(changes.reduce(applyChange, readCsv(text))));
+},
+accepts: (key) => key === 'skills', // may a key no source has yet be created here?
+```
+
+- The kernel (`saveContent(locale, changes)`) applies the changes in memory and validates the result exactly as a build
+  would. Your `save` is called only when it is valid, and only with changes to the keys you provide (or `accepts`).
+- `applyChange` (from `@vvitrine/core`) applies one change to plain data. To keep a YAML file's comments and layout,
+  edit its text with `editYaml(text, changes)` from `@vvitrine/yaml-edit`, as the YAML and Markdown sources do.
+- A source without `save` is read-only: the Studio shows its content without editing it.
+- `checkSourceContract(source, { root, locales, files: memoryFiles({...}) })` also checks that saving a value
+  unchanged gives the same content back.
+
 ## Write a service
 
 ```ts
@@ -166,5 +188,6 @@ and `viewKind`: a generator can lay out what a page shows without knowing the se
 
 ## Testing helpers
 
-`@vvitrine/core/testing` exports `memorySource()`, `memoryFiles()`, `stringTheme()` and `checkSourceContract()`. See the tests in
+`@vvitrine/core/testing` exports `memorySource()`, `memoryFiles()` (readable and writable, with `snapshot()`),
+`stringTheme()` and `checkSourceContract()`. See the tests in
 `packages/*/test/` for examples.
