@@ -24,6 +24,9 @@ const astro = (...args) =>
 // `--background` is explicit: without it, Astro chooses foreground or background
 // from the environment, and a foreground server never returns here.
 astro('dev', '--background', '--port', String(port));
+// Its process, from Astro itself: if `astro dev stop` does not stop it (it finds the server through a lock file, and
+// says "No dev server is running" without one), the test stops it, so that CI never waits on a server left behind.
+const pid = Number(/pid (\d+)/.exec(String(astro('dev', 'status')))?.[1]);
 let failure = null;
 try {
   const deadline = Date.now() + 30_000;
@@ -84,7 +87,17 @@ try {
     socket.close();
   }
 } finally {
-  astro('dev', 'stop');
+  const stopped = String(astro('dev', 'stop')).trim();
+  const until = Date.now() + 10_000;
+  let open = true;
+  while (open && Date.now() < until) {
+    open = (await fetch(`http://localhost:${port}/`).catch(() => undefined)) !== undefined;
+    if (open) await new Promise((r) => setTimeout(r, 250));
+  }
+  if (open) {
+    if (pid > 0) process.kill(pid, 'SIGKILL');
+    failure ??= `the dev server (pid ${pid}) was still running after "astro dev stop" (${stopped}); the test stopped it`;
+  }
   rmSync(folder, { recursive: true, force: true });
 }
 if (failure) {
