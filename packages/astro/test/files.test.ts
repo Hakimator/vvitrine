@@ -30,4 +30,15 @@ describe('project files on disk', () => {
     expect(await files.list('content/resume.yaml')).toBeUndefined();
     expect(await files.list('elsewhere')).toBeUndefined();
   });
+
+  it('writes files, creating their folders, and removes them', async () => {
+    const files = diskFiles(root);
+    await files.write('content/blog/new/post.md', '---\nname: New\n---\n');
+    expect(await files.read('content/blog/new/post.md')).toBe('---\nname: New\n---\n');
+    await files.write('content/resume.yaml', 'basics: { name: Ada }\n');
+    expect(await files.read('content/resume.yaml')).toBe('basics: { name: Ada }\n');
+    await files.remove('content/blog/new/post.md');
+    expect(await files.list('content/blog/new')).toEqual([]);
+    await files.remove('content/blog/new/post.md');
+  });
 });
