@@ -37,6 +37,12 @@ export class InvalidContentError extends VVitrineError {
   }
 }
 
+export class DevEndpointError extends VVitrineError {
+  constructor(plugin: string, path: string, reason: string) {
+    super(`Plugin "${plugin}" declares a development endpoint at "${path}": ${reason}.`);
+  }
+}
+
 export class InvalidConfigError extends VVitrineError {
   constructor(issues: readonly ContentIssue[], where = 'vvitrine.config') {
     super([`Invalid ${where}:`, ...issues.map((i) => `  - ${i.path}: ${i.message}`)].join('\n'));

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   ContentOwnershipError,
   createKernel,
+  DevEndpointError,
   definePlugin,
   defineSection,
   DuplicatePluginError,
@@ -300,6 +301,63 @@ describe('saving content (US-151)', () => {
       { root: '/', logger: silent, files: readOnly },
     );
     await expect(site.saveContent('en', [])).rejects.toThrow('this build gives sources no files to write');
+  });
+});
+
+describe('development endpoints (US-153)', () => {
+  const tool = (name: string, ...paths: string[]): Plugin => ({
+    name,
+    kind: 'service',
+    apiVersion: 1,
+    hooks: {
+      devEndpoints: () =>
+        paths.map((path) => ({
+          path,
+          handle: (request: Request, { site }) => {
+            if (new URL(request.url).searchParams.has('fail')) throw new Error('Broken on purpose');
+            return Response.json({ path, locales: site.locales, method: request.method });
+          },
+        })),
+    },
+  });
+  const kernel = (...tools: Plugin[]) =>
+    createKernel({ ...config(), plugins: [...config().plugins, ...tools] }, { root: '/', logger: silent });
+  const ask = async (k: ReturnType<typeof kernel>, path: string, init?: RequestInit) => {
+    const response = await k.handleDevRequest(new Request(`http://localhost:4321${path}`, init));
+    return response && { status: response.status, body: await response.text() };
+  };
+
+  it('answers with the endpoint of the exact path, or of the deepest folder, and gives it the site', async () => {
+    const site = kernel(tool('studio', '/__vvitrine/studio/', '/__vvitrine/studio/save', '/__vvitrine/studio/app/'));
+    expect(JSON.parse((await ask(site, '/__vvitrine/studio/save', { method: 'POST' }))!.body)).toEqual({
+      path: '/__vvitrine/studio/save',
+      locales: ['en', 'fr'],
+      method: 'POST',
+    });
+    expect(JSON.parse((await ask(site, '/__vvitrine/studio/app/main.js'))!.body).path).toBe('/__vvitrine/studio/app/');
+    expect(JSON.parse((await ask(site, '/__vvitrine/studio/other'))!.body).path).toBe('/__vvitrine/studio/');
+    expect(await ask(site, '/__vvitrine/elsewhere')).toBeUndefined();
+    expect(await ask(site, '/')).toBeUndefined();
+    expect([site.hasDevEndpoints, kernel().hasDevEndpoints]).toEqual([true, false]);
+  });
+
+  it('answers 500 with the message when a handler fails, and tells the logger', async () => {
+    const warn = vi.fn();
+    const site = createKernel(
+      { ...config(), plugins: [...config().plugins, tool('studio', '/__vvitrine/studio/save')] },
+      { root: '/', logger: { info: () => {}, warn } },
+    );
+    expect(await ask(site, '/__vvitrine/studio/save?fail')).toEqual({ status: 500, body: 'Broken on purpose' });
+    expect(warn).toHaveBeenCalledWith('Development endpoint /__vvitrine/studio/save failed: Broken on purpose');
+  });
+
+  it('refuses paths outside /__vvitrine/<tool>/, and a path that two plugins use', () => {
+    for (const path of ['/studio', '/__vvitrine/', '/__vvitrine/Studio', '/__vvitrine/a/../b']) {
+      expect(() => kernel(tool('studio', path))).toThrow(DevEndpointError);
+    }
+    expect(() => kernel(tool('one', '/__vvitrine/x/y'), tool('two', '/__vvitrine/x/y'))).toThrow(
+      'Plugin "two" declares a development endpoint at "/__vvitrine/x/y": "one" already uses it.',
+    );
   });
 });
 
