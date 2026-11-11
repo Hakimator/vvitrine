@@ -1,3 +1,4 @@
+import type { ContentChange } from './content/changes.ts';
 import type { z } from 'zod';
 import type { Basics } from './content/schemas.ts';
 import type { Locale, Messages, Translate } from './i18n/translator.ts';
@@ -161,6 +162,14 @@ export interface ProjectFiles {
   list(dir: string): Promise<readonly string[] | undefined>;
 }
 
+/** Writing to the project's files, for sources that can save (kept apart: loading never needs it). */
+export interface ProjectFileWriter {
+  /** Create or replace a file (UTF-8). Folders on the way are created. */
+  write(path: string, text: string): Promise<void>;
+  /** Delete a file. */
+  remove(path: string): Promise<void>;
+}
+
 export interface SourceContext {
   readonly locale: Locale;
   readonly defaultLocale: Locale;
@@ -178,9 +187,22 @@ export interface RawContent {
   readonly origin?: Readonly<Record<string, string>>;
 }
 
+/** What a source receives to save: the same context as `load`, with files it can write. */
+export interface SaveContext extends SourceContext {
+  readonly files: ProjectFiles & ProjectFileWriter;
+}
+
 export interface SourcePlugin extends BasePlugin {
   readonly kind: 'source';
   load(ctx: SourceContext): Promise<RawContent>;
+  /**
+   * Optional: write content changes back, in the source's own format (keeping comments and layout where it can).
+   * The kernel calls it only with changes to keys this source provides (or `accepts`), after checking that the
+   * changed content is valid. A source without `save` is read-only: the Studio shows its content read-only.
+   */
+  save?(changes: readonly ContentChange[], ctx: SaveContext): Promise<void>;
+  /** Optional, for writable sources: whether a key no source provides yet may be created here. Default: no. */
+  accepts?(key: string): boolean;
 }
 
 // ---------- Section ----------

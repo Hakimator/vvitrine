@@ -10,6 +10,7 @@ export { protectEmail, type ProtectedEmail } from './email.ts';
 export { PluginRegistry } from './registry.ts';
 export { Basics, PartialDate, Profile, Url, CONTENT_SCHEMA_VERSION, RESERVED_KEYS } from './content/schemas.ts';
 export { formatPath, toIssues } from './content/zod-issues.ts';
+export { applyChange, InvalidChangeError, type ContentChange, type ContentPath } from './content/changes.ts';
 export { Translator, type Locale, type MessageCatalog, type Messages, type Translate } from './i18n/translator.ts';
 export { formatPartialDate, formatPeriod } from './i18n/dates.ts';
 export { coreMessages } from './i18n/core-messages.ts';

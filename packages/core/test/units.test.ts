@@ -12,6 +12,7 @@ import {
   tokensToCss,
   Translator,
 } from '../src/index.ts';
+import type { SourcePlugin } from '../src/plugin.ts';
 import { checkSourceContract, memoryFiles, memorySource } from '../src/testing.ts';
 
 describe('protected e-mail addresses', () => {
@@ -121,6 +122,32 @@ describe('testing helpers', () => {
     expect(
       await checkSourceContract(memorySource({ en: { basics: { name: 'X' } } }), { root: '/', locales: ['en', 'fr'] }),
     ).toEqual([]);
+  });
+
+  it('checks that a writable source saves what it loaded', async () => {
+    const files = memoryFiles({ 'a.txt': 'Jane' });
+    const writable = (write: (name: string) => string): SourcePlugin => ({
+      name: 'source-text',
+      kind: 'source',
+      apiVersion: 1,
+      load: async (ctx) => ({ data: { basics: { name: await ctx.files.read('a.txt') } } }),
+      save: async (changes, ctx) => {
+        const name = (changes[0] as { value: string }).value;
+        await ctx.files.write('a.txt', write(name));
+      },
+    });
+    expect(
+      await checkSourceContract(
+        writable((name) => name),
+        { root: '/', locales: ['en'], files },
+      ),
+    ).toEqual([]);
+    expect(
+      await checkSourceContract(
+        writable((name) => `${name}!`),
+        { root: '/', locales: ['en'], files },
+      ),
+    ).toEqual(['saving basics.name unchanged for "en" must load the same content again']);
   });
 });
 
