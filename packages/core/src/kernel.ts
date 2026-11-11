@@ -10,6 +10,7 @@ import { applyChange, type ContentChange } from './content/changes.ts';
 import { loadContent, loadRawContent, validateContent, type ValidatedContent } from './content/pipeline.ts';
 import { toIssues } from './content/zod-issues.ts';
 import {
+  DevEndpointError,
   InvalidPluginOptionsError,
   MissingRendererError,
   RouteConflictError,
@@ -31,10 +32,13 @@ import type {
   Navigation,
   NavItem,
   Plugin,
+  DevEndpoint,
+  DevSite,
   PageContext,
   ProjectFileWriter,
   ProjectFiles,
   RenderContext,
+  SavedContent,
   SourcePlugin,
   SectionInput,
   SectionPlugin,
@@ -62,10 +66,8 @@ export interface KernelOptions {
   readonly files?: ProjectFiles | (ProjectFiles & ProjectFileWriter);
 }
 
-/** What `saveContent` did: the files written or removed, relative to the project root. */
-export interface SavedContent {
-  readonly files: readonly string[];
-}
+/** Development endpoints live in a folder of their own: /__vvitrine/<tool>/... */
+const DEV_PATH = /^\/__vvitrine\/[a-z0-9-]+(?:\/[a-z0-9._-]+)*\/?$/;
 
 const canWrite = (files: ProjectFiles): files is ProjectFiles & ProjectFileWriter =>
   typeof (files as Partial<ProjectFileWriter>).write === 'function' &&
@@ -131,7 +133,7 @@ interface PendingRoute {
  * content per locale, resolves pages and plugin-contributed routes, collects hook output and
  * runs generators. It is framework-free; the Astro integration only renders what it returns.
  */
-export class Kernel {
+export class Kernel implements DevSite {
   private readonly config: ResolvedConfig;
   readonly registry: PluginRegistry;
   private readonly translator: Translator;
@@ -144,6 +146,7 @@ export class Kernel {
     this.config = resolveConfig(userConfig, options.layout);
     this.registry = new PluginRegistry(this.config.plugins);
     this.checkReads();
+    this.endpoints = this.collectDevEndpoints();
     const imagePlugins = this.registry.ofKind('generator').filter((g) => g.images);
     if (imagePlugins.length > 1) {
       throw new VVitrineError(
@@ -158,6 +161,55 @@ export class Kernel {
     this.translator.add(coreMessages);
     for (const plugin of this.registry.all()) this.translator.add(plugin.messages);
     this.translator.add(this.config.messages);
+  }
+
+  private readonly endpoints: readonly DevEndpoint[];
+
+  /** The development endpoints of all plugins (US-153), checked once: under /__vvitrine/, each path once. */
+  private collectDevEndpoints(): DevEndpoint[] {
+    const all: DevEndpoint[] = [];
+    const owners = new Map<string, string>();
+    for (const plugin of this.registry.all()) {
+      for (const endpoint of plugin.hooks?.devEndpoints?.() ?? []) {
+        if (!DEV_PATH.test(endpoint.path) || endpoint.path.split('/').some((part) => /^\.+$/.test(part))) {
+          throw new DevEndpointError(plugin.name, endpoint.path, 'use a path such as /__vvitrine/my-tool/action');
+        }
+        const owner = owners.get(endpoint.path);
+        if (owner) throw new DevEndpointError(plugin.name, endpoint.path, `"${owner}" already uses it`);
+        owners.set(endpoint.path, plugin.name);
+        all.push(endpoint);
+      }
+    }
+    return all;
+  }
+
+  /** Whether some plugin answers development requests (the composition root then routes /__vvitrine/ to it). */
+  get hasDevEndpoints(): boolean {
+    return this.endpoints.length > 0;
+  }
+
+  /**
+   * Answer a request of the development server, or undefined when no endpoint has its path. An exact path wins over a
+   * folder (`/a/` answers `/a/b`), and the deepest folder wins. A failing handler answers 500 with its message, so the
+   * development server keeps running.
+   */
+  async handleDevRequest(request: Request): Promise<Response | undefined> {
+    const path = new URL(request.url).pathname;
+    const endpoint =
+      this.endpoints.find((e) => e.path === path) ??
+      this.endpoints
+        .filter((e) => e.path.endsWith('/') && path.startsWith(e.path))
+        .sort((a, b) => b.path.length - a.path.length)[0];
+    if (!endpoint) return undefined;
+    try {
+      return await endpoint.handle(request, { site: this, logger: this.logger });
+    } catch (error) {
+      this.logger.warn(`Development endpoint ${endpoint.path} failed: ${(error as Error).message}`);
+      return new Response((error as Error).message, {
+        status: 500,
+        headers: { 'content-type': 'text/plain; charset=utf-8' },
+      });
+    }
   }
 
   /** The active theme's tokens with the layout file's overrides. */

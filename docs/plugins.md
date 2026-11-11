@@ -30,9 +30,34 @@ them that way.
     contentLoaded?(raw, ctx),   // transform raw content before validation
     head?(page) => HeadTag[],   // tags for <head>, escaped by the kernel
     bodyEnd?(page) => [{ component, props }],
+    footerLinks?(ctx) => NavItem[],
+    devEndpoints?() => DevEndpoint[], // local endpoints of `pnpm dev` (see below)
   },
 }
 ```
+
+### Development endpoints
+
+A tool that works on the site while you edit it (the Studio, a content checker...) adds local endpoints with
+`devEndpoints`. They are served by `pnpm dev` only and never built:
+
+```ts
+hooks: {
+  devEndpoints: () => [
+    {
+      path: '/__vvitrine/my-tool/languages', // under /__vvitrine/<tool>/; ending with "/" answers everything below it
+      handle: (request, { site }) => Response.json({ locales: site.locales }),
+    },
+  ],
+},
+```
+
+- Handlers take a standard `Request` and return a `Response` (no framework), so the same code can run elsewhere.
+- `site` gives what tools need: the languages, and `saveContent(locale, changes)` to save through the sources.
+- They answer requests to `localhost` only, from pages of the site itself: other sites open in the browser, and other
+  computers when the server is started with `--host`, are refused. Do not change anything on a `GET`: a page on another
+  site can still make the browser send one, even if it cannot read the answer.
+- Two plugins cannot use the same path, and a path outside `/__vvitrine/<tool>/` is refused at startup.
 
 A plugin that sends visitor data to a third party, or stores it, says so with `privacy(ctx)`. The privacy section lists
 these declarations, in the reader's language; plugins that are not in use (a section placed on no page) are left out:

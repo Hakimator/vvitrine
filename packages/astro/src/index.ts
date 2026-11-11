@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { AstroIntegration } from 'astro';
 import { parse } from 'yaml';
 
@@ -82,6 +83,10 @@ interface DevModuleGraph {
 }
 
 export { diskFiles } from './files.ts';
+import { DEV_PREFIX, refusal, send, toRequest } from './dev-server.ts';
+
+/** Loaded through Vite by the development server: it answers the plugins' development endpoints. */
+const DEV_ENTRY = fileURLToPath(new URL('./dev.ts', import.meta.url));
 
 /**
  * Composition root (ADR-009). Users never write pages: this integration injects one catch-all
@@ -135,7 +140,34 @@ export default function vvitrine(options: VVitrineIntegrationOptions = {}): Astr
                   watcher: { add(p: string): void; on(e: string, cb: (file: string) => void): void };
                   ws: { send(m: { type: string }): void };
                   environments?: Record<string, { moduleGraph: DevModuleGraph }>;
+                  middlewares: {
+                    use(handler: (req: IncomingMessage, res: ServerResponse, next: () => void) => void): void;
+                  };
+                  ssrLoadModule(path: string): Promise<Record<string, unknown>>;
                 }) {
+                  // The plugins' development endpoints (US-153), only here: a build has no /__vvitrine/ route.
+                  server.middlewares.use((req, res, next) => {
+                    if (!req.url?.startsWith(DEV_PREFIX)) return next();
+                    const refused = refusal(req.headers.host, req.headers.origin);
+                    if (refused) {
+                      res.statusCode = 403;
+                      res.end(refused);
+                      return;
+                    }
+                    void (async () => {
+                      try {
+                        const dev = (await server.ssrLoadModule(DEV_ENTRY)) as {
+                          handleDevRequest(request: Request): Promise<Response | undefined>;
+                        };
+                        const response = await dev.handleDevRequest(await toRequest(req));
+                        if (response) await send(res, response);
+                        else next();
+                      } catch (error) {
+                        res.statusCode = 500;
+                        res.end((error as Error).message);
+                      }
+                    })();
+                  });
                   if (extraDir) server.watcher.add(extraDir);
                   if (layoutPath) server.watcher.add(layoutPath);
                   const environments = Object.values(server.environments ?? {});

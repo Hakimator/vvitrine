@@ -105,6 +105,39 @@ export interface PluginHooks {
   bodyEnd?(ctx: PageContext): readonly ComponentRef[];
   /** Links added to the footer of every page, after the footer pages (e.g. "Manage cookies"). */
   footerLinks?(ctx: RenderContext): readonly NavItem[];
+  /**
+   * Local endpoints served by the development server only (`astro dev`), never built: for tools such as the Studio.
+   * They use the web's standard `Request` and `Response`, so the same handlers can run elsewhere (the online gateway).
+   */
+  devEndpoints?(): readonly DevEndpoint[];
+}
+
+/** A local endpoint of the development server. */
+export interface DevEndpoint {
+  /**
+   * Where it answers, under `/__vvitrine/` (a folder of its own, e.g. `/__vvitrine/studio/save`). A path ending with
+   * `/` answers for everything below it (e.g. the files of an app).
+   */
+  readonly path: string;
+  handle(request: Request, ctx: DevContext): Response | Promise<Response>;
+}
+
+/** What a development endpoint receives: the site, through what tools need of it, and a logger. */
+export interface DevContext {
+  readonly site: DevSite;
+  readonly logger: Logger;
+}
+
+/** The site as development tools see it (a port: the kernel implements it). */
+export interface DevSite {
+  readonly locales: readonly Locale[];
+  /** Save content changes through the sources (validated first; see `Kernel.saveContent`). */
+  saveContent(locale: Locale, changes: readonly ContentChange[]): Promise<SavedContent>;
+}
+
+/** What saving content did: the files written or removed, relative to the project root. */
+export interface SavedContent {
+  readonly files: readonly string[];
 }
 
 /**
