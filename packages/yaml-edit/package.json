@@ -1,0 +1,17 @@
+{
+  "name": "@vvitrine/yaml-edit",
+  "version": "1.0.0",
+  "description": "Edits YAML text in place for VVitrine content changes, keeping comments and layout.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vvitrine/core": "workspace:*",
+    "yaml": "2.9.1"
+  }
+}

@@ -21,6 +21,13 @@ module.exports = {
       to: { path: ['node:fs', '^fs$', 'node:fs/promises', '^fs/promises$'] },
     },
     {
+      name: 'libraries-depend-on-core-only',
+      comment: 'Libraries shared by plugins (@vvitrine/yaml-edit) import no VVitrine package but the core.',
+      severity: 'error',
+      from: { path: '^packages/yaml-edit/src' },
+      to: { path: ['^packages/(?!core/|yaml-edit/)', '^themes/', '^site/'] },
+    },
+    {
       name: 'plugins-use-public-api-only',
       comment: 'Plugins and themes import @vvitrine/core, never its internal files.',
       severity: 'error',
