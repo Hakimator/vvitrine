@@ -1,4 +1,4 @@
-import { createKernel, VVitrineError, type BuiltSite, type VVitrineConfig } from '@vvitrine/core';
+import { createKernel, VVitrineError, type BuiltSite, type Kernel, type VVitrineConfig } from '@vvitrine/core';
 import layout from 'virtual:vvitrine/layout';
 import { base, dev, root, siteUrl } from 'virtual:vvitrine/runtime';
 import { diskFiles } from './files.ts';
@@ -15,15 +15,20 @@ export function getSite(config: VVitrineConfig): Promise<BuiltSite> {
   return cached;
 }
 
+/** The site's kernel: the configuration, the layout file and the files on disk (the composition root, ADR-007). */
+export function siteKernel(config: VVitrineConfig): Kernel {
+  return createKernel(config, {
+    root,
+    base,
+    files: diskFiles(root),
+    ...(siteUrl ? { siteUrl } : {}),
+    ...(layout ? { layout } : {}),
+  });
+}
+
 async function build(config: VVitrineConfig): Promise<BuiltSite> {
   try {
-    return await createKernel(config, {
-      root,
-      base,
-      files: diskFiles(root),
-      ...(siteUrl ? { siteUrl } : {}),
-      ...(layout ? { layout } : {}),
-    }).build();
+    return await siteKernel(config).build();
   } catch (error) {
     if (error instanceof VVitrineError) {
       // Our messages are self-explanatory: hide the internal stack trace (spike finding F2).
