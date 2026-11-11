@@ -69,4 +69,43 @@ describe('@vvitrine/source-yaml', () => {
     await yamlSource({ dir: 'fixtures/' }).load({ ...ctx('fr'), files: spy });
     expect(read).toEqual(['fixtures/resume.fr.yaml']);
   });
+
+  it('saves changes in the file it read for the locale, keeping its comments', async () => {
+    const project = memoryFiles({
+      'content/resume.yaml': '# Shared\nbasics:\n  name: Jane # me\n',
+      'content/resume.fr.yaml': '# French\nbasics:\n  name: Jeanne\n',
+      'content/other.json': '{ "basics": { "name": "J" } }',
+    });
+    const source = yamlSource();
+    await source.save!([{ op: 'set', path: ['basics', 'label'], value: 'Développeuse' }], {
+      ...ctx('fr'),
+      files: project,
+    });
+    expect(project.snapshot()['content/resume.fr.yaml']).toBe(
+      '# French\nbasics:\n  name: Jeanne\n  label: Développeuse\n',
+    );
+    // English has no file of its own: it reads, and saves, the shared one.
+    await source.save!([{ op: 'set', path: ['basics', 'name'], value: 'Ada' }], { ...ctx('en'), files: project });
+    expect(project.snapshot()['content/resume.yaml']).toBe('# Shared\nbasics:\n  name: Ada # me\n');
+    await yamlSource({ dir: 'content', file: 'other' }).save!([{ op: 'set', path: ['work'], value: [] }], {
+      ...ctx('en'),
+      files: project,
+    });
+    expect(project.snapshot()['content/other.json']).toBe('{\n  "basics": {\n    "name": "J"\n  },\n  "work": []\n}\n');
+  });
+
+  it('creates the file when there is none: shared for the default locale, its own for the others', async () => {
+    const project = memoryFiles({});
+    const change = [{ op: 'set', path: ['basics', 'name'], value: 'Ada' }] as const;
+    await yamlSource().save!(change, { ...ctx('en'), files: project });
+    await yamlSource().save!(change, { ...ctx('fr'), files: project });
+    expect(project.snapshot()).toEqual({
+      'content/resume.yaml': 'basics:\n  name: Ada\n',
+      // French read the shared file just created, so it saved there: no French file.
+    });
+    const french = memoryFiles({});
+    await yamlSource().save!(change, { ...ctx('fr'), files: french });
+    expect(Object.keys(french.snapshot())).toEqual(['content/resume.fr.yaml']);
+    expect(yamlSource().accepts!('anything')).toBe(true);
+  });
 });
