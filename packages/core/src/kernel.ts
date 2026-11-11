@@ -6,7 +6,8 @@ import {
   type SectionRef,
   type VVitrineConfig,
 } from './config.ts';
-import { loadContent, type ValidatedContent } from './content/pipeline.ts';
+import { applyChange, type ContentChange } from './content/changes.ts';
+import { loadContent, loadRawContent, validateContent, type ValidatedContent } from './content/pipeline.ts';
 import { toIssues } from './content/zod-issues.ts';
 import {
   InvalidPluginOptionsError,
@@ -31,8 +32,10 @@ import type {
   NavItem,
   Plugin,
   PageContext,
+  ProjectFileWriter,
   ProjectFiles,
   RenderContext,
+  SourcePlugin,
   SectionInput,
   SectionPlugin,
   ThemePlugin,
@@ -52,9 +55,21 @@ export interface KernelOptions {
   readonly logger?: Logger;
   /** The layout file (site.yaml or site.json), read by the composition root (ADR-016). */
   readonly layout?: LayoutFile;
-  /** The project's files, given to sources (`ctx.files`). Without it, a source that reads a file fails clearly. */
-  readonly files?: ProjectFiles;
+  /**
+   * The project's files, given to sources (`ctx.files`). Without it, a source that reads a file fails clearly. To save
+   * content (`saveContent`), they must also be writable (`ProjectFileWriter`).
+   */
+  readonly files?: ProjectFiles | (ProjectFiles & ProjectFileWriter);
 }
+
+/** What `saveContent` did: the files written or removed, relative to the project root. */
+export interface SavedContent {
+  readonly files: readonly string[];
+}
+
+const canWrite = (files: ProjectFiles): files is ProjectFiles & ProjectFileWriter =>
+  typeof (files as Partial<ProjectFileWriter>).write === 'function' &&
+  typeof (files as Partial<ProjectFileWriter>).remove === 'function';
 
 /** For builds that give no file access: a source that needs files says so instead of failing obscurely. */
 const noFiles: ProjectFiles = {
@@ -204,6 +219,59 @@ export class Kernel {
     return this.registry
       .all()
       .filter((plugin) => plugin.kind !== 'section' || !this.config.pages || placed.has(plugin.id));
+  }
+
+  /**
+   * Save content changes for one locale, through the sources that own the changed keys (ADR-015, US-151):
+   * 1. the sources load the content as written in the files, and the last source that gives a key provides it;
+   * 2. the changes are applied in memory, and the result is validated exactly as a build would (NFR-24);
+   * 3. only then, each source writes its own changes, in its own format.
+   * Nothing is written when a change cannot be applied, the result is invalid, or a key comes from a read-only source.
+   */
+  async saveContent(locale: Locale, changes: readonly ContentChange[]): Promise<SavedContent> {
+    const files = this.options.files ?? noFiles;
+    if (!canWrite(files)) throw new VVitrineError('Cannot save content: this build gives sources no files to write.');
+    const ctx = { locale, defaultLocale: this.config.defaultLocale, root: this.options.root, logger: this.logger };
+    const { raw, origin, providers } = await loadRawContent(this.registry, { ...ctx, files });
+
+    // Which source saves each change.
+    const sources = this.registry.ofKind('source');
+    const byWriter = new Map<SourcePlugin, ContentChange[]>();
+    for (const change of changes) {
+      const key = change.path[0];
+      // A new key goes to the last writable source that accepts it.
+      const writer =
+        providers.get(key) ?? [...sources].reverse().find((source) => source.save && source.accepts?.(key) === true);
+      if (!writer) {
+        throw new VVitrineError(`Cannot save "${key}": no source provides it, and none accepts new content keys.`);
+      }
+      if (!writer.save) {
+        throw new VVitrineError(
+          `Cannot save "${key}": it comes from ${writer.name}, which is read-only${origin[key] ? ` (${origin[key]})` : ''}.`,
+        );
+      }
+      byWriter.set(writer, [...(byWriter.get(writer) ?? []), change]);
+    }
+
+    // The changed content must be valid before anything is written. Hooks may change what they get: give a copy.
+    const changed = changes.reduce(applyChange, raw);
+    await validateContent(this.registry, structuredClone(changed), origin, ctx);
+
+    const written: string[] = [];
+    const recording: ProjectFiles & ProjectFileWriter = {
+      read: (path) => files.read(path),
+      list: (dir) => files.list(dir),
+      write: async (path, text) => {
+        await files.write(path, text);
+        written.push(path);
+      },
+      remove: async (path) => {
+        await files.remove(path);
+        written.push(path);
+      },
+    };
+    for (const [writer, own] of byWriter) await writer.save!(own, { ...ctx, files: recording });
+    return { files: [...new Set(written)] };
   }
 
   private async buildLocale(locale: Locale): Promise<PendingRoute[]> {

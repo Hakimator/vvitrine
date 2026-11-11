@@ -17,8 +17,11 @@ import {
   ThemeCountError,
   UnknownSectionError,
   type BuiltSite,
+  applyChange,
+  InvalidChangeError,
   type GeneratorContext,
   type Plugin,
+  type SourcePlugin,
   type VVitrineConfig,
 } from '../src/index.ts';
 import { memoryFiles, memorySource, stringTheme } from '../src/testing.ts';
@@ -223,6 +226,80 @@ describe('project files', () => {
     await expect(build({ plugins: plugins('content/name.txt') })).rejects.toThrow(
       'Cannot read content/name.txt: this build gives sources no file access.',
     );
+  });
+});
+
+describe('saving content (US-151)', () => {
+  // A writable source: one JSON file per locale, rewritten whole.
+  const jsonSource = (accepts = true): SourcePlugin => ({
+    name: 'source-json',
+    kind: 'source',
+    apiVersion: 1,
+    load: async ({ files, locale }) => {
+      const text = await files.read(`content/${locale}.json`);
+      const data = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+      return { data, origin: Object.fromEntries(Object.keys(data).map((key) => [key, `content/${locale}.json`])) };
+    },
+    save: async (changes, { files, locale }) => {
+      const data = JSON.parse((await files.read(`content/${locale}.json`)) ?? '{}') as Record<string, unknown>;
+      await files.write(`content/${locale}.json`, JSON.stringify(changes.reduce(applyChange, data)));
+    },
+    accepts: () => accepts,
+  });
+  const project = () => memoryFiles({ 'content/en.json': JSON.stringify(content.en) });
+  const kernel = (files: ReturnType<typeof memoryFiles>, plugins: Plugin[] = [jsonSource(), theme, hero, work]) =>
+    createKernel({ plugins, site: { defaultLocale: 'en' } }, { root: '/', logger: silent, files });
+
+  it('writes the changes through the source that provides the key, and the next build shows them', async () => {
+    const files = project();
+    const saved = await kernel(files).saveContent('en', [
+      { op: 'set', path: ['basics', 'name'], value: 'Ada Lovelace' },
+      { op: 'move', path: ['work'], from: 1, to: 0 },
+    ]);
+    expect(saved).toEqual({ files: ['content/en.json'] });
+    const site = await kernel(files).build();
+    expect(site.routes[0]!.sections.map((s) => s.view)).toEqual([
+      { name: 'Ada Lovelace' },
+      { title: 'Experience', items: [content.en.work[1], content.en.work[0]] },
+    ]);
+  });
+
+  it('writes nothing when the changed content would not build', async () => {
+    const files = project();
+    const before = files.snapshot();
+    await expect(
+      kernel(files).saveContent('en', [{ op: 'set', path: ['work', 0, 'startDate'], value: 2025 }]),
+    ).rejects.toThrow(InvalidContentError);
+    await expect(kernel(files).saveContent('en', [{ op: 'remove', path: ['work', 5] }])).rejects.toThrow(
+      InvalidChangeError,
+    );
+    expect(files.snapshot()).toEqual(before);
+  });
+
+  it('refuses to save content from a read-only source, naming it', async () => {
+    const plugins = [memorySource(content), theme, hero, work];
+    await expect(kernel(project(), plugins).saveContent('en', [{ op: 'remove', path: ['work'] }])).rejects.toThrow(
+      'Cannot save "work": it comes from memory-source, which is read-only (memory:en).',
+    );
+  });
+
+  it('creates a key no source provides yet in a source that accepts it, or says that none does', async () => {
+    const files = project();
+    await kernel(files).saveContent('en', [{ op: 'set', path: ['x-notes'], value: ['hello'] }]);
+    expect(JSON.parse(files.snapshot()['content/en.json']!)['x-notes']).toEqual(['hello']);
+    const plugins = [jsonSource(false), theme, hero, work];
+    await expect(
+      kernel(project(), plugins).saveContent('en', [{ op: 'set', path: ['x-new'], value: 1 }]),
+    ).rejects.toThrow('Cannot save "x-new": no source provides it, and none accepts new content keys.');
+  });
+
+  it('needs files it can write', async () => {
+    const readOnly = { read: project().read, list: project().list };
+    const site = createKernel(
+      { plugins: [jsonSource(), theme, hero, work] },
+      { root: '/', logger: silent, files: readOnly },
+    );
+    await expect(site.saveContent('en', [])).rejects.toThrow('this build gives sources no files to write');
   });
 });
 

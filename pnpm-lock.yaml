@@ -284,6 +284,9 @@ importers:
       '@vvitrine/core':
         specifier: workspace:*
         version: link:../core
+      '@vvitrine/yaml-edit':
+        specifier: workspace:*
+        version: link:../yaml-edit
       yaml:
         specifier: 2.9.1
         version: 2.9.1
@@ -296,6 +299,9 @@ importers:
       '@vvitrine/core':
         specifier: workspace:*
         version: link:../core
+      '@vvitrine/yaml-edit':
+        specifier: workspace:*
+        version: link:../yaml-edit
       yaml:
         specifier: 2.9.1
         version: 2.9.1
@@ -303,8 +309,20 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
 
+  packages/yaml-edit:
+    dependencies:
+      '@vvitrine/core':
+        specifier: workspace:*
+        version: link:../core
+      yaml:
+        specifier: 2.9.1
+        version: 2.9.1
+
   scripts:
     dependencies:
+      '@vvitrine/astro':
+        specifier: workspace:*
+        version: link:../packages/astro
       '@vvitrine/contact':
         specifier: workspace:*
         version: link:../packages/contact
@@ -314,6 +332,12 @@ importers:
       '@vvitrine/sections':
         specifier: workspace:*
         version: link:../packages/sections
+      '@vvitrine/source-markdown':
+        specifier: workspace:*
+        version: link:../packages/source-markdown
+      '@vvitrine/source-yaml':
+        specifier: workspace:*
+        version: link:../packages/source-yaml
       zod:
         specifier: 4.6.7
         version: 4.6.7
