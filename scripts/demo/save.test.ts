@@ -1,6 +1,7 @@
 import { cp, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { diskFiles, readLayout } from '@vvitrine/astro';
 import { createKernel, type Plugin } from '@vvitrine/core';
 import { stringTheme } from '@vvitrine/core/testing';
@@ -15,7 +16,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
  * vvitrine.config.ts cannot be loaded here: some of its plugins ship Astro components.)
  */
 describe('saving the demo content', () => {
-  const site = new URL('../../site/', import.meta.url).pathname;
+  // fileURLToPath, not URL.pathname: on Windows the pathname is "/D:/...", not a usable path.
+  const site = fileURLToPath(new URL('../../site/', import.meta.url));
   const plugins: Plugin[] = [
     yamlSource({ dir: 'content', file: 'resume' }),
     markdownSource({ dir: 'content/projects' }),
