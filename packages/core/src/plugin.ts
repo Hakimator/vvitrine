@@ -128,9 +128,68 @@ export interface DevContext {
   readonly logger: Logger;
 }
 
+/**
+ * How the Studio edits a content key, beyond what its schema says (US-131). Forms come from the schema itself: field
+ * names, `.describe()` texts as help, and the kinds the core's field types carry (dates, images, long texts...).
+ */
+export interface ContentEditorHints {
+  /**
+   * For a list: the field that names each item in the Studio, or several, the first one that has a value wins
+   * (e.g. ['position', 'name']). Default: the first text field of the item.
+   */
+  readonly itemTitle?: string | readonly string[];
+  /**
+   * Custom fields, by path inside the content key, with `*` for any list position: `'*.color'` for the `color` of
+   * each item of a list, `'updated'` for a field of an object.
+   */
+  readonly widgets?: Readonly<Record<string, CustomWidget>>;
+}
+
+/**
+ * A field the Studio shows with the plugin's own control: a custom element (a web standard, so plugins do not depend
+ * on the Studio's UI library). The element has a `value` property, and fires a `change` event when the value changes.
+ */
+export interface CustomWidget {
+  /** The custom element's name, with a dash, e.g. 'vv-colour-picker'. */
+  readonly element: string;
+  /** JavaScript module that defines it (`customElements.define(...)`), as source code. */
+  readonly module: string;
+}
+
+/** A JSON Schema (draft 2020-12), as `z.toJSONSchema` writes it. */
+export type JsonSchema = Readonly<Record<string, unknown>>;
+
+/** What can be edited, as data: for the Studio, and any tool that edits a site (US-131). */
+export interface EditingModel {
+  /** `basics` first, then each content key in the order of its plugin. */
+  readonly content: readonly ContentModel[];
+  /** The sections that can be placed on pages, with their options. */
+  readonly sections: readonly SectionModel[];
+}
+
+export interface ContentModel {
+  readonly key: string;
+  /** The plugin that owns the key ('core' for basics). */
+  readonly owner: string;
+  /** What the content files may hold (input side: before defaults). */
+  readonly schema: JsonSchema;
+  readonly editor?: ContentEditorHints;
+}
+
+export interface SectionModel {
+  readonly id: string;
+  readonly plugin: string;
+  /** The content key it owns, if any. */
+  readonly content?: string;
+  /** Its options (per placement on a page), if it has any. */
+  readonly options?: JsonSchema;
+}
+
 /** The site as development tools see it (a port: the kernel implements it). */
 export interface DevSite {
   readonly locales: readonly Locale[];
+  /** What can be edited: content keys and section options, with their schemas. */
+  editingModel(): EditingModel;
   /** Save content changes through the sources (validated first; see `Kernel.saveContent`). */
   saveContent(locale: Locale, changes: readonly ContentChange[]): Promise<SavedContent>;
 }
@@ -265,8 +324,12 @@ export interface SectionPlugin<TContent = unknown, TOptions = unknown, TView = u
   readonly kind: 'section';
   /** Id used in `pages[].sections`. */
   readonly id: string;
-  /** Content key this plugin owns and validates (ADR-008). */
-  readonly content?: { readonly key: string; readonly schema: z.ZodType<TContent> };
+  /** Content key this plugin owns and validates (ADR-008), and how the Studio edits it (optional). */
+  readonly content?: {
+    readonly key: string;
+    readonly schema: z.ZodType<TContent>;
+    readonly editor?: ContentEditorHints;
+  };
   /**
    * True when the section renders the page's main heading (<h1>), like the hero. Pages without such a section get
    * their title as `PageContext.heading`, so every page has exactly one <h1>.

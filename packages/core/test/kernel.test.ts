@@ -4,6 +4,9 @@ import {
   ContentOwnershipError,
   createKernel,
   DevEndpointError,
+  EditorHintError,
+  LongText,
+  PartialDate,
   definePlugin,
   defineSection,
   DuplicatePluginError,
@@ -301,6 +304,52 @@ describe('saving content (US-151)', () => {
       { root: '/', logger: silent, files: readOnly },
     );
     await expect(site.saveContent('en', [])).rejects.toThrow('this build gives sources no files to write');
+  });
+});
+
+describe('editing model (US-131)', () => {
+  const now = (widgets: Record<string, { element: string; module: string }> = {}): Plugin =>
+    defineSection({
+      name: 'section-now',
+      kind: 'section',
+      apiVersion: 1,
+      id: 'now',
+      content: {
+        key: 'now',
+        schema: z.array(z.object({ text: LongText.describe('What you do'), since: PartialDate.optional() })).optional(),
+        editor: { itemTitle: 'text', widgets },
+      },
+      optionsSchema: z.object({ limit: z.number().int().positive().optional() }),
+      present: () => null,
+    });
+  const kernel = (...plugins: Plugin[]) =>
+    createKernel({ ...config(), plugins: [...config().plugins, ...plugins] }, { root: '/', logger: silent });
+
+  it('describes basics and every content key with its owner, schema and editor hints, and the sections', () => {
+    const model = kernel(now()).editingModel();
+    expect(model.content.map((c) => [c.key, c.owner])).toEqual([
+      ['basics', 'core'],
+      ['work', 'section-work'],
+      ['now', 'section-now'],
+    ]);
+    const basics = model.content[0]!.schema as { properties: Record<string, Record<string, unknown>> };
+    expect(basics.properties.summary!['x-editor']).toBe('long-text');
+    expect(basics.properties.image!['x-editor']).toBe('image');
+    const item = (model.content[2]!.schema as { items: { properties: Record<string, Record<string, unknown>> } }).items;
+    expect(item.properties.text).toEqual({ type: 'string', 'x-editor': 'long-text', description: 'What you do' });
+    expect(item.properties.since!['x-editor']).toBe('date');
+    expect(model.content[2]!.editor).toEqual({ itemTitle: 'text', widgets: {} });
+    expect(model.sections.map((s) => s.id)).toEqual(['hero', 'work', 'now']);
+    expect(model.sections[2]).toMatchObject({ plugin: 'section-now', content: 'now', options: { type: 'object' } });
+  });
+
+  it('refuses a widget that is no custom element, or whose module does not define it', () => {
+    expect(() => kernel(now({ '*.since': { element: 'datepicker', module: '' } }))).toThrow(EditorHintError);
+    expect(() => kernel(now({ '*.since': { element: 'my-date', module: 'export {}' } }))).toThrow(
+      'Plugin "section-now" declares an editor widget for "*.since": its module must define <my-date>.',
+    );
+    const ok = "customElements.define('my-date', class extends HTMLElement {})";
+    expect(() => kernel(now({ '*.since': { element: 'my-date', module: ok } }))).not.toThrow();
   });
 });
 

@@ -16,7 +16,8 @@
         },
         "image": {
           "description": "Your photo in public/, e.g. /photo.jpg; initials are shown without it.",
-          "type": "string"
+          "type": "string",
+          "x-editor": "image"
         },
         "email": {
           "description": "Never written plainly in the pages (protected from spam harvesters).",
@@ -29,7 +30,8 @@
           "format": "uri"
         },
         "summary": {
-          "type": "string"
+          "type": "string",
+          "x-editor": "long-text"
         },
         "location": {
           "type": "object",
@@ -96,7 +98,8 @@
           },
           "date": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "awarder": {
             "type": "string"
@@ -122,7 +125,8 @@
           },
           "date": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "summary": {
             "type": "string"
@@ -174,7 +178,8 @@
           },
           "date": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "issuer": {
             "type": "string"
@@ -211,11 +216,13 @@
           },
           "startDate": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "endDate": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "score": {
             "type": "string"
@@ -311,11 +318,13 @@
           },
           "startDate": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "endDate": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "url": {
             "type": "string",
@@ -387,7 +396,8 @@
           },
           "releaseDate": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "url": {
             "type": "string",
@@ -521,11 +531,13 @@
           },
           "date": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "endDate": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "summary": {
             "type": "string"
@@ -560,11 +572,13 @@
           },
           "startDate": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "endDate": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "summary": {
             "type": "string"
@@ -605,11 +619,13 @@
           },
           "startDate": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "endDate": {
             "type": "string",
-            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+            "pattern": "^\\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$",
+            "x-editor": "date"
           },
           "summary": {
             "type": "string"

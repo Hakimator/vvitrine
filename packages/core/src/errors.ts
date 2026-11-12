@@ -37,6 +37,12 @@ export class InvalidContentError extends VVitrineError {
   }
 }
 
+export class EditorHintError extends VVitrineError {
+  constructor(plugin: string, path: string, reason: string) {
+    super(`Plugin "${plugin}" declares an editor widget for "${path}": ${reason}.`);
+  }
+}
+
 export class DevEndpointError extends VVitrineError {
   constructor(plugin: string, path: string, reason: string) {
     super(`Plugin "${plugin}" declares a development endpoint at "${path}": ${reason}.`);
