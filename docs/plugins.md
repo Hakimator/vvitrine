@@ -53,7 +53,16 @@ hooks: {
 ```
 
 - Handlers take a standard `Request` and return a `Response` (no framework), so the same code can run elsewhere.
-- `site` gives what tools need: the languages, and `saveContent(locale, changes)` to save through the sources.
+- `site` gives what tools need:
+  - `locales`;
+  - `editingModel()`: the schemas of the content and of the sections' options;
+  - `readContent(locale)`: the content as written in the files, with each key's file and the keys that cannot be saved;
+  - `checkContent(locale, content)`: the problems a build would find;
+  - `saveContent(locale, changes)`: saving through the sources.
+
+  `EditSession` in `@vvitrine/studio-core` builds on these: changes with undo and redo, checks as you type, and
+  saving only valid content.
+
 - They answer requests to `localhost` only, from pages of the site itself: other sites open in the browser, and other
   computers when the server is started with `--host`, are refused. Do not change anything on a `GET`: a page on another
   site can still make the browser send one, even if it cannot read the answer.
