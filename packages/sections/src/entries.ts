@@ -2,7 +2,7 @@
  * JSON Resume sections drawn with the shared `entries` view kind: volunteer, awards, certificates, publications.
  * Each one owns its content key and validates it; themes need no dedicated component.
  */
-import { defineSection, PartialDate, Url, type EntriesView, type EntryItem } from '@vvitrine/core';
+import { defineSection, type EntriesView, type EntryItem, LongText, PartialDate, Url } from '@vvitrine/core';
 import { z } from 'zod';
 import { byMostRecent, isText, ListOptions, take } from './shared.ts';
 
@@ -25,7 +25,7 @@ export const VolunteerContent = z
       url: Url.optional(),
       startDate: PartialDate.optional(),
       endDate: PartialDate.optional(),
-      summary: z.string().optional(),
+      summary: LongText.optional(),
       highlights: z.array(z.string()).default([]),
     }),
   )
@@ -67,7 +67,7 @@ export const AwardsContent = z
       title: z.string().min(1),
       date: PartialDate.optional(),
       awarder: z.string().optional(),
-      summary: z.string().optional(),
+      summary: LongText.optional(),
     }),
   )
   .default([]);
@@ -147,7 +147,7 @@ export const PublicationsContent = z
       publisher: z.string().optional(),
       releaseDate: PartialDate.optional(),
       url: Url.optional(),
-      summary: z.string().optional(),
+      summary: LongText.optional(),
     }),
   )
   .default([]);

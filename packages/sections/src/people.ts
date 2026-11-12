@@ -1,7 +1,7 @@
 /**
  * JSON Resume sections about interests and references, drawn with the shared `tags` and `quotes` view kinds.
  */
-import { defineSection, type QuoteItem, type QuotesView, type TagsView } from '@vvitrine/core';
+import { defineSection, LongText, type QuoteItem, type QuotesView, type TagsView } from '@vvitrine/core';
 import { z } from 'zod';
 import { ListOptions, take } from './shared.ts';
 
@@ -39,7 +39,7 @@ export const ReferencesContent = z
   .array(
     z.object({
       name: z.string().min(1),
-      reference: z.string().min(1),
+      reference: LongText.min(1),
       /** VVitrine extension: who the person is, e.g. "Team lead at Acme". */
       'x-vvitrine': z
         .object({ role: z.string().optional().describe('Who the person is, e.g. "Team lead at Acme".') })

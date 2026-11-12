@@ -5,12 +5,13 @@
  */
 import {
   defineSection,
-  PartialDate,
-  Url,
   type EntriesView,
   type EntryItem,
   type FiguresView,
+  LongText,
+  PartialDate,
   type QuotesView,
+  Url,
 } from '@vvitrine/core';
 import { z } from 'zod';
 import type { EducationContent } from './education.ts';
@@ -21,7 +22,7 @@ import type { WorkContent } from './work.ts';
 // ---------- Testimonials ----------
 
 export const TestimonialsContent = z
-  .array(z.object({ quote: z.string().min(1), author: z.string().min(1), role: z.string().optional() }))
+  .array(z.object({ quote: LongText.min(1), author: z.string().min(1), role: z.string().optional() }))
   .default([]);
 
 export const testimonials = () =>
@@ -31,7 +32,8 @@ export const testimonials = () =>
     apiVersion: 1,
     id: 'testimonials',
     viewKind: 'quotes',
-    content: { key: 'testimonials', schema: TestimonialsContent },
+    // The quote is long: the Studio names each testimonial by its author.
+    content: { key: 'testimonials', schema: TestimonialsContent, editor: { itemTitle: 'author' } },
     optionsSchema: ListOptions,
     messages: {
       fr: { 'section.testimonials.title': 'Témoignages' },
@@ -69,7 +71,7 @@ export const stats = () =>
     apiVersion: 1,
     id: 'stats',
     viewKind: 'figures',
-    content: { key: 'stats', schema: StatsContent },
+    content: { key: 'stats', schema: StatsContent, editor: { itemTitle: 'label' } },
     optionsSchema: ListOptions,
     messages: {
       fr: { 'section.stats.title': 'En chiffres' },
@@ -93,7 +95,7 @@ export const TimelineContent = z
       title: z.string().min(1),
       date: PartialDate,
       endDate: PartialDate.optional(),
-      summary: z.string().optional(),
+      summary: LongText.optional(),
       url: Url.optional(),
     }),
   )

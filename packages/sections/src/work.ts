@@ -1,4 +1,4 @@
-import { defineSection, PartialDate, Url, type EntriesView } from '@vvitrine/core';
+import { defineSection, type EntriesView, LongText, PartialDate, Url } from '@vvitrine/core';
 import { z } from 'zod';
 import { byMostRecent, isText, ListOptions, take } from './shared.ts';
 
@@ -11,7 +11,7 @@ export const WorkContent = z
       url: Url.optional(),
       startDate: PartialDate,
       endDate: PartialDate.optional(),
-      summary: z.string().optional(),
+      summary: LongText.optional(),
       highlights: z.array(z.string()).default([]),
     }),
   )

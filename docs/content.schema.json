@@ -105,7 +105,8 @@
             "type": "string"
           },
           "summary": {
-            "type": "string"
+            "type": "string",
+            "x-editor": "long-text"
           }
         },
         "required": [
@@ -129,7 +130,8 @@
             "x-editor": "date"
           },
           "summary": {
-            "type": "string"
+            "type": "string",
+            "x-editor": "long-text"
           },
           "tags": {
             "default": [],
@@ -155,7 +157,8 @@
               },
               "body": {
                 "description": "The article in Markdown (the text of the Markdown file).",
-                "type": "string"
+                "type": "string",
+                "x-editor": "markdown"
               }
             }
           }
@@ -293,7 +296,8 @@
             "minLength": 1
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "x-editor": "long-text"
           },
           "highlights": {
             "default": [],
@@ -356,6 +360,7 @@
                 "properties": {
                   "src": {
                     "type": "string",
+                    "x-editor": "image",
                     "description": "Picture in public/, e.g. /projects/app.png."
                   },
                   "alt": {
@@ -371,7 +376,8 @@
               },
               "body": {
                 "description": "Write-up in Markdown, shown on the project page (the text of a Markdown file).",
-                "type": "string"
+                "type": "string",
+                "x-editor": "markdown"
               }
             }
           }
@@ -404,7 +410,8 @@
             "format": "uri"
           },
           "summary": {
-            "type": "string"
+            "type": "string",
+            "x-editor": "long-text"
           }
         },
         "required": [
@@ -424,7 +431,8 @@
           },
           "reference": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "x-editor": "long-text"
           },
           "x-vvitrine": {
             "type": "object",
@@ -503,7 +511,8 @@
         "properties": {
           "quote": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "x-editor": "long-text"
           },
           "author": {
             "type": "string",
@@ -540,7 +549,8 @@
             "x-editor": "date"
           },
           "summary": {
-            "type": "string"
+            "type": "string",
+            "x-editor": "long-text"
           },
           "url": {
             "type": "string",
@@ -581,7 +591,8 @@
             "x-editor": "date"
           },
           "summary": {
-            "type": "string"
+            "type": "string",
+            "x-editor": "long-text"
           },
           "highlights": {
             "default": [],
@@ -628,7 +639,8 @@
             "x-editor": "date"
           },
           "summary": {
-            "type": "string"
+            "type": "string",
+            "x-editor": "long-text"
           },
           "highlights": {
             "default": [],
