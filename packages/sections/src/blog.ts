@@ -2,7 +2,15 @@
  * Blog: articles written in Markdown. The section lists them (shared `entries` view kind, so themes need no list
  * component) and contributes one page per article (`blog:post` component).
  */
-import { defineSection, PartialDate, type EntriesView, type EntryItem, type RenderContext } from '@vvitrine/core';
+import {
+  defineSection,
+  type EntriesView,
+  type EntryItem,
+  LongText,
+  MarkdownText,
+  PartialDate,
+  type RenderContext,
+} from '@vvitrine/core';
 import { z } from 'zod';
 import { renderMarkdownDocument, type Heading } from './markdown.ts';
 import { ListOptions, slugify, take } from './shared.ts';
@@ -13,7 +21,7 @@ export const PostsContent = z
       title: z.string().min(1),
       /** Publication date, e.g. 2026-11-07. */
       date: PartialDate,
-      summary: z.string().optional(),
+      summary: LongText.optional(),
       tags: z.array(z.string().min(1)).default([]),
       /** Drafts are never published. */
       draft: z.boolean().default(false).describe('Keep the article out of the site.'),
@@ -25,7 +33,7 @@ export const PostsContent = z
             .optional()
             .describe('Address of the article, /blog/<slug>; default: the file name.'),
           /** The article, in Markdown. */
-          body: z.string().optional().describe('The article in Markdown (the text of the Markdown file).'),
+          body: MarkdownText.optional().describe('The article in Markdown (the text of the Markdown file).'),
         })
         .default({}),
     }),

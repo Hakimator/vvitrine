@@ -9,8 +9,11 @@ import {
 import { applyChange, type ContentChange } from './content/changes.ts';
 import { loadContent, loadRawContent, validateContent, type ValidatedContent } from './content/pipeline.ts';
 import { toIssues } from './content/zod-issues.ts';
+import { z } from 'zod';
+import { Basics } from './content/schemas.ts';
 import {
   DevEndpointError,
+  EditorHintError,
   InvalidPluginOptionsError,
   MissingRendererError,
   RouteConflictError,
@@ -34,6 +37,8 @@ import type {
   Plugin,
   DevEndpoint,
   DevSite,
+  EditingModel,
+  JsonSchema,
   PageContext,
   ProjectFileWriter,
   ProjectFiles,
@@ -65,6 +70,9 @@ export interface KernelOptions {
    */
   readonly files?: ProjectFiles | (ProjectFiles & ProjectFileWriter);
 }
+
+/** A custom element's name: lower case, starting with a letter, with a dash (HTML standard, simplified). */
+const CUSTOM_ELEMENT = /^[a-z][a-z0-9._]*-[a-z0-9._-]*$/;
 
 /** Development endpoints live in a folder of their own: /__vvitrine/<tool>/... */
 const DEV_PATH = /^\/__vvitrine\/[a-z0-9-]+(?:\/[a-z0-9._-]+)*\/?$/;
@@ -147,6 +155,7 @@ export class Kernel implements DevSite {
     this.registry = new PluginRegistry(this.config.plugins);
     this.checkReads();
     this.endpoints = this.collectDevEndpoints();
+    this.checkEditorHints();
     const imagePlugins = this.registry.ofKind('generator').filter((g) => g.images);
     if (imagePlugins.length > 1) {
       throw new VVitrineError(
@@ -164,6 +173,53 @@ export class Kernel implements DevSite {
   }
 
   private readonly endpoints: readonly DevEndpoint[];
+
+  /** Custom widgets must be custom elements (a dash in the name), given with the module that defines them. */
+  private checkEditorHints(): void {
+    for (const section of this.registry.ofKind('section')) {
+      for (const [path, widget] of Object.entries(section.content?.editor?.widgets ?? {})) {
+        if (!CUSTOM_ELEMENT.test(widget.element)) {
+          throw new EditorHintError(section.name, path, `"${widget.element}" is no custom element name (use a dash)`);
+        }
+        if (typeof widget.module !== 'string' || !widget.module.includes(widget.element)) {
+          throw new EditorHintError(section.name, path, `its module must define <${widget.element}>`);
+        }
+      }
+    }
+  }
+
+  /**
+   * What can be edited (US-131): the JSON Schema of `basics` and of every content key, with its owner and the
+   * plugin's editor hints, and the options of every section. The input side of the schemas: what the files may hold.
+   */
+  editingModel(): EditingModel {
+    const json = (schema: z.ZodType): JsonSchema =>
+      z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' }) as JsonSchema;
+    const sections = this.registry.ofKind('section');
+    return {
+      content: [
+        { key: 'basics', owner: 'core', schema: json(Basics) },
+        ...sections.flatMap((section) =>
+          section.content
+            ? [
+                {
+                  key: section.content.key,
+                  owner: section.name,
+                  schema: json(section.content.schema),
+                  ...(section.content.editor ? { editor: section.content.editor } : {}),
+                },
+              ]
+            : [],
+        ),
+      ],
+      sections: sections.map((section) => ({
+        id: section.id,
+        plugin: section.name,
+        ...(section.content ? { content: section.content.key } : {}),
+        ...(section.optionsSchema ? { options: json(section.optionsSchema) } : {}),
+      })),
+    };
+  }
 
   /** The development endpoints of all plugins (US-153), checked once: under /__vvitrine/, each path once. */
   private collectDevEndpoints(): DevEndpoint[] {

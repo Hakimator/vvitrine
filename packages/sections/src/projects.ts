@@ -1,4 +1,13 @@
-import { defineSection, PartialDate, Url, type RenderContext, type ResponsiveImage } from '@vvitrine/core';
+import {
+  defineSection,
+  ImagePath,
+  LongText,
+  MarkdownText,
+  PartialDate,
+  type RenderContext,
+  type ResponsiveImage,
+  Url,
+} from '@vvitrine/core';
 import { z } from 'zod';
 import { renderMarkdown } from './markdown.ts';
 import { byMostRecent, ListOptions, slugify, take } from './shared.ts';
@@ -7,7 +16,7 @@ export const ProjectsContent = z
   .array(
     z.object({
       name: z.string().min(1),
-      description: z.string().optional(),
+      description: LongText.optional(),
       highlights: z.array(z.string()).default([]),
       keywords: z.array(z.string()).default([]),
       roles: z.array(z.string()).default([]),
@@ -25,7 +34,7 @@ export const ProjectsContent = z
           featured: z.boolean().default(false).describe('Shown first, with a "Featured" label.'),
           image: z
             .object({
-              src: z.string().describe('Picture in public/, e.g. /projects/app.png.'),
+              src: ImagePath.describe('Picture in public/, e.g. /projects/app.png.'),
               alt: z
                 .string()
                 .min(1, { message: 'alt text is required (accessibility)' })
@@ -33,10 +42,9 @@ export const ProjectsContent = z
             })
             .optional(),
           /** Long write-up in Markdown (case study), shown on the project page. */
-          body: z
-            .string()
-            .optional()
-            .describe('Write-up in Markdown, shown on the project page (the text of a Markdown file).'),
+          body: MarkdownText.optional().describe(
+            'Write-up in Markdown, shown on the project page (the text of a Markdown file).',
+          ),
         })
         .default({ featured: false }),
     }),

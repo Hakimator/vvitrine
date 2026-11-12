@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { InvalidContentError, createKernel, InvalidPluginOptionsError, type EntriesView } from '@vvitrine/core';
 import { memorySource, stringTheme } from '@vvitrine/core/testing';
+import { describeContent } from '@vvitrine/studio-core';
 import now from '../src/index.ts';
+import { monthInputModule } from '../src/month-input.browser.ts';
 
 const content = {
   basics: { name: 'Jane' },
@@ -48,5 +50,61 @@ describe('example section-now', () => {
 
   it('rejects content that does not match its schema', async () => {
     await expect(build({ ...content, now: { updated: 'soon', items: [] } })).rejects.toThrow(InvalidContentError);
+  });
+
+  it('tells the Studio how to edit it: items named by their text, the month with its own control', () => {
+    const model = createKernel(
+      { plugins: [memorySource({ en: content }), stringTheme({}, ''), now()] },
+      { root: '/', logger: { info: () => {}, warn: () => {} } },
+    ).editingModel();
+    const form = describeContent(model.content.find((c) => c.key === 'now')!);
+    const updated = form.fields!.find((f) => f.path.join('.') === 'updated')!;
+    expect(updated).toMatchObject({ kind: 'custom', widget: { element: 'now-month' } });
+    expect(form.fields!.find((f) => f.path.join('.') === 'items')!.itemTitle).toEqual(['text']);
+  });
+
+  it('defines <now-month>: a value in YYYY-MM, and a change event when it changes', () => {
+    // Small stand-ins for the browser: enough to run the module and use the element.
+    const defined = new Map<string, new () => HTMLElement & { value: string }>();
+    const input = {
+      type: '',
+      value: '',
+      isConnected: false,
+      label: '',
+      listener: () => {},
+      addEventListener(_type: string, listener: () => void) {
+        this.listener = listener;
+      },
+      setAttribute(_name: string, label: string) {
+        this.label = label;
+      },
+    };
+    const events: string[] = [];
+    class Element {
+      getAttribute = () => 'Updated';
+      append = () => {};
+      dispatchEvent = (event: { type: string }) => events.push(event.type);
+    }
+    const browser = {
+      customElements: {
+        get: (name: string) => defined.get(name),
+        define: (name: string, c: never) => defined.set(name, c),
+      },
+      HTMLElement: Element,
+      document: { createElement: () => input },
+      Event: class {
+        readonly type: string;
+        constructor(type: string) {
+          this.type = type;
+        }
+      },
+    };
+    new Function(...Object.keys(browser), monthInputModule)(...Object.values(browser));
+    const element = new (defined.get('now-month')!)();
+    (element as unknown as { connectedCallback(): void }).connectedCallback();
+    element.value = '2026-11';
+    expect([input.type, input.value, element.value, input.label]).toEqual(['month', '2026-11', '2026-11', 'Updated']);
+    input.listener();
+    expect(events).toEqual(['change']);
   });
 });

@@ -1,0 +1,19 @@
+{
+  "name": "@vvitrine/studio-core",
+  "version": "1.0.0",
+  "description": "The VVitrine Studio's domain and use cases, without any framework: forms from the plugins' schemas.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vvitrine/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@vvitrine/sections": "workspace:*"
+  }
+}

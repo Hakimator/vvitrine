@@ -22,10 +22,20 @@ module.exports = {
     },
     {
       name: 'libraries-depend-on-core-only',
-      comment: 'Libraries shared by plugins (@vvitrine/yaml-edit) import no VVitrine package but the core.',
+      comment:
+        "Libraries (@vvitrine/yaml-edit) and the Studio's framework-free core (@vvitrine/studio-core) import no VVitrine package but the core.",
       severity: 'error',
-      from: { path: '^packages/yaml-edit/src' },
-      to: { path: ['^packages/(?!core/|yaml-edit/)', '^themes/', '^site/'] },
+      from: { path: '^packages/(yaml-edit|studio-core)/src' },
+      to: { path: ['^packages/(?!core/|yaml-edit/|studio-core/)', '^themes/', '^site/'] },
+    },
+    {
+      name: 'public-site-never-imports-the-studio',
+      comment:
+        'The public site stays as it is without the Studio (NFR-19): only Studio packages import Studio packages.',
+      severity: 'error',
+      from: { path: '^(packages/(?!studio-)|themes/|site/|examples/)' },
+      // A file of a Studio package, or its name when the import does not resolve (no dependency declared).
+      to: { path: ['^packages/studio-', '^@vvitrine/studio-'] },
     },
     {
       name: 'plugins-use-public-api-only',

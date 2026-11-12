@@ -133,6 +133,10 @@ importers:
       zod:
         specifier: 4.6.7
         version: 4.6.7
+    devDependencies:
+      '@vvitrine/studio-core':
+        specifier: workspace:*
+        version: link:../../../packages/studio-core
 
   examples/plugins/service-plausible:
     dependencies:
@@ -308,6 +312,16 @@ importers:
       zod:
         specifier: 4.6.7
         version: 4.6.7
+
+  packages/studio-core:
+    dependencies:
+      '@vvitrine/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@vvitrine/sections':
+        specifier: workspace:*
+        version: link:../sections
 
   packages/yaml-edit:
     dependencies:
