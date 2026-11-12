@@ -95,6 +95,39 @@ See `site/plugins/talks.ts`. A section:
 deployment base path, `asset(path)` for files in `public/`, and `image(path)` for images: `{ src, srcset?, width?,
 height? }`, filled in by the image plugin when one is installed. Never hard-code a visible string or an absolute link.
 
+### Make a section editable in the Studio
+
+The Studio builds the form of a section's content and options from its schemas: field names become labels, and
+`.describe()` texts become help. Use the core's field types where they fit, so that the Studio picks the right
+control:
+
+| Type (from `@vvitrine/core`) | Control                              |
+| ---------------------------- | ------------------------------------ |
+| `z.string()`                 | one-line text                        |
+| `LongText`                   | text area (a summary, a description) |
+| `MarkdownText`               | Markdown editor                      |
+| `PartialDate`                | date (YYYY, YYYY-MM or YYYY-MM-DD)   |
+| `ImagePath`                  | picture in `public/`                 |
+| `Url`, `z.email()`           | web address, e-mail address          |
+| `z.enum([...])`              | list of choices                      |
+
+Two optional hints go next to the schema:
+
+```ts
+content: {
+  key: 'now',
+  schema: NowContent,
+  editor: {
+    itemTitle: 'text', // the field that names each list item (default: the first one-line text)
+    widgets: { updated: { element: 'now-month', module: monthInputModule } }, // a control of your own
+  },
+},
+```
+
+A widget is a custom element (a web standard): the Studio sets its `value` property and listens to its `change`
+event, so your plugin does not depend on the Studio's user interface library. `module` is the JavaScript that defines
+it. Paths use `*` for any position in a list (`'*.color'`). The example section `section-now` has one.
+
 ## Write an image plugin
 
 An image plugin is a generator with an `images` field (at most one per site): the kernel calls `images.prepare()` once
