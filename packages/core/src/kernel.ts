@@ -14,11 +14,13 @@ import { Basics } from './content/schemas.ts';
 import {
   DevEndpointError,
   EditorHintError,
+  InvalidContentError,
   InvalidPluginOptionsError,
   MissingRendererError,
   RouteConflictError,
   UnknownSectionError,
   VVitrineError,
+  type ContentIssue,
 } from './errors.ts';
 import { coreMessages } from './i18n/core-messages.ts';
 import { formatPartialDate, formatPeriod } from './i18n/dates.ts';
@@ -327,6 +329,21 @@ export class Kernel implements DevSite {
     return this.registry
       .all()
       .filter((plugin) => plugin.kind !== 'section' || !this.config.pages || placed.has(plugin.id));
+  }
+
+  /**
+   * Check the content of one locale (all keys, as written in the files) exactly as a build would: the `contentLoaded`
+   * hooks, then each key's schema. Gives the problems, none when the content is valid. For the Studio, which checks
+   * content as it is typed (NFR-24).
+   */
+  async checkContent(locale: Locale, content: Readonly<Record<string, unknown>>): Promise<readonly ContentIssue[]> {
+    try {
+      await validateContent(this.registry, structuredClone({ ...content }), {}, { locale, logger: this.logger });
+      return [];
+    } catch (error) {
+      if (error instanceof InvalidContentError) return error.issues;
+      throw error;
+    }
   }
 
   /**

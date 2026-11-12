@@ -14,6 +14,8 @@ export interface ContentIssue {
   readonly file?: string;
   /** Path inside the content, e.g. `work[0].startDate`. */
   readonly path: string;
+  /** The same path as segments, e.g. ['work', 0, 'startDate']: for tools that point at the field (the Studio). */
+  readonly at?: readonly (string | number)[];
   readonly message: string;
   readonly hint?: string;
 }

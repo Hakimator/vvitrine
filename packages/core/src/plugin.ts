@@ -1,4 +1,5 @@
 import type { ContentChange } from './content/changes.ts';
+import type { ContentIssue } from './errors.ts';
 import type { z } from 'zod';
 import type { Basics } from './content/schemas.ts';
 import type { Locale, Messages, Translate } from './i18n/translator.ts';
@@ -190,6 +191,11 @@ export interface DevSite {
   readonly locales: readonly Locale[];
   /** What can be edited: content keys and section options, with their schemas. */
   editingModel(): EditingModel;
+  /**
+   * Check content (all keys of one locale, as written in the files) exactly as a build would, without saving:
+   * the problems found, none when it is valid.
+   */
+  checkContent(locale: Locale, content: Readonly<Record<string, unknown>>): Promise<readonly ContentIssue[]>;
   /** Save content changes through the sources (validated first; see `Kernel.saveContent`). */
   saveContent(locale: Locale, changes: readonly ContentChange[]): Promise<SavedContent>;
 }

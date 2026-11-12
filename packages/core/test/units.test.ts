@@ -112,7 +112,13 @@ describe('issue formatting', () => {
     expect(formatPath(['work', 0, 'startDate'])).toBe('work[0].startDate');
     const result = z.object({ startDate: z.string().regex(/^\d{4}$/) }).safeParse({ startDate: 'x' });
     expect(toIssues(result.error!, ['work', 2], 'a.yaml')).toEqual([
-      { path: 'work[2].startDate', message: expect.any(String), hint: 'example: 2024-09', file: 'a.yaml' },
+      {
+        path: 'work[2].startDate',
+        at: ['work', 2, 'startDate'],
+        message: expect.any(String),
+        hint: 'example: 2024-09',
+        file: 'a.yaml',
+      },
     ]);
   });
 });
