@@ -14,6 +14,7 @@
     "@vvitrine/core": "workspace:*"
   },
   "devDependencies": {
-    "@vvitrine/sections": "workspace:*"
+    "@vvitrine/sections": "workspace:*",
+    "@vvitrine/source-yaml": "workspace:*"
   }
 }

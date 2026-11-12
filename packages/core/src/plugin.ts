@@ -1,4 +1,5 @@
 import type { ContentChange } from './content/changes.ts';
+import type { ContentIssue } from './errors.ts';
 import type { z } from 'zod';
 import type { Basics } from './content/schemas.ts';
 import type { Locale, Messages, Translate } from './i18n/translator.ts';
@@ -190,8 +191,27 @@ export interface DevSite {
   readonly locales: readonly Locale[];
   /** What can be edited: content keys and section options, with their schemas. */
   editingModel(): EditingModel;
+  /**
+   * The content of one locale as written in the files (before defaults and hooks), with the file each key comes
+   * from: what an editor starts from.
+   */
+  readContent(locale: Locale): Promise<WrittenContent>;
+  /**
+   * Check content (all keys of one locale, as written in the files) exactly as a build would, without saving:
+   * the problems found, none when it is valid.
+   */
+  checkContent(locale: Locale, content: Readonly<Record<string, unknown>>): Promise<readonly ContentIssue[]>;
   /** Save content changes through the sources (validated first; see `Kernel.saveContent`). */
   saveContent(locale: Locale, changes: readonly ContentChange[]): Promise<SavedContent>;
+}
+
+/** Content as written in the files, with where each key comes from (`readContent`). */
+export interface WrittenContent {
+  readonly content: Readonly<Record<string, unknown>>;
+  /** The file (or folder) of each key, relative to the project root. */
+  readonly origin: Readonly<Record<string, string>>;
+  /** The keys that cannot be saved: their source is read-only. */
+  readonly readOnly: readonly string[];
 }
 
 /** What saving content did: the files written or removed, relative to the project root. */

@@ -11,3 +11,11 @@ export {
   type FieldKind,
   type FieldPath,
 } from './fields.ts';
+export { invert } from './history.ts';
+export {
+  EditSession,
+  SaveBlockedError,
+  type ContentChecker,
+  type ContentStore,
+  type LocalizedChange,
+} from './session.ts';

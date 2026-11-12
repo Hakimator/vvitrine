@@ -322,6 +322,9 @@ importers:
       '@vvitrine/sections':
         specifier: workspace:*
         version: link:../sections
+      '@vvitrine/source-yaml':
+        specifier: workspace:*
+        version: link:../source-yaml
 
   packages/yaml-edit:
     dependencies:

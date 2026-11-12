@@ -307,6 +307,47 @@ describe('saving content (US-151)', () => {
   });
 });
 
+describe('checking content as it is typed (US-132)', () => {
+  const site = () => createKernel(config(), { root: '/', logger: silent });
+
+  it('finds what a build would refuse, with the path as segments, and nothing in valid content', async () => {
+    expect(await site().checkContent('en', content.en)).toEqual([]);
+    const wrong = { ...content.en, work: [{ ...content.en.work[0], startDate: 2025 }] };
+    const issues = await site().checkContent('en', wrong);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ path: 'work[0].startDate', at: ['work', 0, 'startDate'] });
+  });
+
+  it('reads the content as written, with each key’s file and the keys that cannot be saved', async () => {
+    const written = await site().readContent('en');
+    expect(written).toEqual({
+      content: content.en,
+      origin: { basics: 'memory:en', work: 'memory:en' },
+      readOnly: ['basics', 'work'],
+    });
+  });
+
+  it('runs the contentLoaded hooks first, on a copy, like a build', async () => {
+    const seen: unknown[] = [];
+    const hook: Plugin = {
+      name: 'hook',
+      kind: 'service',
+      apiVersion: 1,
+      hooks: {
+        contentLoaded: (raw) => {
+          seen.push(raw.basics);
+          (raw as Record<string, unknown>).basics = { name: 'From the hook' };
+        },
+      },
+    };
+    const kernel = createKernel({ ...config(), plugins: [...config().plugins, hook] }, { root: '/', logger: silent });
+    const typed = { ...content.en, basics: { name: '' } };
+    expect(await kernel.checkContent('en', typed)).toEqual([]);
+    expect(seen).toEqual([{ name: '' }]);
+    expect(typed.basics).toEqual({ name: '' });
+  });
+});
+
 describe('editing model (US-131)', () => {
   const now = (widgets: Record<string, { element: string; module: string }> = {}): Plugin =>
     defineSection({
