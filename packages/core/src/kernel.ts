@@ -46,6 +46,7 @@ import type {
   ProjectFiles,
   RenderContext,
   SavedContent,
+  WrittenContent,
   SourcePlugin,
   SectionInput,
   SectionPlugin,
@@ -329,6 +330,22 @@ export class Kernel implements DevSite {
     return this.registry
       .all()
       .filter((plugin) => plugin.kind !== 'section' || !this.config.pages || placed.has(plugin.id));
+  }
+
+  /**
+   * The content of one locale as the sources give it (merged, before hooks and defaults), with each key's file, and
+   * the keys whose source cannot save (US-151 AC2: the Studio shows them read-only).
+   */
+  async readContent(locale: Locale): Promise<WrittenContent> {
+    const { raw, origin, providers } = await loadRawContent(this.registry, {
+      locale,
+      defaultLocale: this.config.defaultLocale,
+      root: this.options.root,
+      logger: this.logger,
+      files: this.options.files ?? noFiles,
+    });
+    const readOnly = [...providers].filter(([, source]) => !source.save).map(([key]) => key);
+    return { content: raw, origin, readOnly };
   }
 
   /**

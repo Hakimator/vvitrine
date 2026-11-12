@@ -318,6 +318,15 @@ describe('checking content as it is typed (US-132)', () => {
     expect(issues[0]).toMatchObject({ path: 'work[0].startDate', at: ['work', 0, 'startDate'] });
   });
 
+  it('reads the content as written, with each key’s file and the keys that cannot be saved', async () => {
+    const written = await site().readContent('en');
+    expect(written).toEqual({
+      content: content.en,
+      origin: { basics: 'memory:en', work: 'memory:en' },
+      readOnly: ['basics', 'work'],
+    });
+  });
+
   it('runs the contentLoaded hooks first, on a copy, like a build', async () => {
     const seen: unknown[] = [];
     const hook: Plugin = {
