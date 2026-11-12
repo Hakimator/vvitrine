@@ -5,10 +5,12 @@
  * What it shows:
  * - a section owns a content key (`now`) and validates it with its own zod schema;
  * - it has options (`title`, `limit`) and messages in each language;
- * - it returns a shared view kind (`entries`), so every theme draws it without a component of its own.
+ * - it returns a shared view kind (`entries`), so every theme draws it without a component of its own;
+ * - it tells the Studio how to edit it: items are named by their text, and the month has a control of its own.
  */
 import { defineSection, PartialDate, type EntriesView } from '@vvitrine/core';
 import { z } from 'zod';
+import { monthInputModule } from './month-input.browser.ts';
 
 export const NowContent = z
   .object({
@@ -25,7 +27,14 @@ export default function now() {
     apiVersion: 1,
     id: 'now',
     viewKind: 'entries',
-    content: { key: 'now', schema: NowContent },
+    content: {
+      key: 'now',
+      schema: NowContent,
+      editor: {
+        itemTitle: 'text',
+        widgets: { updated: { element: 'now-month', module: monthInputModule } },
+      },
+    },
     optionsSchema: z.object({ title: z.string().optional(), limit: z.number().int().positive().optional() }),
     messages: {
       fr: { 'section.now.title': 'En ce moment', 'section.now.updated': 'Mis à jour : {date}' },
