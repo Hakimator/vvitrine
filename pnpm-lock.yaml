@@ -180,6 +180,9 @@ importers:
       '@vvitrine/core':
         specifier: workspace:*
         version: link:../core
+      '@vvitrine/yaml-edit':
+        specifier: workspace:*
+        version: link:../yaml-edit
       yaml:
         specifier: 2.9.1
         version: 2.9.1

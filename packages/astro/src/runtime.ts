@@ -1,7 +1,9 @@
 import { createKernel, VVitrineError, type BuiltSite, type Kernel, type VVitrineConfig } from '@vvitrine/core';
 import layout from 'virtual:vvitrine/layout';
 import { base, dev, root, siteUrl } from 'virtual:vvitrine/runtime';
+import { resolve } from 'node:path';
 import { diskFiles } from './files.ts';
+import { layoutFileWriter } from './layout-writer.ts';
 
 let cached: Promise<BuiltSite> | undefined;
 
@@ -15,7 +17,10 @@ export function getSite(config: VVitrineConfig): Promise<BuiltSite> {
   return cached;
 }
 
-/** The site's kernel: the configuration, the layout file and the files on disk (the composition root, ADR-007). */
+/**
+ * The site's kernel: the configuration, the layout file (writable in development) and the files on disk (the
+ * composition root, ADR-007).
+ */
 export function siteKernel(config: VVitrineConfig): Kernel {
   return createKernel(config, {
     root,
@@ -23,6 +28,8 @@ export function siteKernel(config: VVitrineConfig): Kernel {
     files: diskFiles(root),
     ...(siteUrl ? { siteUrl } : {}),
     ...(layout ? { layout } : {}),
+    // The Studio saves the layout file while `pnpm dev` runs; a build never writes it.
+    ...(dev && layout ? { layoutWriter: layoutFileWriter(resolve(root, layout.origin)) } : {}),
   });
 }
 
