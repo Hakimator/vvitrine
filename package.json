@@ -37,7 +37,7 @@
     "@commitlint/config-conventional": "21.2.4",
     "@eslint/js": "10.0.1",
     "@lhci/cli": "0.16.0",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.65.0",
     "@types/node": "22.20.5",
     "@vitest/coverage-v8": "5.1.0",
     "@vvitrine/analytics": "workspace:*",
@@ -63,7 +63,7 @@
     "prettier": "3.9.10",
     "prettier-plugin-astro": "1.1.2",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.72.1",
+    "typescript-eslint": "8.72.2",
     "vitest": "5.1.0",
     "zod": "4.6.7"
   }
