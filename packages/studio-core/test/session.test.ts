@@ -102,6 +102,8 @@ describe('undo of any change (US-132)', () => {
     session.undo();
     expect(session.content('en')).toEqual(start().en);
     expect(session.canUndo).toBe(false);
+    // Back to the content of the files: nothing to save.
+    expect([session.pending, session.dirty]).toEqual([[], false]);
     session.redo();
     expect((session.content('en').basics as { name: string }).name).toBe('Ada');
   });
@@ -166,6 +168,32 @@ describe('saving and checking (US-132)', () => {
     session.apply('en', { op: 'set', path: ['work', 0, 'startDate'], value: '2025' });
     await session.check(valid);
     expect(session.issues).toEqual([]);
+  });
+
+  it('has nothing to save, and no problem to show, once every change of a language is undone', async () => {
+    const session = new EditSession(start());
+    session.apply('en', { op: 'set', path: ['work', 0, 'startDate'], value: 'June' });
+    session.apply('en', { op: 'remove', path: ['work', 1] });
+    session.apply('fr', { op: 'set', path: ['basics', 'label'], value: 'Développeuse' });
+    const issue = { path: 'work[0].startDate', at: ['work', 0, 'startDate'], message: 'expected a date' };
+    await session.check({ checkContent: async (locale) => (locale === 'en' ? [issue] : []) });
+    session.undo();
+    session.undo();
+    // French is back to its file: only the English changes are left (the removal and its undo cancel out on saving).
+    expect(session.pending.map((p) => [p.locale, p.change.op])).toEqual([
+      ['en', 'set'],
+      ['en', 'remove'],
+      ['en', 'insert'],
+    ]);
+    expect(session.issues).toHaveLength(1);
+    session.undo();
+    expect([session.pending, session.issues, session.dirty]).toEqual([[], [], false]);
+    // After a save, the saved content is the new reference.
+    await session.save(store().store, valid);
+    session.redo();
+    expect(session.dirty).toBe(true);
+    session.undo();
+    expect(session.dirty).toBe(false);
   });
 
   it('keeps unsaved the languages that failed to save', async () => {

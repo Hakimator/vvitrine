@@ -3,8 +3,26 @@
 The Studio edits your site from your own computer, without an account: start `pnpm dev`, then open
 **http://localhost:4321/\_\_vvitrine/studio/**.
 
-It is being built in steps. Today it shows what it will edit (every piece of content, its file, and whether it can be
-saved) and offers the API the editing screens will use. Forms, the page builder and the live preview come next.
+It is being built in steps. Today it edits your content; the page builder and the live preview come next.
+
+## Edit your content
+
+The list on the left has every piece of content of your site: your profile, jobs, projects, articles, and the content
+of any section plugin you install. Pick one to see its form, with every language side by side, each with the file it
+is saved to.
+
+- Each field says what it expects (a date such as `2025-06`, an address, an image path). Lists have an "Add" button
+  and each item a "Remove" button.
+- A field filled in one language and empty in another is marked "Missing in FR" (or the language concerned), so that
+  no translation is forgotten.
+- What you type is checked after a short pause, by the same rules as the build: a problem shows under its field, and
+  the content is marked "(to fix)" in the list.
+- **Undo** (Ctrl+Z) and **Redo** (Ctrl+Shift+Z) go back and forth through your changes, and **Save** (Ctrl+S) writes
+  them all at once. Leaving the page with unsaved changes asks you first.
+- Fields the Studio has no form for (rare: a plugin's own structure) are shown as they are, to edit in their file.
+
+A plugin can give its fields their own controls (see [Make a section editable in the Studio](plugins.md#make-a-section-editable-in-the-studio)): the Studio
+loads them only when their field is shown.
 
 ## Install or remove it
 

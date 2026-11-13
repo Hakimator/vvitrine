@@ -29,8 +29,19 @@ const problem = (status: number, message: string) => json({ error: message }, st
  * Studio's page receives: on top of the development server's own checks (localhost, same-site pages only), a page of
  * another site cannot use the API even through a request the browser sends without an origin.
  */
-export default function studio(): Plugin {
+export interface StudioOptions {
+  /**
+   * Where the page loads the Studio's app from. Default: through the development server, which compiles it from this
+   * package (no build step). Another host of the Studio (the online gateway) gives a built file.
+   */
+  readonly appUrl?: string;
+}
+
+export default function studio(options: StudioOptions = {}): Plugin {
   const token = newToken();
+  // Not the development server's client: it reloads every page when a content file changes, which would reload the
+  // Studio (and lose its undo history) each time it saves.
+  const scripts = [options.appUrl ?? '/@id/@vvitrine/studio/app'];
 
   /** The API: what the Studio's page asks, with the token. */
   const api: Record<
@@ -71,13 +82,18 @@ export default function studio(): Plugin {
   const page: DevEndpoint = {
     path: STUDIO_PATH,
     handle: async (request, { site }) => {
-      if (new URL(request.url).pathname !== STUDIO_PATH) return problem(404, 'No such Studio page.');
+      const path = new URL(request.url).pathname;
+      const widget = /^widgets\/([a-z][a-z0-9._-]*)\.js$/.exec(path.slice(STUDIO_PATH.length))?.[1];
+      if (widget) return widgetModule(widget, site);
+      if (path !== STUDIO_PATH) return problem(404, 'No such Studio page.');
       if (request.method !== 'GET') return problem(405, 'The Studio page answers GET only.');
       const nonce = newToken().slice(0, 32);
       const [locale] = site.locales;
       const html = studioPage({
         token,
         nonce,
+        base: STUDIO_PATH,
+        scripts,
         locales: site.locales,
         model: site.editingModel(),
         written: await site.readContent(locale!),
@@ -85,11 +101,24 @@ export default function studio(): Plugin {
       return new Response(html, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
-          'content-security-policy': `default-src 'none'; style-src 'nonce-${nonce}'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`,
+          'content-security-policy': `default-src 'none'; script-src 'self'; style-src 'nonce-${nonce}'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`,
           ...SECURITY_HEADERS,
         },
       });
     },
+  };
+
+  /**
+   * The module of a plugin's control, as a script of this site (the page's security policy allows no other).
+   * Plugin code, not a secret: no token needed, like the app itself.
+   */
+  const widgetModule = (element: string, site: DevContext['site']) => {
+    const widgets = site.editingModel().content.flatMap((content) => Object.values(content.editor?.widgets ?? {}));
+    const found = widgets.find((widget) => widget.element === element);
+    if (!found) return problem(404, `No control named <${element}>.`);
+    return new Response(found.module, {
+      headers: { 'content-type': 'text/javascript; charset=utf-8', ...SECURITY_HEADERS },
+    });
   };
 
   const endpoints: DevEndpoint[] = Object.entries(api).map(([name, { method, answer }]) => ({

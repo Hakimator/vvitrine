@@ -49,7 +49,10 @@ type Schema = Record<string, unknown>;
 const EDITOR_KINDS = new Set<FieldKind>(['long-text', 'markdown', 'date', 'image']);
 const CONSTRAINTS = ['minLength', 'maxLength', 'pattern', 'minimum', 'maximum', 'minItems', 'maxItems'] as const;
 
-/** "startDate" -> "Start date", "countryCode" -> "Country code", "x-vvitrine" -> "Site options". */
+/** Words written in capitals in labels. */
+const ACRONYMS: Readonly<Record<string, string>> = { url: 'URL', urls: 'URLs', pdf: 'PDF', cv: 'CV', id: 'ID' };
+
+/** "startDate" -> "Start date", "countryCode" -> "Country code", "url" -> "URL", "x-vvitrine" -> "Site options". */
 export function humanise(name: string): string {
   if (name === 'x-vvitrine') return 'Site options';
   const words = name
@@ -58,7 +61,11 @@ export function humanise(name: string): string {
     .replace(/[-_]+/g, ' ')
     .trim()
     .toLowerCase();
-  return words.charAt(0).toUpperCase() + words.slice(1);
+  const written = words
+    .split(' ')
+    .map((word) => ACRONYMS[word] ?? word)
+    .join(' ');
+  return written.charAt(0).toUpperCase() + written.slice(1);
 }
 
 /** The form of a content key: its schema, with the plugin's hints (item titles, custom widgets). */
