@@ -25,6 +25,7 @@ export interface BuilderTexts {
   readonly nothingToAdd: string;
   readonly empty: string;
   readonly hint: string;
+  readonly dragHandle: string;
   readonly moved: (name: string, position: number, count: number, page: string) => string;
   readonly movedToPage: (name: string, page: string, position: number, count: number) => string;
   readonly added: (name: string, page: string, position: number, count: number) => string;
@@ -56,7 +57,8 @@ export const builderTexts: BuilderTexts = {
   addTo: (page) => `Add a section to ${page}`,
   nothingToAdd: 'Every installed section is on this page.',
   empty: 'No section on this page yet.',
-  hint: "Each section's menu moves it, on its page or to another one, hides it, or takes it off the page.",
+  hint: 'Drag a section by its handle to move it, on its page or to another one, or use its menu, which has every move and more.',
+  dragHandle: 'Drag to move',
   moved: (name, position, count, page) => `${name} moved to position ${position} of ${count} on ${page}.`,
   movedToPage: (name, page, position, count) => `${name} moved to ${page}, position ${position} of ${count}.`,
   added: (name, page, position, count) => `${name} added to ${page}, position ${position} of ${count}.`,

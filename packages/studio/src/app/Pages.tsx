@@ -2,6 +2,7 @@
 import type { PageConfig, SectionModel, WrittenLayout } from '@vvitrine/core';
 import { humanise, pageChanges, placement, type EditSession, type PageAction } from '@vvitrine/studio-core';
 import { useEffect, useRef } from 'preact/hooks';
+import { dragSection, dropOnPage, onSectionDrop, type Slot } from './drag.ts';
 import { Menu, type MenuItem } from './Menu.tsx';
 import type { BuilderTexts } from './messages.ts';
 
@@ -22,7 +23,7 @@ interface PagesProps {
 /**
  * The page builder (US-135): every page with its sections in order. Each section has a menu with every action
  * (move up, down, to the top or bottom, to another page; hide; leave out of the menu; remove), usable with a single
- * pointer or the keyboard. Each action is announced.
+ * pointer or the keyboard; dragging by the handle is a shortcut for the same moves. Each action is announced.
  */
 export function Pages({ session, written, sections, language, texts, announce }: PagesProps) {
   const layout = session.data(LAYOUT);
@@ -71,6 +72,24 @@ export function Pages({ session, written, sections, language, texts, announce }:
       menuId(target, id),
     );
   };
+
+  // A drop is the same move as the menu's, counted the same way.
+  useEffect(
+    () =>
+      onSectionDrop((from: Slot, to: Slot) => {
+        if (readOnly) return;
+        if (from.page !== to.page) {
+          const already = pages[to.page]!.sections.some(
+            (ref) => placement(ref).id === placement(pages[from.page]!.sections[from.index]!).id,
+          );
+          if (!already) moveToPage(from.page, from.index, to.page, to.index);
+          return;
+        }
+        const final = to.index > from.index ? to.index - 1 : to.index;
+        if (final !== from.index) move(from.page, from.index, final);
+      }),
+    [layout, readOnly],
+  );
 
   useEffect(() => {
     const target = focus.current;
@@ -136,7 +155,9 @@ interface PageCardProps {
 }
 
 function PageCard({ page, index: p, pages, name, names, installed, texts, readOnly, session, actions }: PageCardProps) {
+  const list = useRef<HTMLOListElement>(null);
   const count = page.sections.length;
+  useEffect(() => (readOnly || !list.current ? undefined : dropOnPage(list.current, p, count)), [p, count, readOnly]);
   const placed = new Set(page.sections.map((ref) => placement(ref).id));
   const headingId = `page-${p}`;
   const addable: MenuItem[] = installed
@@ -157,7 +178,7 @@ function PageCard({ page, index: p, pages, name, names, installed, texts, readOn
         {name} <code class="file">{page.path}</code>
         {page.footer && <span class="file"> · {texts.inFooter}</span>}
       </h3>
-      <ol class="sections" aria-labelledby={headingId}>
+      <ol class="sections" ref={list} aria-labelledby={headingId}>
         {page.sections.map((ref, s) => (
           <Placed
             key={placement(ref).id}
@@ -208,9 +229,18 @@ function Placed({
   actions: PageCardProps['actions'];
   pageName: string;
 }) {
+  const row = useRef<HTMLLIElement>(null);
+  const handle = useRef<HTMLSpanElement>(null);
   const section = placement(page.sections[s]!);
   const name = names.section(section.id);
   const last = page.sections.length - 1;
+  useEffect(
+    () =>
+      readOnly || !row.current || !handle.current
+        ? undefined
+        : dragSection(row.current, handle.current, { page: p, index: s }),
+    [p, s, readOnly],
+  );
 
   const keep = menuId(p, section.id);
   const items: MenuItem[] = [];
@@ -269,7 +299,12 @@ function Placed({
     (state): state is string => typeof state === 'string',
   );
   return (
-    <li class={`placed${section.hidden ? ' is-hidden' : ''}`}>
+    <li ref={row} class={`placed${section.hidden ? ' is-hidden' : ''}`}>
+      {!readOnly && (
+        <span class="grip" ref={handle} aria-hidden="true" title={texts.dragHandle}>
+          ⠿
+        </span>
+      )}
       <span class="name">{name}</span>
       {states.length > 0 && <span class="states"> ({states.join(', ')})</span>}
       {!readOnly && <Menu id={menuId(p, section.id)} label={texts.actionsFor(name, pageName)} text="⋯" items={items} />}
