@@ -111,12 +111,13 @@ describe('forms from the plugins’ schemas (US-131)', () => {
   });
 
   it('makes field names readable', () => {
-    expect(['startDate', 'countryCode', 'x-vvitrine', 'x-my_field', 'url'].map(humanise)).toEqual([
+    expect(['startDate', 'countryCode', 'x-vvitrine', 'x-my_field', 'url', 'demoUrl'].map(humanise)).toEqual([
       'Start date',
       'Country code',
       'Site options',
       'My field',
-      'Url',
+      'URL',
+      'Demo URL',
     ]);
   });
 });
