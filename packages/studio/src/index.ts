@@ -77,6 +77,26 @@ export default function studio(options: StudioOptions = {}): Plugin {
         return json(await site.saveContent(body.locale, body.changes));
       },
     },
+    // The layout file (US-135): the page builder's document.
+    layout: { method: 'GET', answer: async (_request, { site }) => json(site.readLayout()) },
+    'check-layout': {
+      method: 'POST',
+      answer: async (request, { site }) => {
+        const body = (await request.json()) as { layout?: unknown };
+        if (typeof body.layout !== 'object' || body.layout === null || Array.isArray(body.layout)) {
+          return problem(400, 'Send { layout }.');
+        }
+        return json({ issues: site.checkLayout(body.layout as Record<string, unknown>) });
+      },
+    },
+    'save-layout': {
+      method: 'POST',
+      answer: async (request, { site }) => {
+        const body = (await request.json()) as { changes?: ContentChange[] };
+        if (!Array.isArray(body.changes)) return problem(400, 'Send { changes }.');
+        return json(await site.saveLayout(body.changes));
+      },
+    },
   };
 
   const page: DevEndpoint = {
