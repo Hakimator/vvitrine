@@ -39,9 +39,12 @@ interface Step {
  * - Every edit is a `ContentChange`; its inverse is recorded, so undo gives back the exact content before it.
  * - Undo and redo are changes too: they join the changes to save, so saving after an undo saves the undone content.
  * - Typing in a field gives one change per key stroke: `{ merge: true }` makes them one step to undo.
+ * - A language back to its saved content (every change undone) has nothing to save, and no problem left to show.
  */
 export class EditSession {
   readonly #content = new Map<Locale, Record<string, unknown>>();
+  /** The content of each language as its files hold it (when the session started, or at the last save). */
+  readonly #saved = new Map<Locale, Readonly<Record<string, unknown>>>();
   readonly #undo: Step[] = [];
   readonly #redo: Step[] = [];
   #pending: LocalizedChange[] = [];
@@ -49,7 +52,10 @@ export class EditSession {
   readonly #listeners = new Set<() => void>();
 
   constructor(content: Readonly<Record<Locale, Readonly<Record<string, unknown>>>>) {
-    for (const [locale, data] of Object.entries(content)) this.#content.set(locale, { ...data });
+    for (const [locale, data] of Object.entries(content)) {
+      this.#content.set(locale, { ...data });
+      this.#saved.set(locale, data);
+    }
   }
 
   /** The content of a language, as it is now (not to be changed: apply changes instead). */
@@ -148,6 +154,7 @@ export class EditSession {
       const changes = this.#pending.filter((item) => item.locale === locale).map((item) => item.change);
       const saved = await store.saveContent(locale, changes);
       files.push(...saved.files);
+      this.#saved.set(locale, this.content(locale));
       this.#pending = this.#pending.filter((item) => item.locale !== locale);
       this.#notify();
     }
@@ -166,6 +173,10 @@ export class EditSession {
     const last = this.#pending.at(-1);
     if (last && sameField(last, locale, change)) this.#pending[this.#pending.length - 1] = { locale, change };
     else this.#pending.push({ locale, change });
+    if (equal(content, this.#saved.get(locale))) {
+      this.#pending = this.#pending.filter((item) => item.locale !== locale);
+      this.#issues = this.#issues.filter((issue) => issue.locale !== locale);
+    }
     this.#notify();
   }
 
@@ -186,5 +197,19 @@ function sameField(step: { locale: Locale; change: ContentChange }, locale: Loca
     change.op === 'set' &&
     step.change.path.length === change.path.length &&
     step.change.path.every((segment, index) => segment === change.path[index])
+  );
+}
+
+/** Whether two pieces of content (plain data: objects, lists, strings, numbers, booleans, null) are the same. */
+function equal(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  const left = a as Record<string, unknown>;
+  const right = b as Record<string, unknown>;
+  const keys = Object.keys(left).filter((key) => left[key] !== undefined);
+  return (
+    keys.length === Object.keys(right).filter((key) => right[key] !== undefined).length &&
+    keys.every((key) => equal(left[key], right[key]))
   );
 }
