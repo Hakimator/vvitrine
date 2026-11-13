@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -85,6 +86,19 @@ interface DevModuleGraph {
 export { diskFiles } from './files.ts';
 import { DEV_PREFIX, refusal, send, toRequest } from './dev-server.ts';
 
+/**
+ * The Studio's app, when the site has the Studio (@vvitrine/studio): the development server scans it for the
+ * browser libraries it uses (Preact) when it starts. Found later, while the Studio loads, they would be prepared
+ * again under new names, and the page would get two copies of them (and stay blank).
+ */
+function studioApp(root: string): string | undefined {
+  try {
+    return createRequire(resolve(root, 'package.json')).resolve('@vvitrine/studio/app').replaceAll('\\', '/');
+  } catch {
+    return undefined;
+  }
+}
+
 /** Loaded through Vite by the development server: it answers the plugins' development endpoints. */
 const DEV_ENTRY = fileURLToPath(new URL('./dev.ts', import.meta.url));
 
@@ -109,6 +123,7 @@ export default function vvitrine(options: VVitrineIntegrationOptions = {}): Astr
         const extraDir = options.contentDir ? resolve(root, options.contentDir) : undefined;
         const outDir = fileURLToPath(config.outDir);
         const layoutPath = findLayout(root, configPath, options.layout);
+        const studio = command === 'dev' ? studioApp(root) : undefined;
         const runtime = {
           root,
           base: config.base,
@@ -120,6 +135,13 @@ export default function vvitrine(options: VVitrineIntegrationOptions = {}): Astr
         updateConfig({
           vite: {
             plugins: [
+              {
+                name: 'vvitrine:studio-dependencies',
+                configEnvironment(name: string) {
+                  // Added to the entries Astro gives the browser's environment (Vite merges the lists).
+                  return studio && name === 'client' ? { optimizeDeps: { entries: [studio] } } : undefined;
+                },
+              },
               {
                 name: 'vvitrine:virtual-modules',
                 resolveId(id: string) {
