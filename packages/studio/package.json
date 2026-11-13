@@ -5,14 +5,17 @@
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./app": "./src/app/main.tsx"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@preact/signals": "2.11.4",
     "@vvitrine/core": "workspace:*",
-    "@vvitrine/studio-core": "workspace:*"
+    "@vvitrine/studio-core": "workspace:*",
+    "preact": "11.1.1"
   },
   "devDependencies": {
     "@vvitrine/source-yaml": "workspace:*"
