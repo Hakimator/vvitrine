@@ -18,16 +18,22 @@ describe('an editing session on a site', () => {
   it('starts from the files, refuses what would not build, and saves the rest in place', async () => {
     const files = memoryFiles({ 'content/resume.yaml': resume });
     const kernel = site(files);
-    const session = new EditSession({ en: (await kernel.readContent('en')).content });
+    const session = new EditSession({
+      en: {
+        data: (await kernel.readContent('en')).content,
+        store: { save: (changes) => kernel.saveContent('en', changes) },
+        checker: { check: (data) => kernel.checkContent('en', data) },
+      },
+    });
 
     session.apply('en', { op: 'set', path: ['work', 0, 'startDate'], value: 'next year' });
-    await expect(session.save(kernel, kernel)).rejects.toThrow(SaveBlockedError);
+    await expect(session.save()).rejects.toThrow(SaveBlockedError);
     expect(session.issuesAt('en', ['work', 0, 'startDate'])).toHaveLength(1);
     expect(files.snapshot()['content/resume.yaml']).toBe(resume);
 
     session.undo();
     session.apply('en', { op: 'set', path: ['basics', 'name'], value: 'Ada Lovelace' });
-    expect(await session.save(kernel, kernel)).toEqual(['content/resume.yaml']);
+    expect(await session.save()).toEqual(['content/resume.yaml']);
     expect(session.issues).toEqual([]);
     expect(files.snapshot()['content/resume.yaml']).toBe(resume.replace('Jane Doe', 'Ada Lovelace'));
   });

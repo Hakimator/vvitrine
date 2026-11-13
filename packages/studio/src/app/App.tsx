@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import type { ContentChange, ContentModel, Locale, WrittenContent } from '@vvitrine/core';
-import { describeContent, EditSession, SaveBlockedError } from '@vvitrine/studio-core';
+import { describeContent, EditSession, SaveBlockedError, type SessionDocument } from '@vvitrine/studio-core';
 import { signal, useSignal } from '@preact/signals';
 import { useEffect, useMemo } from 'preact/hooks';
 import type { StudioApi } from './api.ts';
@@ -24,7 +24,19 @@ const CHECK_DELAY = 600;
 
 export function App({ data }: { data: StudioData }) {
   const session = useMemo(
-    () => new EditSession(Object.fromEntries(data.locales.map((l) => [l, data.written[l]!.content]))),
+    () =>
+      new EditSession(
+        Object.fromEntries(
+          data.locales.map((l) => [
+            l,
+            {
+              data: data.written[l]!.content,
+              store: { save: (changes) => data.api.saveContent(l, changes) },
+              checker: { check: (content) => data.api.checkContent(l, content) },
+            } satisfies SessionDocument,
+          ]),
+        ),
+      ),
     [data],
   );
   const selected = useSignal(data.content[0]!.key);
@@ -39,7 +51,7 @@ export function App({ data }: { data: StudioData }) {
     const check = () => {
       clearTimeout(timer);
       timer = setTimeout(
-        () => void session.check(data.api).catch((error: Error) => (status.value = error.message)),
+        () => void session.check().catch((error: Error) => (status.value = error.message)),
         CHECK_DELAY,
       );
     };
@@ -103,7 +115,7 @@ export function App({ data }: { data: StudioData }) {
     }
     status.value = 'Saving…';
     try {
-      const files = await session.save(data.api, data.api);
+      const files = await session.save();
       status.value = `Saved: ${files.join(', ')}.`;
     } catch (error) {
       status.value =
@@ -117,7 +129,7 @@ export function App({ data }: { data: StudioData }) {
     key: current.model.key,
     locale,
     locales: data.locales,
-    content: (l) => session.content(l),
+    content: (l) => session.data(l),
     issues: (place: Place) => session.issuesAt(locale, place),
     apply: apply(locale),
     readOnly,

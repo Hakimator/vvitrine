@@ -15,7 +15,11 @@ export { invert } from './history.ts';
 export {
   EditSession,
   SaveBlockedError,
-  type ContentChecker,
-  type ContentStore,
-  type LocalizedChange,
+  type DocumentChange,
+  type DocumentChecker,
+  type DocumentId,
+  type DocumentIssue,
+  type DocumentStore,
+  type SessionDocument,
+  type UndoneStep,
 } from './session.ts';

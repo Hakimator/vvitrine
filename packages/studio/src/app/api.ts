@@ -1,10 +1,11 @@
-import type { ContentChange, ContentIssue, EditingModel, Locale, WrittenContent } from '@vvitrine/core';
-import type { ContentChecker, ContentStore } from '@vvitrine/studio-core';
+import type { ContentChange, ContentIssue, EditingModel, Locale, SavedContent, WrittenContent } from '@vvitrine/core';
 
-/** The Studio's API as the page sees it: the session's store and checker, over HTTP, with the token of this run. */
-export interface StudioApi extends ContentStore, ContentChecker {
+/** The Studio's API as the page sees it, over HTTP, with the token of this run. */
+export interface StudioApi {
   model(): Promise<EditingModel>;
   content(locale: Locale): Promise<WrittenContent>;
+  checkContent(locale: Locale, content: Readonly<Record<string, unknown>>): Promise<readonly ContentIssue[]>;
+  saveContent(locale: Locale, changes: readonly ContentChange[]): Promise<SavedContent>;
 }
 
 export function studioApi(base: string, token: string): StudioApi {
