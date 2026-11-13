@@ -1,7 +1,7 @@
-// The dev server of the Studio tests (Playwright starts and stops it): the demo, reading a copy of its content, so that
-// the tests can save without touching site/content. Each start begins from a fresh copy.
+// The dev server of the Studio tests (Playwright starts and stops it): the demo, reading a copy of its content and of
+// its layout file, so that the tests can save without touching site/. Each start begins from a fresh copy.
 import { spawn } from 'node:child_process';
-import { cpSync, rmSync } from 'node:fs';
+import { copyFileSync, cpSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -10,6 +10,7 @@ const [port = '4325'] = process.argv.slice(2);
 const folder = join(tmpdir(), 'vvitrine-studio-e2e');
 rmSync(folder, { recursive: true, force: true });
 cpSync(new URL('../site/content', import.meta.url), folder, { recursive: true });
+copyFileSync(new URL('../site/site.yaml', import.meta.url), join(folder, 'site.yaml'));
 
 const server = spawn(
   'pnpm',
@@ -21,7 +22,7 @@ const server = spawn(
     env: {
       ...process.env,
       VVITRINE_CONFIG: '../e2e/fixtures/studio.config.ts',
-      VVITRINE_LAYOUT: 'site.yaml',
+      VVITRINE_LAYOUT: join(folder, 'site.yaml'),
       VVITRINE_STUDIO_CONTENT: folder,
     },
   },
