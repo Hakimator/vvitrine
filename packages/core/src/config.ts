@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { toIssues } from './content/zod-issues.ts';
 import { InvalidConfigError } from './errors.ts';
 import type { Messages } from './i18n/translator.ts';
+import type { PageConfig } from './pages.ts';
 import type { Plugin, ThemePlugin } from './plugin.ts';
 import { TokenValuesSchema, type ThemeTokens } from './render/tokens.ts';
 
@@ -13,27 +14,7 @@ import { TokenValuesSchema, type ThemeTokens } from './render/tokens.ts';
  * A setting lives in one place only: the same key in both is an error.
  */
 
-export type SectionRef =
-  | string
-  | {
-      readonly id: string;
-      readonly options?: unknown;
-      /** Show a link to this section in the site navigation (default true when it has a title). */
-      readonly nav?: boolean;
-    };
-
-export interface PageConfig {
-  /** Path without locale prefix, e.g. '/' or '/cv'. */
-  readonly path: string;
-  /** Message key or literal title. Defaults to the person's name. */
-  readonly title?: string;
-  readonly sections: readonly SectionRef[];
-  /**
-   * Link this page from the footer of every page, with its title as the label (e.g. a privacy page). Its sections
-   * then get no header link.
-   */
-  readonly footer?: boolean;
-}
+export type { PageConfig, SectionRef } from './pages.ts';
 
 export interface VVitrineConfig {
   readonly site?: {
@@ -81,10 +62,17 @@ const PagesSchema = z.array(
       .array(
         z.union([
           z.string(),
-          z.object({ id: z.string(), options: z.unknown().optional(), nav: z.boolean().optional() }),
+          z.object({
+            id: z.string(),
+            options: z.unknown().optional(),
+            nav: z.boolean().optional(),
+            hidden: z.boolean().optional(),
+          }),
         ]),
       )
-      .describe('Section ids in order, or { id, options, nav } to set options or leave out the header link.'),
+      .describe(
+        'Section ids in order, or { id, options, nav, hidden } to set options, leave out the header link, or keep the section without showing it.',
+      ),
   }),
 );
 
@@ -175,6 +163,7 @@ export function resolveConfig(config: VVitrineConfig, layoutFile?: LayoutFile): 
       throw new InvalidConfigError(
         both.map((key) => ({
           path: key,
+          at: [key],
           message: `set in both vvitrine.config.ts and ${layoutFile.origin}; keep it in one place (the Studio edits ${layoutFile.origin})`,
         })),
         `vvitrine.config.ts and ${layoutFile.origin}`,
@@ -190,6 +179,7 @@ export function resolveConfig(config: VVitrineConfig, layoutFile?: LayoutFile): 
         [
           {
             path: 'theme.use',
+            at: ['theme', 'use'],
             message: `${layoutFile.origin} uses "${use}", and vvitrine.config.ts installs ${inConfig.join(', ')}; remove the theme from "plugins" (a theme that is imported ships its CSS)`,
           },
         ],
@@ -198,7 +188,13 @@ export function resolveConfig(config: VVitrineConfig, layoutFile?: LayoutFile): 
     }
     if (!layoutFile.theme) {
       throw new InvalidConfigError(
-        [{ path: 'theme.use', message: `the theme "${use}" was not loaded (the composition root loads it)` }],
+        [
+          {
+            path: 'theme.use',
+            at: ['theme', 'use'],
+            message: `the theme "${use}" was not loaded (the composition root loads it)`,
+          },
+        ],
         layoutFile.origin,
       );
     }

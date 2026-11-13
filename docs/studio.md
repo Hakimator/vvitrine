@@ -3,7 +3,25 @@
 The Studio edits your site from your own computer, without an account: start `pnpm dev`, then open
 **http://localhost:4321/\_\_vvitrine/studio/**.
 
-It is being built in steps. Today it edits your content; the page builder and the live preview come next.
+It is being built in steps. Today it edits your content and arranges your pages; the live preview comes next.
+
+## Arrange your pages
+
+**Pages**, at the top of the list, shows every page of your site with its sections in order. Each section has a menu
+(the `⋯` button) with everything you can do to it:
+
+- move it up, down, to the top or the bottom of its page, or to another page (with its options);
+- hide it: it stays on the page with its options, but is not shown until you show it again;
+- leave it out of the header menu, or put it back (pages linked from the footer have no header links);
+- take it off the page.
+
+"Add a section" lists the installed section plugins that are not on that page yet. You can also drag a section by its
+handle (`⠿`), on its page or to another one: it does the same as the menu. Every move is announced, and Undo takes it
+back.
+
+Saving writes `site.yaml` in place: only the lines that moved change, and your comments stay with the section they
+describe. The Studio arranges the pages only when they are in the layout file: if `vvitrine.config.ts` sets them, or
+there is no `site.yaml`, it shows them read-only and says why.
 
 ## Edit your content
 

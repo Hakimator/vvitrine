@@ -103,6 +103,29 @@ button:disabled { opacity: 0.5; cursor: default; }
 .raw { overflow: auto; padding: 0.5rem; border: 1px dashed var(--line); }
 .flag { color: var(--danger); font-size: 0.85em; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.group-name { margin: 0.75rem 0.6rem 0.25rem; font-size: 0.8em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.page { border: 1px solid var(--line); border-radius: 0.4rem; padding: 0.5rem 0.75rem 0.75rem; margin: 0 0 1rem; }
+.page h3 { margin: 0.25rem 0 0.5rem; }
+.sections { list-style: none; margin: 0 0 0.5rem; padding: 0; min-height: 2.5rem; border-radius: 0.3rem; }
+.sections[data-drop-over] { outline: 2px dashed var(--accent); outline-offset: 2px; }
+.placed { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--line);
+  position: relative; background: Canvas; }
+.placed .name { flex: 1; }
+.placed.is-hidden .name { font-style: italic; opacity: 0.75; }
+.placed[data-dragging] { opacity: 0.4; }
+.placed[data-drop-edge="top"]::before, .placed[data-drop-edge="bottom"]::after { content: ""; position: absolute; left: 0; right: 0;
+  height: 3px; background: var(--accent); }
+.placed[data-drop-edge="top"]::before { top: -2px; }
+.placed[data-drop-edge="bottom"]::after { bottom: -2px; }
+.grip { cursor: grab; display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; min-height: 1.5rem;
+  user-select: none; font-size: 1.1em; }
+.states { font-size: 0.85em; }
+.placed .issues { flex-basis: 100%; }
+.menu { position: relative; }
+.menu [role="menu"] { position: absolute; right: 0; z-index: 2; list-style: none; margin: 0.25rem 0 0; padding: 0.25rem; min-width: 15rem;
+  background: Canvas; border: 1px solid var(--line); border-radius: 0.4rem; box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); }
+.menu [role="menuitem"] { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 0.4rem 0.6rem; }
+.menu [role="menuitem"]:focus { background: color-mix(in srgb, var(--accent) 18%, transparent); }
 @media (max-width: 40rem) {
   .studio { grid-template-columns: 1fr; grid-template-areas: "bar" "nav" "main"; }
   nav { border-right: 0; border-bottom: 1px solid var(--line); }

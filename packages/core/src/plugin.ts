@@ -6,6 +6,7 @@ import type { Locale, Messages, Translate } from './i18n/translator.ts';
 import type { HeadTag } from './render/head.ts';
 import type { ThemeTokens } from './render/tokens.ts';
 import type { ImageProvider, ResponsiveImage } from './images.ts';
+import type { PageConfig } from './pages.ts';
 import type { ViewKind } from './views.ts';
 
 /**
@@ -180,6 +181,8 @@ export interface ContentModel {
 export interface SectionModel {
   readonly id: string;
   readonly plugin: string;
+  /** Its title in each language (the `section.<id>.title` message), when it has one: how tools name it. */
+  readonly title?: Readonly<Record<Locale, string>>;
   /** The content key it owns, if any. */
   readonly content?: string;
   /** Its options (per placement on a page), if it has any. */
@@ -203,6 +206,34 @@ export interface DevSite {
   checkContent(locale: Locale, content: Readonly<Record<string, unknown>>): Promise<readonly ContentIssue[]>;
   /** Save content changes through the sources (validated first; see `Kernel.saveContent`). */
   saveContent(locale: Locale, changes: readonly ContentChange[]): Promise<SavedContent>;
+  /** The layout file as written, with the pages as built: what a page builder starts from. */
+  readLayout(): WrittenLayout;
+  /** Check a layout (the whole file's data) as a build would, without saving: the problems found. */
+  checkLayout(layout: Readonly<Record<string, unknown>>): readonly ContentIssue[];
+  /** Save layout changes to the layout file (checked first; see `Kernel.saveLayout`). */
+  saveLayout(changes: readonly ContentChange[]): Promise<SavedContent>;
+}
+
+/** The layout file as written (`readLayout`), and what a page builder needs to show it. */
+export interface WrittenLayout {
+  /** The data of the layout file, as written ({} without a layout file). */
+  readonly layout: Readonly<Record<string, unknown>>;
+  /** The layout file, relative to the project root; undefined without one. */
+  readonly origin?: string;
+  /** Why the layout cannot be saved here, when it cannot (no layout file, pages set in vvitrine.config.ts...). */
+  readonly readOnly?: string;
+  /** The pages as built: those of the layout file, of vvitrine.config.ts, or the default (one page, every section). */
+  readonly pages: readonly PageConfig[];
+  /** The title of each page in each language, by page path, for the pages that have one. */
+  readonly titles: Readonly<Record<string, Readonly<Record<Locale, string>>>>;
+}
+
+/**
+ * Where layout changes are written (a port, filled by the composition root, which knows the file and its format).
+ * The kernel checks the changes first; the writer applies them to the file, keeping what it can of its layout.
+ */
+export interface LayoutWriter {
+  save(changes: readonly ContentChange[]): Promise<void>;
 }
 
 /** Content as written in the files, with where each key comes from (`readContent`). */

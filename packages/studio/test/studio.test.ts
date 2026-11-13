@@ -1,4 +1,4 @@
-import { createKernel, type Plugin } from '@vvitrine/core';
+import { createKernel, defineSection, type Plugin } from '@vvitrine/core';
 import { memoryFiles, stringTheme } from '@vvitrine/core/testing';
 import yamlSource from '@vvitrine/source-yaml';
 import { describe, expect, it } from 'vitest';
@@ -101,6 +101,37 @@ describe('the local Studio (US-133)', () => {
       405,
       'The Studio page answers GET only.',
     ]);
+  });
+
+  it('gives the layout, checks it and saves changes to it (US-135)', async () => {
+    const saved: unknown[] = [];
+    const layout = { pages: [{ path: '/', sections: ['hero'] }] };
+    const hero = defineSection({ name: 'hero', kind: 'section', apiVersion: 1, id: 'hero', present: () => ({}) });
+    const kernel = createKernel(
+      { plugins: [stringTheme({}, ''), hero, studio()] },
+      {
+        root: '/',
+        logger: { info: () => {}, warn: () => {} },
+        layout: { data: layout, origin: 'site.yaml' },
+        layoutWriter: { save: async (changes) => void saved.push(changes) },
+      },
+    );
+    const { call } = await open(kernel);
+    const post = (name: string, body: unknown) => call(name, { method: 'POST', body: JSON.stringify(body) });
+    expect(await (await call('layout')).json()).toMatchObject({ layout, origin: 'site.yaml', pages: layout.pages });
+    expect(await (await post('check-layout', { layout })).json()).toEqual({ issues: [] });
+    const unknown = await (await post('check-layout', { layout: { pages: [{ path: '/', sections: ['x'] }] } })).json();
+    expect(unknown.issues[0]).toMatchObject({ at: ['pages', 0, 'sections', 0] });
+
+    const refused = await post('save-layout', {
+      changes: [{ op: 'insert', path: ['pages', 0, 'sections'], index: 0, value: 'x' }],
+    });
+    expect([refused.status, saved]).toEqual([422, []]);
+    const hide = { op: 'set', path: ['pages', 0, 'sections', 0], value: { id: 'hero', hidden: true } };
+    expect(await (await post('save-layout', { changes: [hide] })).json()).toEqual({ files: ['site.yaml'] });
+    expect(saved).toEqual([[hide]]);
+    expect((await post('save-layout', {})).status).toBe(400);
+    expect((await post('check-layout', { layout: [] })).status).toBe(400);
   });
 
   it('is gone with the plugin: no Studio route without studio()', async () => {
