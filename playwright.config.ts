@@ -6,6 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  *   site/dist-bold  bold theme (e2e/fixtures/bold.config.ts)
  *   site/dist-base  corporate theme under a base path, like GitHub project pages
  *   site/dist-minimal  the example theme and section (examples/plugins)
+ * and the Studio against `astro dev` (e2e/studio-server.mjs), which needs no build.
  */
 const serve = (dir: string, port: number, base = '') => ({
   command: `node e2e/serve.mjs site/${dir} ${port} ${base}`,
@@ -25,17 +26,19 @@ export default defineConfig({
     serve('dist-bold', 4322),
     serve('dist-base', 4323, '/demo'),
     serve('dist-minimal', 4324),
+    // The Studio runs in `astro dev`, on a fresh copy of the content each time (the tests save into it).
+    { command: 'node e2e/studio-server.mjs 4325', url: 'http://localhost:4325/', reuseExistingServer: false },
   ],
   projects: [
     {
       name: 'corporate',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4321' },
-      testIgnore: /base-path|examples/,
+      testIgnore: /base-path|examples|studio/,
     },
     {
       name: 'bold',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4322' },
-      testIgnore: /base-path|examples/,
+      testIgnore: /base-path|examples|studio/,
     },
     {
       name: 'base-path',
@@ -46,6 +49,11 @@ export default defineConfig({
       name: 'minimal',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4324' },
       testMatch: /examples/,
+    },
+    {
+      name: 'studio',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4325' },
+      testMatch: /studio\.spec/,
     },
   ],
 });
