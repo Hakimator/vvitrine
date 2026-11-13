@@ -25,7 +25,7 @@
     "@vvitrine/studio": "workspace:*",
     "@vvitrine/theme-bold": "workspace:*",
     "@vvitrine/theme-corporate": "workspace:*",
-    "astro": "7.4.7",
+    "astro": "7.4.10",
     "sharp": "0.35.5",
     "zod": "4.6.7"
   }

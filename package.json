@@ -52,7 +52,7 @@
     "@vvitrine/source-markdown": "workspace:*",
     "@vvitrine/source-yaml": "workspace:*",
     "@vvitrine/theme-bold": "workspace:*",
-    "astro": "7.4.7",
+    "astro": "7.4.10",
     "astro-eslint-parser": "3.2.0",
     "cross-env": "10.1.0",
     "dependency-cruiser": "18.7.2",

@@ -19,6 +19,6 @@
     "@vvitrine/sections": "workspace:*"
   },
   "devDependencies": {
-    "astro": "7.4.7"
+    "astro": "7.4.10"
   }
 }
