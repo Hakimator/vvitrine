@@ -493,6 +493,18 @@ describe('navigation', () => {
     expect(empty.routes[0]!.context.nav.items).toEqual([]);
   });
 
+  it('keeps a hidden section out of its page and the header, and still checks its options', async () => {
+    const site = await build(
+      config({ pages: [{ path: '/', sections: ['hero', { id: 'work', hidden: true, nav: true }] }] }),
+    );
+    const home = site.routes.find((r) => r.key === 'en:/')!;
+    expect(home.sections.map((s) => s.id)).toEqual(['hero']);
+    expect(home.context.nav.items).toEqual([]);
+    await expect(
+      build(config({ pages: [{ path: '/', sections: ['hero', { id: 'missing', hidden: true }] }] })),
+    ).rejects.toThrow('Unknown section "missing"');
+  });
+
   it('links footer pages from the footer instead of the header', async () => {
     const site = await build(
       config({

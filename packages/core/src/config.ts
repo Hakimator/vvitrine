@@ -20,6 +20,8 @@ export type SectionRef =
       readonly options?: unknown;
       /** Show a link to this section in the site navigation (default true when it has a title). */
       readonly nav?: boolean;
+      /** Keep the section on the page without showing it: it is left out of the page, its options are kept. */
+      readonly hidden?: boolean;
     };
 
 export interface PageConfig {
@@ -81,10 +83,17 @@ const PagesSchema = z.array(
       .array(
         z.union([
           z.string(),
-          z.object({ id: z.string(), options: z.unknown().optional(), nav: z.boolean().optional() }),
+          z.object({
+            id: z.string(),
+            options: z.unknown().optional(),
+            nav: z.boolean().optional(),
+            hidden: z.boolean().optional(),
+          }),
         ]),
       )
-      .describe('Section ids in order, or { id, options, nav } to set options or leave out the header link.'),
+      .describe(
+        'Section ids in order, or { id, options, nav, hidden } to set options, leave out the header link, or keep the section without showing it.',
+      ),
   }),
 );
 

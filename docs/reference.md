@@ -21,7 +21,7 @@ not in both.
 | `pages[].path` | text | yes |  | Address without the language prefix, e.g. "/" or "/resume". |
 | `pages[].title` | text |  |  | Message key or text; default: your name. |
 | `pages[].footer` | `true` or `false` |  |  | Link the page from the footer instead of the header (e.g. privacy). |
-| `pages[].sections` | list of text or object | yes |  | Section ids in order, or { id, options, nav } to set options or leave out the header link. |
+| `pages[].sections` | list of text or object | yes |  | Section ids in order, or { id, options, nav, hidden } to set options, leave out the header link, or keep the section without showing it. |
 | `messages` | map |  |  | Replace any text, per language: { en: { 'section.work.title': 'Career' } }. |
 
 ## `site.yaml`
@@ -70,7 +70,7 @@ The layout of the site, as plain data: languages, pages, texts and design tokens
 | `pages[].path` | text | yes |  | Address without the language prefix, e.g. "/" or "/resume". |
 | `pages[].title` | text |  |  | Message key or text; default: your name. |
 | `pages[].footer` | `true` or `false` |  |  | Link the page from the footer instead of the header (e.g. privacy). |
-| `pages[].sections` | list of text or object | yes |  | Section ids in order, or { id, options, nav } to set options or leave out the header link. |
+| `pages[].sections` | list of text or object | yes |  | Section ids in order, or { id, options, nav, hidden } to set options, leave out the header link, or keep the section without showing it. |
 | `messages` | map |  |  | Replace any text, per language: { en: { 'section.work.title': 'Career' } }. |
 
 ## Content

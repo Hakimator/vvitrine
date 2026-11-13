@@ -43,7 +43,7 @@ export default defineConfig({
 | `theme.options`      | layout only          | `{}`                             | Options of that theme, e.g. `{ colorSchemeToggle: true }`.                                                                         |
 | `theme.tokens`       | layout only          | the theme's values               | Design token overrides for `light` and `dark`, whatever the theme (see [Themes](themes.md)).                                       |
 | `pages`              | layout               | one home page with every section | Each page: `path` (`/` or `/cv`), optional `title`, ordered `sections`. A page without a hero shows its title as its main heading. |
-| `pages[].sections[]` | layout               |                                  | A section id, or `{ id, options, nav }`. Options are validated by the section.                                                     |
+| `pages[].sections[]` | layout               |                                  | A section id, or `{ id, options, nav, hidden }`. Options are validated by the section.                                             |
 | `messages`           | layout               |                                  | Overrides of any UI string, per locale, and your own texts (e.g. a page title key).                                                |
 | `plugins`            | `vvitrine.config.ts` | (required)                       | Plugin instances. Call the factories: `corporate()`, not `corporate`.                                                              |
 
@@ -65,6 +65,13 @@ section from the header, set `nav: false`:
 
 ```yaml
 sections: [hero, projects, { id: languages, nav: false }]
+```
+
+To take a section off a page for a while without losing its options, set `hidden: true`: it is left out of the page
+and of the header, and comes back as it was when you remove the flag (the Studio's "Hide" does this).
+
+```yaml
+sections: [hero, { id: projects, hidden: true, options: { limit: 6 } }]
 ```
 
 ## Footer and privacy page

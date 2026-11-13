@@ -322,10 +322,12 @@ export class Kernel implements DevSite {
     return context;
   }
 
-  /** Every plugin except sections that are not placed on any page. */
+  /** Every plugin except sections that are not shown on any page (left out, or hidden). */
   private pluginsInUse(): Plugin[] {
     const placed = new Set(
-      (this.config.pages ?? []).flatMap((page) => page.sections.map((ref) => (typeof ref === 'string' ? ref : ref.id))),
+      (this.config.pages ?? []).flatMap((page) =>
+        page.sections.flatMap((ref) => (typeof ref === 'string' ? [ref] : ref.hidden ? [] : [ref.id])),
+      ),
     );
     return this.registry
       .all()
@@ -492,12 +494,14 @@ export class Kernel implements DevSite {
     render: RenderContext,
     used: Set<string>,
   ): BuiltSection | null {
-    const { id, options } = typeof ref === 'string' ? { id: ref, options: undefined } : ref;
+    const { id, options, hidden } = typeof ref === 'string' ? { id: ref, options: undefined, hidden: false } : ref;
     const section = this.registry.section(id);
     if (!section) throw new UnknownSectionError(id, page.path, this.registry.sectionIds());
+    // A hidden section is still checked (its options are kept for when it shows again), but not built.
+    const parsedOptions = this.parseOptions(section, options, page.path);
+    if (hidden) return null;
     used.add(id);
 
-    const parsedOptions = this.parseOptions(section, options, page.path);
     const view = section.present(this.sectionInput(section, content), parsedOptions, render);
     if (view === null) return null;
     return { id, component: this.component(id, section), view };

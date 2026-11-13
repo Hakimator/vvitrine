@@ -211,6 +211,9 @@
                     "options": {},
                     "nav": {
                       "type": "boolean"
+                    },
+                    "hidden": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
@@ -219,7 +222,7 @@
                 }
               ]
             },
-            "description": "Section ids in order, or { id, options, nav } to set options or leave out the header link."
+            "description": "Section ids in order, or { id, options, nav, hidden } to set options, leave out the header link, or keep the section without showing it."
           }
         },
         "required": [
