@@ -12,6 +12,7 @@ export {
   type FieldPath,
 } from './fields.ts';
 export { invert } from './history.ts';
+export { pageChanges, placement, written, type PageAction, type Placement } from './layout.ts';
 export {
   EditSession,
   SaveBlockedError,
