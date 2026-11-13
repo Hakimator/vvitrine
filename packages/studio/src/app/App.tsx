@@ -1,11 +1,13 @@
 /** @jsxImportSource preact */
-import type { ContentChange, ContentModel, Locale, WrittenContent } from '@vvitrine/core';
+import type { ContentChange, ContentModel, Locale, SectionModel, WrittenContent, WrittenLayout } from '@vvitrine/core';
 import { describeContent, EditSession, SaveBlockedError, type SessionDocument } from '@vvitrine/studio-core';
 import { signal, useSignal } from '@preact/signals';
 import { useEffect, useMemo } from 'preact/hooks';
 import type { StudioApi } from './api.ts';
 import { Field, type FieldContext } from './Fields.tsx';
 import type { Place } from './logic.ts';
+import { builderTexts } from './messages.ts';
+import { LAYOUT, Pages } from './Pages.tsx';
 
 export interface StudioData {
   readonly api: StudioApi;
@@ -13,7 +15,15 @@ export interface StudioData {
   readonly locales: readonly Locale[];
   readonly content: readonly ContentModel[];
   readonly written: Readonly<Record<Locale, WrittenContent>>;
+  /** The sections that can be placed on pages. */
+  readonly sections: readonly SectionModel[];
+  readonly layout: WrittenLayout;
 }
+
+/** The page builder's entry in the list (no content key has a '#'). */
+const PAGES = '#pages';
+/** The Studio's own language (its other languages come with US-149). */
+const LANGUAGE = 'en';
 
 /** Re-render when the session changes (every edit, undo, check, save). */
 const version = signal(0);
@@ -25,8 +35,8 @@ const CHECK_DELAY = 600;
 export function App({ data }: { data: StudioData }) {
   const session = useMemo(
     () =>
-      new EditSession(
-        Object.fromEntries(
+      new EditSession({
+        ...Object.fromEntries(
           data.locales.map((l) => [
             l,
             {
@@ -36,7 +46,12 @@ export function App({ data }: { data: StudioData }) {
             } satisfies SessionDocument,
           ]),
         ),
-      ),
+        [LAYOUT]: {
+          data: data.layout.layout,
+          store: { save: (changes) => data.api.saveLayout(changes) },
+          checker: { check: async (layout) => data.api.checkLayout(layout) },
+        },
+      }),
     [data],
   );
   const selected = useSignal(data.content[0]!.key);
@@ -87,8 +102,24 @@ export function App({ data }: { data: StudioData }) {
   }, [session]);
 
   const forms = useMemo(() => data.content.map((model) => ({ model, form: describeContent(model) })), [data]);
-  const current = forms.find((f) => f.model.key === selected.value)!;
+  const current = forms.find((f) => f.model.key === selected.value) ?? forms[0]!;
   const readOnly = data.locales.some((l) => data.written[l]!.readOnly.includes(current.model.key));
+  const toFix = (key: string) =>
+    session.issues.some((issue) =>
+      key === PAGES ? issue.document === LAYOUT : issue.document !== LAYOUT && issue.at?.[0] === key,
+    );
+  const entry = (key: string, label: string) => (
+    <li key={key}>
+      <button
+        type="button"
+        aria-current={key === selected.value ? 'true' : undefined}
+        onClick={() => (selected.value = key)}
+      >
+        {label}
+        {toFix(key) && <span class="flag"> (to fix)</span>}
+      </button>
+    </li>
+  );
   const loaded = new Set<string>();
 
   const apply =
@@ -163,40 +194,48 @@ export function App({ data }: { data: StudioData }) {
           {status.value}
         </p>
       </header>
-      <nav aria-label="Content">
-        <ul>
-          {forms.map(({ model, form }) => (
-            <li key={model.key}>
-              <button
-                type="button"
-                aria-current={model.key === selected.value ? 'true' : undefined}
-                onClick={() => (selected.value = model.key)}
-              >
-                {form.label}
-                {session.issues.some((issue) => issue.at?.[0] === model.key) && <span class="flag"> (to fix)</span>}
-              </button>
-            </li>
-          ))}
-        </ul>
+      <nav aria-label="Studio">
+        <p class="group-name" id="nav-site">
+          Site
+        </p>
+        <ul aria-labelledby="nav-site">{entry(PAGES, builderTexts.pages)}</ul>
+        <p class="group-name" id="nav-content">
+          Content
+        </p>
+        <ul aria-labelledby="nav-content">{forms.map(({ model, form }) => entry(model.key, form.label))}</ul>
       </nav>
-      <main>
-        <h2>{current.form.label}</h2>
-        {current.form.help && <p class="help">{current.form.help}</p>}
-        {readOnly && <p class="note">This content comes from a source that cannot save: it is shown read-only.</p>}
-        <div class="languages">
-          {data.locales.map((locale) => (
-            <section key={locale} lang={locale} aria-labelledby={`language-${locale}`}>
-              <h3 id={`language-${locale}`}>
-                {locale.toUpperCase()}
-                {data.written[locale]!.origin[current.model.key] && (
-                  <span class="file"> · {data.written[locale]!.origin[current.model.key]}</span>
-                )}
-              </h3>
-              <Field field={current.form} ctx={context(locale)} />
-            </section>
-          ))}
-        </div>
-      </main>
+      {selected.value === PAGES ? (
+        <main>
+          <h2>{builderTexts.pages}</h2>
+          <Pages
+            session={session}
+            written={data.layout}
+            sections={data.sections}
+            language={LANGUAGE}
+            texts={builderTexts}
+            announce={(text) => (status.value = text)}
+          />
+        </main>
+      ) : (
+        <main>
+          <h2>{current.form.label}</h2>
+          {current.form.help && <p class="help">{current.form.help}</p>}
+          {readOnly && <p class="note">This content comes from a source that cannot save: it is shown read-only.</p>}
+          <div class="languages">
+            {data.locales.map((locale) => (
+              <section key={locale} lang={locale} aria-labelledby={`language-${locale}`}>
+                <h3 id={`language-${locale}`}>
+                  {locale.toUpperCase()}
+                  {data.written[locale]!.origin[current.model.key] && (
+                    <span class="file"> · {data.written[locale]!.origin[current.model.key]}</span>
+                  )}
+                </h3>
+                <Field field={current.form} ctx={context(locale)} />
+              </section>
+            ))}
+          </div>
+        </main>
+      )}
     </div>
   );
 }

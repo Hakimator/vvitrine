@@ -9,7 +9,11 @@ async function start(root: HTMLElement): Promise<void> {
   const base = meta('vvitrine-studio-base');
   const locales = meta('vvitrine-studio-locales').split(',').filter(Boolean);
   const api = studioApi(base, meta('vvitrine-studio-token'));
-  const [model, ...written] = await Promise.all([api.model(), ...locales.map((locale) => api.content(locale))]);
+  const [model, layout, ...written] = await Promise.all([
+    api.model(),
+    api.layout(),
+    ...locales.map((locale) => api.content(locale)),
+  ]);
   root.replaceChildren();
   render(
     <App
@@ -18,6 +22,8 @@ async function start(root: HTMLElement): Promise<void> {
         base,
         locales,
         content: model.content,
+        sections: model.sections,
+        layout,
         written: Object.fromEntries(locales.map((l, i) => [l, written[i]!])),
       }}
     />,
