@@ -52,8 +52,12 @@ export class DevEndpointError extends VVitrineError {
 }
 
 export class InvalidConfigError extends VVitrineError {
+  /** The problems, each with its path: a tool can point at the setting (the Studio's page builder). */
+  readonly issues: readonly ContentIssue[];
+
   constructor(issues: readonly ContentIssue[], where = 'vvitrine.config') {
     super([`Invalid ${where}:`, ...issues.map((i) => `  - ${i.path}: ${i.message}`)].join('\n'));
+    this.issues = issues;
   }
 }
 

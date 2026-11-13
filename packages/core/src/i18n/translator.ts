@@ -41,6 +41,11 @@ export class Translator {
     };
   }
 
+  /** The message for `key` in `locale` (or the default locale), or undefined: for tools, nothing is reported. */
+  find(key: string, locale: Locale): string | undefined {
+    return this.catalogs.get(locale)?.[key] ?? this.catalogs.get(this.options.defaultLocale)?.[key];
+  }
+
   private missing(key: string, locale: Locale): string {
     const id = `${locale}:${key}`;
     if (!this.reported.has(id)) {

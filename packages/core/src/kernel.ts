@@ -7,6 +7,7 @@ import {
   type VVitrineConfig,
 } from './config.ts';
 import { applyChange, type ContentChange } from './content/changes.ts';
+import { layoutIssues } from './layout-check.ts';
 import { loadContent, loadRawContent, validateContent, type ValidatedContent } from './content/pipeline.ts';
 import { toIssues } from './content/zod-issues.ts';
 import { z } from 'zod';
@@ -14,6 +15,7 @@ import { Basics } from './content/schemas.ts';
 import {
   DevEndpointError,
   EditorHintError,
+  InvalidConfigError,
   InvalidContentError,
   InvalidPluginOptionsError,
   MissingRendererError,
@@ -41,12 +43,14 @@ import type {
   DevSite,
   EditingModel,
   JsonSchema,
+  LayoutWriter,
   PageContext,
   ProjectFileWriter,
   ProjectFiles,
   RenderContext,
   SavedContent,
   WrittenContent,
+  WrittenLayout,
   SourcePlugin,
   SectionInput,
   SectionPlugin,
@@ -67,6 +71,8 @@ export interface KernelOptions {
   readonly logger?: Logger;
   /** The layout file (site.yaml or site.json), read by the composition root (ADR-016). */
   readonly layout?: LayoutFile;
+  /** Where layout changes are saved (`saveLayout`), given by the development server. Without it, they cannot be. */
+  readonly layoutWriter?: LayoutWriter;
   /**
    * The project's files, given to sources (`ctx.files`). Without it, a source that reads a file fails clearly. To save
    * content (`saveContent`), they must also be writable (`ProjectFileWriter`).
@@ -146,6 +152,8 @@ interface PendingRoute {
  */
 export class Kernel implements DevSite {
   private readonly config: ResolvedConfig;
+  /** The configuration as written, to check a changed layout against it (`checkLayout`). */
+  private readonly userConfig: VVitrineConfig;
   readonly registry: PluginRegistry;
   private readonly translator: Translator;
   private readonly logger: Logger;
@@ -153,6 +161,7 @@ export class Kernel implements DevSite {
 
   constructor(userConfig: VVitrineConfig, options: KernelOptions) {
     this.options = options;
+    this.userConfig = userConfig;
     this.logger = options.logger ?? consoleLogger;
     this.config = resolveConfig(userConfig, options.layout);
     this.registry = new PluginRegistry(this.config.plugins);
@@ -218,10 +227,82 @@ export class Kernel implements DevSite {
       sections: sections.map((section) => ({
         id: section.id,
         plugin: section.name,
+        ...this.titles(`section.${section.id}.title`),
         ...(section.content ? { content: section.content.key } : {}),
         ...(section.optionsSchema ? { options: json(section.optionsSchema) } : {}),
       })),
     };
+  }
+
+  /** `{ title }`, the message `key` in each language, or nothing when no language has it. */
+  private titles(key: string): { title?: Record<Locale, string> } {
+    const found = this.config.locales.flatMap((locale) => {
+      const text = this.translator.find(key, locale);
+      return text === undefined ? [] : [[locale, text] as const];
+    });
+    return found.length > 0 ? { title: Object.fromEntries(found) } : {};
+  }
+
+  /**
+   * The layout file as written, with the pages as built and their titles (US-135). It cannot be saved without a
+   * layout file, when vvitrine.config.ts sets the pages (a setting lives in one place), or without a writer.
+   */
+  readLayout(): WrittenLayout {
+    const file = this.options.layout;
+    const pages = this.config.pages ?? [{ path: '/', sections: this.registry.sectionIds() }];
+    const reason = this.layoutReadOnly();
+    return {
+      layout: (file?.data ?? {}) as Record<string, unknown>,
+      ...(file ? { origin: file.origin } : {}),
+      ...(reason ? { readOnly: reason } : {}),
+      pages,
+      titles: Object.fromEntries(
+        pages.flatMap((page) => {
+          if (!page.title) return [];
+          const title = page.title;
+          return [
+            [
+              page.path,
+              Object.fromEntries(this.config.locales.map((l) => [l, this.translator.find(title, l) ?? title])),
+            ],
+          ];
+        }),
+      ),
+    };
+  }
+
+  private layoutReadOnly(): string | undefined {
+    if (!this.options.layout)
+      return 'There is no layout file: create site.yaml next to vvitrine.config.ts to arrange your pages here.';
+    if (this.userConfig.pages)
+      return 'The pages are set in vvitrine.config.ts: move them to the layout file to arrange them here.';
+    if (!this.options.layoutWriter) return 'This server cannot save the layout file.';
+    return undefined;
+  }
+
+  /** Check a layout (the layout file's data) as a build would: the problems, each with its place (US-135). */
+  checkLayout(layout: Readonly<Record<string, unknown>>): readonly ContentIssue[] {
+    const file = this.options.layout ?? { data: {}, origin: 'site.yaml' };
+    return layoutIssues(this.userConfig, this.registry, file, layout);
+  }
+
+  /**
+   * Save layout changes (US-135): applied to the layout file's data and checked first, so a layout the build would
+   * refuse is never written (`InvalidConfigError`, with the problems); an impossible change throws
+   * `InvalidChangeError`. The writer then changes the file.
+   */
+  async saveLayout(changes: readonly ContentChange[]): Promise<SavedContent> {
+    const reason = this.layoutReadOnly();
+    if (reason) throw new VVitrineError(reason);
+    const { origin } = this.options.layout!;
+    const changed = changes.reduce<Record<string, unknown>>(
+      (data, change) => applyChange(data, change),
+      this.readLayout().layout,
+    );
+    const issues = this.checkLayout(changed);
+    if (issues.length > 0) throw new InvalidConfigError(issues, origin);
+    await this.options.layoutWriter!.save(changes);
+    return { files: [origin] };
   }
 
   /** The development endpoints of all plugins (US-153), checked once: under /__vvitrine/, each path once. */

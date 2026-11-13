@@ -163,6 +163,7 @@ export function resolveConfig(config: VVitrineConfig, layoutFile?: LayoutFile): 
       throw new InvalidConfigError(
         both.map((key) => ({
           path: key,
+          at: [key],
           message: `set in both vvitrine.config.ts and ${layoutFile.origin}; keep it in one place (the Studio edits ${layoutFile.origin})`,
         })),
         `vvitrine.config.ts and ${layoutFile.origin}`,
@@ -178,6 +179,7 @@ export function resolveConfig(config: VVitrineConfig, layoutFile?: LayoutFile): 
         [
           {
             path: 'theme.use',
+            at: ['theme', 'use'],
             message: `${layoutFile.origin} uses "${use}", and vvitrine.config.ts installs ${inConfig.join(', ')}; remove the theme from "plugins" (a theme that is imported ships its CSS)`,
           },
         ],
@@ -186,7 +188,13 @@ export function resolveConfig(config: VVitrineConfig, layoutFile?: LayoutFile): 
     }
     if (!layoutFile.theme) {
       throw new InvalidConfigError(
-        [{ path: 'theme.use', message: `the theme "${use}" was not loaded (the composition root loads it)` }],
+        [
+          {
+            path: 'theme.use',
+            at: ['theme', 'use'],
+            message: `the theme "${use}" was not loaded (the composition root loads it)`,
+          },
+        ],
         layoutFile.origin,
       );
     }
