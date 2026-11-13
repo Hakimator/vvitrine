@@ -31,9 +31,9 @@ module.exports = {
     {
       name: 'public-site-never-imports-the-studio',
       comment:
-        'The public site stays as it is without the Studio (NFR-19): only Studio packages import Studio packages.',
+        'The public site stays as it is without the Studio (NFR-19): only the Studio (@vvitrine/studio and studio-*) imports Studio packages; a site installs the Studio through the studio() plugin.',
       severity: 'error',
-      from: { path: '^(packages/(?!studio-)|themes/|site/|examples/)' },
+      from: { path: '^(packages/(?!studio/|studio-)|themes/|site/|examples/)' },
       // A file of a Studio package, or its name when the import does not resolve (no dependency declared).
       to: { path: ['^packages/studio-', '^@vvitrine/studio-'] },
     },
