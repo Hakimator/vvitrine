@@ -59,6 +59,7 @@ Everything else (`packages/`, `themes/`) is the framework.
 | [Configuration](docs/configuration.md)     | `site.yaml` and `vvitrine.config.ts` guide                          |
 | [Reference](docs/reference.md)             | Every configuration, content and option field, from the schemas     |
 | [Plugins](docs/plugins.md)                 | Use and write source, section, theme, service and generator plugins |
+| [Studio](docs/studio.md)                   | Edit your site from `pnpm dev`                                      |
 | [Example plugins](examples/plugins/)       | One small, tested plugin of each kind, to copy                      |
 | [Themes](docs/themes.md)                   | Switch theme, design tokens, write a theme                          |
 | [Deployment](docs/deployment.md)           | GitHub Pages, Cloudflare, Netlify, Vercel, any host                 |
