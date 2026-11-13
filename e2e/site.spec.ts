@@ -1,4 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { expect, test, type Page } from '@playwright/test';
 
 /** Runs for both themes: the same content must behave the same whatever the theme. */
@@ -730,4 +733,22 @@ test('robots.txt is generated', async ({ request }) => {
   const response = await request.get('/robots.txt');
   expect(response.ok()).toBe(true);
   expect(await response.text()).toContain('User-agent: *');
+});
+
+test('the built site has no Studio: no route, and no file that mentions it (NFR-19)', async ({ request }, testInfo) => {
+  // The demo installs studio(): it answers in `pnpm dev` only.
+  expect((await request.get('/__vvitrine/studio/')).status()).toBe(404);
+  const folder = { corporate: 'dist', bold: 'dist-bold' }[testInfo.project.name]!;
+  const root = fileURLToPath(new URL(`../site/${folder}/`, import.meta.url));
+  const texts = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory()
+        ? texts(join(dir, entry.name))
+        : /\.(html|js|css|xml|txt|json|webmanifest)$/.test(entry.name)
+          ? [join(dir, entry.name)]
+          : [],
+    );
+  const files = texts(root);
+  expect(files.length).toBeGreaterThan(20);
+  expect(files.filter((file) => /__vvitrine|vvitrine-studio/.test(readFileSync(file, 'utf8')))).toEqual([]);
 });

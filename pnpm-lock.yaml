@@ -313,6 +313,19 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
 
+  packages/studio:
+    dependencies:
+      '@vvitrine/core':
+        specifier: workspace:*
+        version: link:../core
+      '@vvitrine/studio-core':
+        specifier: workspace:*
+        version: link:../studio-core
+    devDependencies:
+      '@vvitrine/source-yaml':
+        specifier: workspace:*
+        version: link:../source-yaml
+
   packages/studio-core:
     dependencies:
       '@vvitrine/core':
@@ -397,6 +410,9 @@ importers:
       '@vvitrine/source-yaml':
         specifier: workspace:*
         version: link:../packages/source-yaml
+      '@vvitrine/studio':
+        specifier: workspace:*
+        version: link:../packages/studio
       '@vvitrine/theme-bold':
         specifier: workspace:*
         version: link:../themes/bold

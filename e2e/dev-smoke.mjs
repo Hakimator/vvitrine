@@ -69,6 +69,20 @@ try {
     else if (foreign.status !== 403) failure = `a request from another site got ${foreign.status}, not 403`;
   }
 
+  // The Studio (US-133): its page gives the token of this run, its API answers with it and refuses without it.
+  if (!failure) {
+    const studio = `http://localhost:${port}/__vvitrine/studio/`;
+    const page = await fetch(studio);
+    const token = /name="vvitrine-studio-token" content="([0-9a-f]+)"/.exec(await page.text())?.[1];
+    const content = (headers) => fetch(`${studio}api/content?locale=en`, { headers });
+    const withToken = await content({ 'x-vvitrine-studio-token': token ?? '' });
+    const written = withToken.ok ? await withToken.json() : undefined;
+    const without = await content({});
+    if (page.status !== 200 || !token) failure = `the Studio page answered ${page.status}, without a token`;
+    else if (written?.origin?.basics !== 'content/resume.en.yaml') failure = 'the Studio API did not give the content';
+    else if (without.status !== 403) failure = `the Studio API answered ${without.status} without the token, not 403`;
+  }
+
   // Saving a content file tells the open page to reload. The file is written back with the same bytes.
   if (!failure) {
     const client = await (await fetch(`http://localhost:${port}/@vite/client`)).text();
