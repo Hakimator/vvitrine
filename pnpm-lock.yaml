@@ -410,6 +410,9 @@ importers:
       '@vvitrine/source-yaml':
         specifier: workspace:*
         version: link:../packages/source-yaml
+      '@vvitrine/studio':
+        specifier: workspace:*
+        version: link:../packages/studio
       '@vvitrine/theme-bold':
         specifier: workspace:*
         version: link:../themes/bold

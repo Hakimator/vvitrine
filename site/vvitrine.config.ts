@@ -29,6 +29,7 @@ import {
 import { seo, sitemap } from '@vvitrine/seo';
 import images from '@vvitrine/images';
 import markdownSource from '@vvitrine/source-markdown';
+import studio from '@vvitrine/studio';
 import yamlSource from '@vvitrine/source-yaml';
 import talks from './plugins/talks.ts';
 
@@ -88,5 +89,7 @@ export default defineConfig({
     consent(),
     // Responsive WebP variants and real sizes for the images in public/.
     images(),
+    // The Studio: edit this site from `pnpm dev` at http://localhost:4321/__vvitrine/studio/. Never in the built site.
+    studio(),
   ],
 });
