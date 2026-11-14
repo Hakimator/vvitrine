@@ -18,8 +18,8 @@ export interface FieldContext {
   readonly issues: (place: Place) => readonly ContentIssue[];
   readonly apply: (change: ContentChange, merge?: boolean) => void;
   /**
-   * Do a list action in every language, as one step (US-136); then announce `said` and put the focus on the element
-   * with the id `focus`.
+   * Do a list action in every language (in this one only for a key with a file per item), as one step (US-136);
+   * then announce `said` and put the focus on the element with the id `focus`.
    */
   readonly list: (place: Place, action: ListAction, said: string, focus?: string) => void;
   /** Whether the content key's items keep the order of their files (they cannot be moved). */
@@ -92,8 +92,11 @@ function List({
   const { texts } = ctx;
   const addId = `${id}-add`;
   const menuId = (index: number) => `${id}-item-${index}`;
-  // The items of a key whose files give their order cannot move (Markdown projects); their own lists can.
-  const movable = !(ctx.fixedOrder && place.length === 1);
+  // The items of a key whose files give their order (Markdown projects: a file per item, per language) cannot move,
+  // and are added and removed in this language only; their own lists (keywords...) are like any other.
+  const files = ctx.fixedOrder && place.length === 1;
+  const movable = !files;
+  const where = texts.where(files ? ctx.locale.toUpperCase() : undefined);
   const last = list.length - 1;
   const titleOf = (index: number) => itemTitle(list[index], field) ?? `Item ${index + 1}`;
   const moveItem = (from: number, to: number) =>
@@ -132,14 +135,14 @@ function List({
           ctx.list(
             place,
             { kind: 'duplicate', index },
-            texts.duplicated(title, index + 2, list.length + 1),
+            texts.duplicated(title, where, index + 2, list.length + 1),
             menuId(index + 1),
           ),
       },
       {
         label: texts.remove,
         // The item is gone: the keyboard goes to "Add", next to where it was.
-        run: () => ctx.list(place, { kind: 'remove', index }, texts.removed(title, field.label), addId),
+        run: () => ctx.list(place, { kind: 'remove', index }, texts.removed(title, field.label, where), addId),
       },
     ];
   };
@@ -149,7 +152,7 @@ function List({
       {/* The content key itself is named by the heading above it: its legend is for screen readers only. */}
       <legend class={field.path.length === 0 ? 'visually-hidden' : undefined}>{field.label}</legend>
       {field.help && <p class="help">{field.help}</p>}
-      {!movable && list.length > 1 && !ctx.readOnly && <p class="help">{texts.fixedOrder}</p>}
+      {files && !ctx.readOnly && <p class="help">{texts.fixedOrder}</p>}
       <Issues ctx={ctx} place={place} own />
       <Missing ctx={ctx} place={place} />
       <ol ref={listRef}>
@@ -188,7 +191,7 @@ function List({
           type="button"
           id={addId}
           onClick={() =>
-            ctx.list(place, { kind: 'add', value: emptyItem(field) }, texts.added(field.label, list.length + 1))
+            ctx.list(place, { kind: 'add', value: emptyItem(field) }, texts.added(field.label, list.length + 1, where))
           }
         >
           {texts.addTo(field.label)}

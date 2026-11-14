@@ -86,9 +86,11 @@ export interface ListTexts extends MoveTexts {
   readonly fixedOrder: string;
   readonly dragHandle: string;
   readonly moved: (item: string, position: number, count: number, list: string) => string;
-  readonly duplicated: (item: string, position: number, count: number) => string;
-  readonly removed: (item: string, list: string) => string;
-  readonly added: (list: string, position: number) => string;
+  /** Where an action applied: every language, or one (`language` is its code, e.g. "FR"). */
+  readonly where: (language?: string) => string;
+  readonly duplicated: (item: string, where: string, position: number, count: number) => string;
+  readonly removed: (item: string, list: string, where: string) => string;
+  readonly added: (list: string, position: number, where: string) => string;
 }
 
 export const listTexts: ListTexts = {
@@ -97,12 +99,14 @@ export const listTexts: ListTexts = {
   duplicate: 'Duplicate',
   remove: 'Remove',
   addTo: (list) => `Add to ${list}`,
-  fixedOrder: 'These items are in the order of their files: they cannot be moved here.',
+  fixedOrder:
+    'Each item is a file of its own, listed in the order of the file names: items cannot be moved here, and adding, duplicating or removing one changes this language only.',
   dragHandle: 'Drag to move',
   moved: (item, position, count, list) =>
     `${item} moved to position ${position} of ${count} in ${list}, in every language.`,
-  duplicated: (item, position, count) =>
-    `${item} duplicated, in every language: the copy is at position ${position} of ${count}.`,
-  removed: (item, list) => `${item} removed from ${list}, in every language. Undo brings it back.`,
-  added: (list, position) => `New item added to ${list}, at position ${position}, in every language.`,
+  where: (language) => (language ? `in ${language} only` : 'in every language'),
+  duplicated: (item, where, position, count) =>
+    `${item} duplicated, ${where}: the copy is at position ${position} of ${count}.`,
+  removed: (item, list, where) => `${item} removed from ${list}, ${where}. Undo brings it back.`,
+  added: (list, position, where) => `New item added to ${list}, at position ${position}, ${where}.`,
 };

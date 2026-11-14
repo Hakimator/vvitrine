@@ -192,7 +192,10 @@ export function App({ data }: { data: StudioData }) {
     issues: (place: Place) => session.issuesAt(locale, place),
     apply: apply(locale),
     list: (place, action, said, focus) => {
-      const documents = Object.fromEntries(data.locales.map((l) => [l, session.data(l)]));
+      // A key with a file per item (and per language) changes its items in this language only: the same item in
+      // another language is another file, matched by name, not by position.
+      const languages = fixedOrder && place.length === 1 ? [locale] : data.locales;
+      const documents = Object.fromEntries(languages.map((l) => [l, session.data(l)]));
       try {
         session.applyTogether(listChanges(documents, place as unknown as ContentPath, action));
       } catch (error) {
