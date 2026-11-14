@@ -314,3 +314,25 @@ describe('steps over several documents, and the files after saving (US-136)', ()
     expect(session.rebase('en', start().en)).toBe(false);
   });
 });
+
+describe('new items waiting to be saved (US-136)', () => {
+  it('saves a new item whole, with what was typed into it', async () => {
+    const { session, saved } = open();
+    session.apply('en', { op: 'insert', path: ['work'], index: 2, value: { name: '', highlights: [] } });
+    session.apply('fr', { op: 'set', path: ['basics', 'label'], value: 'Développeuse' });
+    session.apply('en', { op: 'set', path: ['work', 2, 'name'], value: 'Atlas' }, { merge: true });
+    session.apply('en', { op: 'set', path: ['work', 2, 'highlights'], value: ['Maps'] });
+    expect(session.pending.filter((p) => p.document === 'en')).toEqual([
+      {
+        document: 'en',
+        change: { op: 'insert', path: ['work'], index: 2, value: { name: 'Atlas', highlights: ['Maps'] } },
+      },
+    ]);
+    // A change elsewhere comes after it: later sets are their own changes again.
+    session.apply('en', { op: 'set', path: ['basics', 'name'], value: 'Ada' });
+    session.apply('en', { op: 'set', path: ['work', 2, 'name'], value: 'Atlas map' });
+    expect(session.pending.filter((p) => p.document === 'en')).toHaveLength(3);
+    await session.save();
+    expect(saved.find((s) => s.document === 'en')!.changes[0]).toMatchObject({ value: { name: 'Atlas' } });
+  });
+});

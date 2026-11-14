@@ -253,18 +253,46 @@ export class EditSession {
 
   #commit(changed: ReadonlyMap<DocumentId, Record<string, unknown>>, changes: readonly DocumentChange[]): void {
     for (const [document, data] of changed) this.#data.set(document, data);
-    for (const item of changes) {
-      // A `set` of the same field as the last change waiting to be saved replaces it: only the last value is saved.
-      const last = this.#pending.at(-1);
-      if (last && sameField(last, item)) this.#pending[this.#pending.length - 1] = item;
-      else this.#pending.push(item);
-    }
+    for (const item of changes) this.#wait(item);
     for (const [document, data] of changed) {
       if (!equal(data, this.#saved.get(document))) continue;
       this.#pending = this.#pending.filter((item) => item.document !== document);
       this.#issues = this.#issues.filter((issue) => issue.document !== document);
     }
     this.#notify();
+  }
+
+  /**
+   * Add a change to those waiting to be saved, as few as they can be: a `set` of the same field as the last one
+   * replaces it (only the last value is saved), and a `set` inside an item inserted just before goes into that item
+   * (a new item is saved whole: a source that makes a file per item names it after what was typed, not after an
+   * empty item).
+   */
+  #wait(item: DocumentChange): void {
+    let at = this.#pending.length - 1;
+    while (at >= 0 && this.#pending[at]!.document !== item.document) at -= 1;
+    const inserted = at === -1 ? undefined : this.#pending[at]!;
+    if (inserted?.change.op === 'insert' && item.change.op === 'set') {
+      const { path, index, value } = inserted.change;
+      const inside =
+        path.length + 1 < item.change.path.length && [...path, index].every((s, i) => s === item.change.path[i]);
+      if (inside) {
+        try {
+          const rest = item.change.path.slice(path.length + 1);
+          const filled = applyChange(
+            { item: value },
+            { op: 'set', path: ['item', ...rest], value: item.change.value },
+          ).item;
+          this.#pending[at] = { document: item.document, change: { ...inserted.change, value: filled } };
+          return;
+        } catch {
+          // Not a place inside the item (a list position it does not have): kept as its own change.
+        }
+      }
+    }
+    const last = this.#pending.at(-1);
+    if (last && sameField(last, item)) this.#pending[this.#pending.length - 1] = item;
+    else this.#pending.push(item);
   }
 
   #changed(): DocumentId[] {
