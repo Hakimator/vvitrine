@@ -161,7 +161,10 @@ export default function vvitrine(options: VVitrineIntegrationOptions = {}): Astr
                 configureServer(server: {
                   watcher: { add(p: string): void; on(e: string, cb: (file: string) => void): void };
                   ws: { send(m: { type: string }): void };
-                  environments?: Record<string, { moduleGraph: DevModuleGraph }>;
+                  environments?: Record<
+                    string,
+                    { moduleGraph: DevModuleGraph; hot?: { send(message: { type: string }): void } }
+                  >;
                   middlewares: {
                     use(handler: (req: IncomingMessage, res: ServerResponse, next: () => void) => void): void;
                   };
@@ -200,10 +203,13 @@ export default function vvitrine(options: VVitrineIntegrationOptions = {}): Astr
                   const reload = (file: string) => {
                     const changed = resolve(file);
                     if (changed === layoutPath) {
-                      // The layout module is virtual: drop it so the next request reads the file again.
+                      // The layout module is virtual: drop it so the next request reads the file again. The server's
+                      // module runners (pages, development endpoints) keep the modules they ran, and a request made in
+                      // between could run the old one again: they are told to reload too.
                       for (const environment of environments) {
                         const module = environment.moduleGraph.getModuleById(RESOLVED_LAYOUT_ID);
                         if (module) environment.moduleGraph.invalidateModule(module as never);
+                        environment.hot?.send({ type: 'full-reload' });
                       }
                     } else if (changed.startsWith(outDir) || /[\\/]\.astro[\\/]/.test(changed) || isCode(changed)) {
                       return;
