@@ -1,12 +1,26 @@
 /** @jsxImportSource preact */
-import type { ContentChange, ContentModel, Locale, SectionModel, WrittenContent, WrittenLayout } from '@vvitrine/core';
-import { describeContent, EditSession, SaveBlockedError, type SessionDocument } from '@vvitrine/studio-core';
+import type {
+  ContentChange,
+  ContentModel,
+  ContentPath,
+  Locale,
+  SectionModel,
+  WrittenContent,
+  WrittenLayout,
+} from '@vvitrine/core';
+import {
+  describeContent,
+  EditSession,
+  listChanges,
+  SaveBlockedError,
+  type SessionDocument,
+} from '@vvitrine/studio-core';
 import { signal, useSignal } from '@preact/signals';
-import { useEffect, useMemo } from 'preact/hooks';
+import { useEffect, useMemo, useRef } from 'preact/hooks';
 import type { StudioApi } from './api.ts';
 import { Field, type FieldContext } from './Fields.tsx';
 import type { Place } from './logic.ts';
-import { builderTexts } from './messages.ts';
+import { builderTexts, listTexts } from './messages.ts';
 import { LAYOUT, Pages } from './Pages.tsx';
 
 export interface StudioData {
@@ -56,6 +70,13 @@ export function App({ data }: { data: StudioData }) {
   );
   const selected = useSignal(data.content[0]!.key);
   void version.value;
+  /** What gets focus after the next render: the menu of the item that moved, so the keyboard stays on it. */
+  const focusNext = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const target = focusNext.current;
+    focusNext.current = undefined;
+    if (target) document.getElementById(target)?.focus();
+  });
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -104,6 +125,7 @@ export function App({ data }: { data: StudioData }) {
   const forms = useMemo(() => data.content.map((model) => ({ model, form: describeContent(model) })), [data]);
   const current = forms.find((f) => f.model.key === selected.value) ?? forms[0]!;
   const readOnly = data.locales.some((l) => data.written[l]!.readOnly.includes(current.model.key));
+  const fixedOrder = data.locales.some((l) => data.written[l]!.fixedOrder.includes(current.model.key));
   const toFix = (key: string) =>
     session.issues.some((issue) =>
       key === PAGES ? issue.document === LAYOUT : issue.document !== LAYOUT && issue.at?.[0] === key,
@@ -169,6 +191,19 @@ export function App({ data }: { data: StudioData }) {
     content: (l) => session.data(l),
     issues: (place: Place) => session.issuesAt(locale, place),
     apply: apply(locale),
+    list: (place, action, said, focus) => {
+      const documents = Object.fromEntries(data.locales.map((l) => [l, session.data(l)]));
+      try {
+        session.applyTogether(listChanges(documents, place as unknown as ContentPath, action));
+      } catch (error) {
+        status.value = (error as Error).message;
+        return;
+      }
+      focusNext.current = focus;
+      status.value = said;
+    },
+    fixedOrder,
+    texts: listTexts,
     readOnly,
     loadWidget: (element) => {
       if (loaded.has(element) || customElements.get(element)) return;

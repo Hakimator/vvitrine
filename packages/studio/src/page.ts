@@ -121,6 +121,11 @@ button:disabled { opacity: 0.5; cursor: default; }
   user-select: none; font-size: 1.1em; }
 .states { font-size: 0.85em; }
 .placed .issues { flex-basis: 100%; }
+.list > ol { counter-reset: position; list-style: none; padding-left: 0; }
+.item-row { display: flex; align-items: flex-start; gap: 0.4rem; counter-increment: position; }
+.item-row::before { content: counter(position) "."; min-width: 1.5rem; padding-top: 0.6rem; text-align: right; }
+.item-body { flex: 1; min-width: 0; }
+.item-tools { display: flex; align-items: center; gap: 0.25rem; padding-top: 0.6rem; }
 .menu { position: relative; }
 .menu [role="menu"] { position: absolute; right: 0; z-index: 2; list-style: none; margin: 0.25rem 0 0; padding: 0.25rem; min-width: 15rem;
   background: Canvas; border: 1px solid var(--line); border-radius: 0.4rem; box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); }

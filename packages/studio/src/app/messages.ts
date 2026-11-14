@@ -3,17 +3,28 @@
  * each of them (WCAG 4.1.3). Kept apart, with their parameters, so that the Studio's other languages (US-149) are a
  * catalogue to add, not code to change.
  */
-export interface BuilderTexts {
+/** The moves every list offers in its items' menus: sections on a page, jobs, skills... */
+export interface MoveTexts {
+  readonly moveUp: string;
+  readonly moveDown: string;
+  readonly moveTop: string;
+  readonly moveBottom: string;
+}
+
+const moveTexts: MoveTexts = {
+  moveUp: 'Move up',
+  moveDown: 'Move down',
+  moveTop: 'Move to the top',
+  moveBottom: 'Move to the bottom',
+};
+
+export interface BuilderTexts extends MoveTexts {
   readonly pages: string;
   readonly home: string;
   readonly inFooter: string;
   readonly hidden: string;
   readonly notInMenu: string;
   readonly actionsFor: (name: string, page: string) => string;
-  readonly moveUp: string;
-  readonly moveDown: string;
-  readonly moveTop: string;
-  readonly moveBottom: string;
   readonly moveToPage: (page: string) => string;
   readonly hide: string;
   readonly show: string;
@@ -37,16 +48,13 @@ export interface BuilderTexts {
 }
 
 export const builderTexts: BuilderTexts = {
+  ...moveTexts,
   pages: 'Pages',
   home: 'Home page',
   inFooter: 'linked from the footer',
   hidden: 'hidden',
   notInMenu: 'not in the menu',
   actionsFor: (name, page) => `Move or change ${name} on ${page}`,
-  moveUp: 'Move up',
-  moveDown: 'Move down',
-  moveTop: 'Move to the top',
-  moveBottom: 'Move to the bottom',
   moveToPage: (page) => `Move to ${page}`,
   hide: 'Hide on this page',
   show: 'Show on this page',
@@ -67,4 +75,34 @@ export const builderTexts: BuilderTexts = {
   shownOn: (name, page) => `${name} shown on ${page} again.`,
   leftOutOfMenu: (name) => `${name} left out of the menu.`,
   shownInMenu: (name) => `${name} shown in the menu.`,
+};
+
+/** The texts of list items in the content forms (US-136): their menu, and what is announced after each action. */
+export interface ListTexts extends MoveTexts {
+  readonly actionsFor: (item: string, language: string) => string;
+  readonly duplicate: string;
+  readonly remove: string;
+  readonly addTo: (list: string) => string;
+  readonly fixedOrder: string;
+  readonly dragHandle: string;
+  readonly moved: (item: string, position: number, count: number, list: string) => string;
+  readonly duplicated: (item: string, position: number, count: number) => string;
+  readonly removed: (item: string, list: string) => string;
+  readonly added: (list: string, position: number) => string;
+}
+
+export const listTexts: ListTexts = {
+  ...moveTexts,
+  actionsFor: (item, language) => `Move or change ${item} (${language})`,
+  duplicate: 'Duplicate',
+  remove: 'Remove',
+  addTo: (list) => `Add to ${list}`,
+  fixedOrder: 'These items are in the order of their files: they cannot be moved here.',
+  dragHandle: 'Drag to move',
+  moved: (item, position, count, list) =>
+    `${item} moved to position ${position} of ${count} in ${list}, in every language.`,
+  duplicated: (item, position, count) =>
+    `${item} duplicated, in every language: the copy is at position ${position} of ${count}.`,
+  removed: (item, list) => `${item} removed from ${list}, in every language. Undo brings it back.`,
+  added: (list, position) => `New item added to ${list}, at position ${position}, in every language.`,
 };
