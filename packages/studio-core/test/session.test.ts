@@ -142,7 +142,7 @@ describe('undo of any change (US-132)', () => {
     session.apply('en', { op: 'set', path: ['basics', 'name'], value: 'Ada' });
     expect(session.canRedo).toBe(false);
     // The removal was undone before: only the new change is left to undo, then to redo.
-    const set = { document: 'en', changes: [{ op: 'set', path: ['basics', 'name'], value: 'Ada' }] };
+    const set = { changes: [{ document: 'en', change: { op: 'set', path: ['basics', 'name'], value: 'Ada' } }] };
     expect([session.undo(), session.undo(), session.redo()]).toEqual([set, undefined, set]);
     expect(open().session.undo()).toBeUndefined();
     expect(open().session.redo()).toBeUndefined();
@@ -268,5 +268,49 @@ describe('steps of several changes (US-135)', () => {
     expect([session.data('en'), session.canUndo, session.pending]).toEqual([start().en, false, []]);
     session.apply('en', []);
     expect(session.canUndo).toBe(false);
+  });
+});
+
+describe('steps over several documents, and the files after saving (US-136)', () => {
+  it('undoes the same move in every language as one step, and saves each language', async () => {
+    const { session, saved } = open();
+    session.apply('fr', { op: 'set', path: ['work'], value: [{ name: 'A' }, { name: 'B' }] });
+    session.applyTogether([
+      { document: 'en', change: { op: 'move', path: ['work'], from: 1, to: 0 } },
+      { document: 'fr', change: { op: 'move', path: ['work'], from: 1, to: 0 } },
+    ]);
+    expect([session.data('en').work, session.data('fr').work].map((w) => (w as { name: string }[])[0]!.name)).toEqual([
+      'B',
+      'B',
+    ]);
+    expect(session.undo()?.changes.map((c) => c.document)).toEqual(['en', 'fr']);
+    expect((session.data('en').work as { name: string }[])[0]!.name).toBe('A');
+    expect((session.data('fr').work as { name: string }[])[0]!.name).toBe('A');
+    session.redo();
+    await session.save();
+    expect(saved.map((s) => [s.document, s.changes.map((c) => c.op)])).toEqual([
+      ['fr', ['set', 'move', 'move', 'move']],
+      // English was back to its file after the undo: only the redone move is left.
+      ['en', ['move']],
+    ]);
+  });
+
+  it('takes the data as the files hold it after a save, dropping the steps of that document only', async () => {
+    const { session } = open();
+    session.apply('en', { op: 'insert', path: ['work'], index: 2, value: { name: 'C' } });
+    session.apply('fr', { op: 'set', path: ['basics', 'name'], value: 'Jeanne D.' });
+    await session.save();
+    // The source put the new job first (its files are read by name).
+    const files = { ...start().en, work: [{ name: 'C' }, ...start().en.work] };
+    expect(session.rebase('en', files)).toBe(true);
+    expect(session.data('en')).toEqual(files);
+    expect([session.dirty, session.canUndo]).toEqual([false, true]);
+    session.undo(); // the French step is still there
+    expect(session.data('fr')).toEqual(start().fr);
+    expect(session.canUndo).toBe(false);
+    // Nothing to do when the files hold the same data, or while changes wait to be saved.
+    expect(session.rebase('en', files)).toBe(false);
+    session.apply('en', { op: 'set', path: ['basics', 'name'], value: 'Ada' });
+    expect(session.rebase('en', start().en)).toBe(false);
   });
 });
