@@ -124,6 +124,14 @@ button:disabled { opacity: 0.5; cursor: default; }
 .list > ol { counter-reset: position; list-style: none; padding-left: 0; }
 .item-row { display: flex; align-items: flex-start; gap: 0.4rem; counter-increment: position; }
 .item-row::before { content: counter(position) "."; min-width: 1.5rem; padding-top: 0.6rem; text-align: right; }
+.item-row { position: relative; }
+.item-row .grip { padding-top: 0.5rem; }
+.item-row[data-dragging] { opacity: 0.4; }
+.item-row[data-drop-edge="top"]::after, .item-row[data-drop-edge="bottom"]::after { content: ""; position: absolute; left: 0; right: 0;
+  height: 3px; background: var(--accent); }
+.item-row[data-drop-edge="top"]::after { top: -2px; }
+.item-row[data-drop-edge="bottom"]::after { bottom: -2px; }
+.list > ol[data-drop-over] { outline: 2px dashed var(--accent); outline-offset: 2px; }
 .item-body { flex: 1; min-width: 0; }
 .item-tools { display: flex; align-items: center; gap: 0.25rem; padding-top: 0.6rem; }
 .menu { position: relative; }

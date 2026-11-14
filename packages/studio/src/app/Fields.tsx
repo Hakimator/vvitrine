@@ -1,7 +1,9 @@
 /** @jsxImportSource preact */
 import type { ContentChange, ContentIssue, Locale } from '@vvitrine/core';
 import { itemTitle, type FieldDescriptor, type ListAction } from '@vvitrine/studio-core';
+import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
+import { dragItem, droppedAt, dropOnList, onDrop } from './drag.ts';
 import { changeFor, emptyItem, filled, inputId, placeOf, valueAt, type Place } from './logic.ts';
 import { Menu, type MenuItem } from './Menu.tsx';
 import type { ListTexts } from './messages.ts';
@@ -69,7 +71,8 @@ function Group({
 
 /**
  * A list: each item has a menu with every action (move up, down, to the top or bottom, duplicate, remove), usable with
- * a single pointer or the keyboard, and each action is announced (US-136). An action applies to every language, so
+ * a single pointer or the keyboard, and each action is announced (US-136). Dragging an item by its handle is a
+ * shortcut for the same moves, within its list. An action applies to every language, so
  * that the languages keep the same items in the same order.
  */
 function List({
@@ -92,17 +95,32 @@ function List({
   // The items of a key whose files give their order cannot move (Markdown projects); their own lists can.
   const movable = !(ctx.fixedOrder && place.length === 1);
   const last = list.length - 1;
+  const titleOf = (index: number) => itemTitle(list[index], field) ?? `Item ${index + 1}`;
+  const moveItem = (from: number, to: number) =>
+    ctx.list(
+      place,
+      { kind: 'move', from, to },
+      texts.moved(titleOf(from), to + 1, list.length, field.label),
+      menuId(to),
+    );
+  const draggable = movable && !ctx.readOnly;
+  const listRef = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    if (!draggable || !listRef.current) return undefined;
+    const target = dropOnList(ITEM, listRef.current, id, list.length, true);
+    const stop = onDrop(ITEM, (from, to) => {
+      if (from.list !== id || to.list !== id) return;
+      const final = droppedAt(from.index, to.index);
+      if (final !== undefined) moveItem(from.index, final);
+    });
+    return () => {
+      target();
+      stop();
+    };
+  });
 
   const actions = (title: string, index: number): MenuItem[] => {
-    const move = (to: number) => ({
-      run: () =>
-        ctx.list(
-          place,
-          { kind: 'move', from: index, to },
-          texts.moved(title, to + 1, list.length, field.label),
-          menuId(to),
-        ),
-    });
+    const move = (to: number) => ({ run: () => moveItem(index, to) });
     return [
       ...(movable && index > 0 ? [{ label: texts.moveUp, ...move(index - 1) }] : []),
       ...(movable && index < last ? [{ label: texts.moveDown, ...move(index + 1) }] : []),
@@ -134,11 +152,11 @@ function List({
       {!movable && list.length > 1 && !ctx.readOnly && <p class="help">{texts.fixedOrder}</p>}
       <Issues ctx={ctx} place={place} own />
       <Missing ctx={ctx} place={place} />
-      <ol>
+      <ol ref={listRef}>
         {list.map((item, index) => {
           const title = itemTitle(item, field) ?? `Item ${index + 1}`;
           return (
-            <li key={index} class="item-row">
+            <Row key={index} list={id} index={index} draggable={draggable} handle={texts.dragHandle}>
               <div class="item-body">
                 {field.item!.kind === 'object' ? (
                   <fieldset class="group item">
@@ -161,7 +179,7 @@ function List({
                   />
                 </div>
               )}
-            </li>
+            </Row>
           );
         })}
       </ol>
@@ -177,6 +195,44 @@ function List({
         </button>
       )}
     </fieldset>
+  );
+}
+
+/** What the content forms drag: list items, dropped only in their own list. */
+const ITEM = 'item';
+
+/** A list item, with its drag handle when it can move. */
+function Row({
+  list,
+  index,
+  draggable,
+  handle: hint,
+  children,
+}: {
+  list: string;
+  index: number;
+  draggable: boolean;
+  handle: string;
+  children: ComponentChildren;
+}) {
+  const row = useRef<HTMLLIElement>(null);
+  const handle = useRef<HTMLSpanElement>(null);
+  useEffect(
+    () =>
+      draggable && row.current && handle.current
+        ? dragItem(ITEM, row.current, handle.current, { list, index }, true)
+        : undefined,
+    [list, index, draggable],
+  );
+  return (
+    <li ref={row} class="item-row">
+      {draggable && (
+        <span class="grip" ref={handle} aria-hidden="true" title={hint}>
+          ⠿
+        </span>
+      )}
+      {children}
+    </li>
   );
 }
 
