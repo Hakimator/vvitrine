@@ -147,7 +147,13 @@ export function App({ data }: { data: StudioData }) {
     status.value = 'Saving…';
     try {
       const files = await session.save();
-      status.value = `Saved: ${files.join(', ')}.`;
+      // The files are the truth: a source may have put a new item elsewhere (Markdown files are read by name), and
+      // later changes must point at the items as they are in the files.
+      const moved = [];
+      for (const locale of data.locales) {
+        if (session.rebase(locale, (await data.api.content(locale)).content)) moved.push(locale);
+      }
+      status.value = `Saved: ${files.join(', ')}.${moved.length > 0 ? ' Items are now in the order of their files.' : ''}`;
     } catch (error) {
       status.value =
         error instanceof SaveBlockedError
