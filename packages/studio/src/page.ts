@@ -67,7 +67,8 @@ table { border-collapse: collapse; width: 100%; }
 th, td { border-bottom: 1px solid var(--line); padding: 0.5rem; text-align: left; }
 code { overflow-wrap: anywhere; }
 #studio > main { margin: 0 auto; max-width: 60rem; padding: 1.5rem 1rem; }
-.studio { display: grid; grid-template-columns: minmax(10rem, 14rem) 1fr; grid-template-areas: "bar bar" "nav main"; min-height: 100vh; }
+.studio { display: grid; grid-template-columns: minmax(10rem, 14rem) 1fr; grid-template-areas: "bar bar" "nav main";
+  grid-template-rows: auto 1fr; min-height: 100vh; }
 .bar { grid-area: bar; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; align-items: center; padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--line); position: sticky; top: 0; background: Canvas; z-index: 1; }
 .bar h1 { font-size: 1.15rem; margin: 0; }
@@ -140,7 +141,7 @@ button:disabled { opacity: 0.5; cursor: default; }
 .menu [role="menuitem"] { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 0.4rem 0.6rem; }
 .menu [role="menuitem"]:focus { background: color-mix(in srgb, var(--accent) 18%, transparent); }
 @media (max-width: 40rem) {
-  .studio { grid-template-columns: 1fr; grid-template-areas: "bar" "nav" "main"; }
+  .studio { grid-template-columns: 1fr; grid-template-areas: "bar" "nav" "main"; grid-template-rows: auto auto 1fr; }
   nav { border-right: 0; border-bottom: 1px solid var(--line); }
   nav ul { display: flex; flex-wrap: wrap; gap: 0.25rem; }
   nav button { width: auto; }
