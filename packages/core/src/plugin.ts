@@ -243,6 +243,8 @@ export interface WrittenContent {
   readonly origin: Readonly<Record<string, string>>;
   /** The keys that cannot be saved: their source is read-only. */
   readonly readOnly: readonly string[];
+  /** The keys whose items keep an order of their own (by file name...): moving them is refused. */
+  readonly fixedOrder: readonly string[];
 }
 
 /** What saving content did: the files written or removed, relative to the project root. */
@@ -346,6 +348,11 @@ export interface SourcePlugin extends BasePlugin {
   save?(changes: readonly ContentChange[], ctx: SaveContext): Promise<void>;
   /** Optional, for writable sources: whether a key no source provides yet may be created here. Default: no. */
   accepts?(key: string): boolean;
+  /**
+   * Optional: true when the items of the keys it provides keep an order of their own (one file per item, read by
+   * file name): it refuses to move them, and saving may put a new item elsewhere than where it was inserted.
+   */
+  readonly fixedOrder?: boolean;
 }
 
 // ---------- Section ----------

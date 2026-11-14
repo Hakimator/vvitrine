@@ -324,7 +324,14 @@ describe('checking content as it is typed (US-132)', () => {
       content: content.en,
       origin: { basics: 'memory:en', work: 'memory:en' },
       readOnly: ['basics', 'work'],
+      fixedOrder: [],
     });
+    const ordered = { ...memorySource(content), fixedOrder: true };
+    const fixed = await createKernel(config({ plugins: [ordered, theme, hero, work] }), {
+      root: '/',
+      logger: silent,
+    }).readContent('en');
+    expect(fixed.fixedOrder).toEqual(['basics', 'work']);
   });
 
   it('runs the contentLoaded hooks first, on a copy, like a build', async () => {
