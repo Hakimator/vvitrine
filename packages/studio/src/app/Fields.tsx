@@ -1,8 +1,12 @@
 /** @jsxImportSource preact */
 import type { ContentChange, ContentIssue, Locale } from '@vvitrine/core';
-import { itemTitle, type FieldDescriptor } from '@vvitrine/studio-core';
+import { itemTitle, type FieldDescriptor, type ListAction } from '@vvitrine/studio-core';
+import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
+import { dragItem, droppedAt, dropOnList, onDrop } from './drag.ts';
 import { changeFor, emptyItem, filled, inputId, placeOf, valueAt, type Place } from './logic.ts';
+import { Menu, type MenuItem } from './Menu.tsx';
+import type { ListTexts } from './messages.ts';
 
 /** What every field needs from the screen. */
 export interface FieldContext {
@@ -13,6 +17,14 @@ export interface FieldContext {
   readonly content: (locale: Locale) => Readonly<Record<string, unknown>>;
   readonly issues: (place: Place) => readonly ContentIssue[];
   readonly apply: (change: ContentChange, merge?: boolean) => void;
+  /**
+   * Do a list action in every language (in this one only for a key with a file per item), as one step (US-136);
+   * then announce `said` and put the focus on the element with the id `focus`.
+   */
+  readonly list: (place: Place, action: ListAction, said: string, focus?: string) => void;
+  /** Whether the content key's items keep the order of their files (they cannot be moved). */
+  readonly fixedOrder: boolean;
+  readonly texts: ListTexts;
   readonly readOnly: boolean;
   /** Loads the module of a plugin's control (once), so that its element is defined. */
   readonly loadWidget: (element: string) => void;
@@ -57,6 +69,12 @@ function Group({
   );
 }
 
+/**
+ * A list: each item has a menu with every action (move up, down, to the top or bottom, duplicate, remove), usable with
+ * a single pointer or the keyboard, and each action is announced (US-136). Dragging an item by its handle is a
+ * shortcut for the same moves, within its list. An action applies to every language, so
+ * that the languages keep the same items in the same order.
+ */
 function List({
   field,
   ctx,
@@ -70,53 +88,154 @@ function List({
 }) {
   const items = valueAt(ctx.content(ctx.locale), place);
   const list = Array.isArray(items) ? items : [];
-  const add = () =>
-    ctx.apply(
-      Array.isArray(items)
-        ? { op: 'insert', path: place, index: list.length, value: emptyItem(field) }
-        : { op: 'set', path: place, value: [emptyItem(field)] },
+  const id = inputId(ctx.locale, place);
+  const { texts } = ctx;
+  const addId = `${id}-add`;
+  const menuId = (index: number) => `${id}-item-${index}`;
+  // The items of a key whose files give their order (Markdown projects: a file per item, per language) cannot move,
+  // and are added and removed in this language only; their own lists (keywords...) are like any other.
+  const files = ctx.fixedOrder && place.length === 1;
+  const movable = !files;
+  const where = texts.where(files ? ctx.locale.toUpperCase() : undefined);
+  const last = list.length - 1;
+  const titleOf = (index: number) => itemTitle(list[index], field) ?? `Item ${index + 1}`;
+  const moveItem = (from: number, to: number) =>
+    ctx.list(
+      place,
+      { kind: 'move', from, to },
+      texts.moved(titleOf(from), to + 1, list.length, field.label),
+      menuId(to),
     );
+  const draggable = movable && !ctx.readOnly;
+  const listRef = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    if (!draggable || !listRef.current) return undefined;
+    const target = dropOnList(ITEM, listRef.current, id, list.length, true);
+    const stop = onDrop(ITEM, (from, to) => {
+      if (from.list !== id || to.list !== id) return;
+      const final = droppedAt(from.index, to.index);
+      if (final !== undefined) moveItem(from.index, final);
+    });
+    return () => {
+      target();
+      stop();
+    };
+  });
+
+  const actions = (title: string, index: number): MenuItem[] => {
+    const move = (to: number) => ({ run: () => moveItem(index, to) });
+    return [
+      ...(movable && index > 0 ? [{ label: texts.moveUp, ...move(index - 1) }] : []),
+      ...(movable && index < last ? [{ label: texts.moveDown, ...move(index + 1) }] : []),
+      ...(movable && index > 1 ? [{ label: texts.moveTop, ...move(0) }] : []),
+      ...(movable && index < last - 1 ? [{ label: texts.moveBottom, ...move(last) }] : []),
+      {
+        label: texts.duplicate,
+        run: () =>
+          ctx.list(
+            place,
+            { kind: 'duplicate', index },
+            texts.duplicated(title, where, index + 2, list.length + 1),
+            menuId(index + 1),
+          ),
+      },
+      {
+        label: texts.remove,
+        // The item is gone: the keyboard goes to "Add", next to where it was.
+        run: () => ctx.list(place, { kind: 'remove', index }, texts.removed(title, field.label, where), addId),
+      },
+    ];
+  };
+
   return (
     <fieldset class="group list">
       {/* The content key itself is named by the heading above it: its legend is for screen readers only. */}
       <legend class={field.path.length === 0 ? 'visually-hidden' : undefined}>{field.label}</legend>
       {field.help && <p class="help">{field.help}</p>}
+      {files && !ctx.readOnly && <p class="help">{texts.fixedOrder}</p>}
       <Issues ctx={ctx} place={place} own />
       <Missing ctx={ctx} place={place} />
-      <ol>
+      <ol ref={listRef}>
         {list.map((item, index) => {
           const title = itemTitle(item, field) ?? `Item ${index + 1}`;
           return (
-            <li key={index}>
-              {field.item!.kind === 'object' ? (
-                <fieldset class="group item">
-                  <legend>{title}</legend>
-                  {field.item!.fields!.map((child) => (
-                    <Field key={child.path.join('.')} field={child} ctx={ctx} positions={[...positions, index]} />
-                  ))}
-                </fieldset>
-              ) : (
-                <Field field={{ ...field.item!, label: title }} ctx={ctx} positions={[...positions, index]} />
-              )}
+            <Row key={index} list={id} index={index} draggable={draggable} handle={texts.dragHandle}>
+              <div class="item-body">
+                {field.item!.kind === 'object' ? (
+                  <fieldset class="group item">
+                    <legend>{title}</legend>
+                    {field.item!.fields!.map((child) => (
+                      <Field key={child.path.join('.')} field={child} ctx={ctx} positions={[...positions, index]} />
+                    ))}
+                  </fieldset>
+                ) : (
+                  <Field field={{ ...field.item!, label: title }} ctx={ctx} positions={[...positions, index]} />
+                )}
+              </div>
               {!ctx.readOnly && (
-                <button
-                  type="button"
-                  class="quiet"
-                  onClick={() => ctx.apply({ op: 'remove', path: [...place, index] as unknown as Place })}
-                >
-                  Remove {title}
-                </button>
+                <div class="item-tools">
+                  <Menu
+                    id={menuId(index)}
+                    label={texts.actionsFor(title, ctx.locale.toUpperCase())}
+                    text="⋯"
+                    items={actions(title, index)}
+                  />
+                </div>
               )}
-            </li>
+            </Row>
           );
         })}
       </ol>
       {!ctx.readOnly && (
-        <button type="button" onClick={add}>
-          Add to {field.label}
+        <button
+          type="button"
+          id={addId}
+          onClick={() =>
+            ctx.list(place, { kind: 'add', value: emptyItem(field) }, texts.added(field.label, list.length + 1, where))
+          }
+        >
+          {texts.addTo(field.label)}
         </button>
       )}
     </fieldset>
+  );
+}
+
+/** What the content forms drag: list items, dropped only in their own list. */
+const ITEM = 'item';
+
+/** A list item, with its drag handle when it can move. */
+function Row({
+  list,
+  index,
+  draggable,
+  handle: hint,
+  children,
+}: {
+  list: string;
+  index: number;
+  draggable: boolean;
+  handle: string;
+  children: ComponentChildren;
+}) {
+  const row = useRef<HTMLLIElement>(null);
+  const handle = useRef<HTMLSpanElement>(null);
+  useEffect(
+    () =>
+      draggable && row.current && handle.current
+        ? dragItem(ITEM, row.current, handle.current, { list, index }, true)
+        : undefined,
+    [list, index, draggable],
+  );
+  return (
+    <li ref={row} class="item-row">
+      {draggable && (
+        <span class="grip" ref={handle} aria-hidden="true" title={hint}>
+          ⠿
+        </span>
+      )}
+      {children}
+    </li>
   );
 }
 

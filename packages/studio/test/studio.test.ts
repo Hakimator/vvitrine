@@ -65,6 +65,7 @@ describe('the local Studio (US-133)', () => {
       content: { basics: { name: 'Jane Doe' } },
       origin: { basics: 'content/resume.yaml' },
       readOnly: [],
+      fixedOrder: [],
     });
 
     const check = (content: unknown) =>

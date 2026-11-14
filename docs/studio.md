@@ -29,8 +29,14 @@ The list on the left has every piece of content of your site: your profile, jobs
 of any section plugin you install. Pick one to see its form, with every language side by side, each with the file it
 is saved to.
 
-- Each field says what it expects (a date such as `2025-06`, an address, an image path). Lists have an "Add" button
-  and each item a "Remove" button.
+- Each field says what it expects (a date such as `2025-06`, an address, an image path).
+- Lists (jobs, skills, their keywords...) have an "Add" button, and each item a menu (the `⋯` button) to move it up,
+  down, to the top or the bottom, to duplicate it or to remove it; you can also drag it by its handle (`⠿`). These
+  change every language at once, so that your languages keep the same items in the same order: only their texts
+  differ. Each action is announced, and Undo takes it back.
+- Projects and articles are a Markdown file each, per language, listed in the order of their file names: they cannot
+  be moved, and adding, duplicating or removing one changes the language you do it in only. After saving, the Studio
+  shows them in the order of their files.
 - A field filled in one language and empty in another is marked "Missing in FR" (or the language concerned), so that
   no translation is forgotten.
 - What you type is checked after a short pause, by the same rules as the build: a problem shows under its field, and

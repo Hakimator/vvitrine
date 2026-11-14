@@ -67,7 +67,8 @@ table { border-collapse: collapse; width: 100%; }
 th, td { border-bottom: 1px solid var(--line); padding: 0.5rem; text-align: left; }
 code { overflow-wrap: anywhere; }
 #studio > main { margin: 0 auto; max-width: 60rem; padding: 1.5rem 1rem; }
-.studio { display: grid; grid-template-columns: minmax(10rem, 14rem) 1fr; grid-template-areas: "bar bar" "nav main"; min-height: 100vh; }
+.studio { display: grid; grid-template-columns: minmax(10rem, 14rem) 1fr; grid-template-areas: "bar bar" "nav main";
+  grid-template-rows: auto 1fr; min-height: 100vh; }
 .bar { grid-area: bar; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; align-items: center; padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--line); position: sticky; top: 0; background: Canvas; z-index: 1; }
 .bar h1 { font-size: 1.15rem; margin: 0; }
@@ -121,13 +122,26 @@ button:disabled { opacity: 0.5; cursor: default; }
   user-select: none; font-size: 1.1em; }
 .states { font-size: 0.85em; }
 .placed .issues { flex-basis: 100%; }
+.list > ol { counter-reset: position; list-style: none; padding-left: 0; }
+.item-row { display: flex; align-items: flex-start; gap: 0.4rem; counter-increment: position; }
+.item-row::before { content: counter(position) "."; min-width: 1.5rem; padding-top: 0.6rem; text-align: right; }
+.item-row { position: relative; }
+.item-row .grip { padding-top: 0.5rem; }
+.item-row[data-dragging] { opacity: 0.4; }
+.item-row[data-drop-edge="top"]::after, .item-row[data-drop-edge="bottom"]::after { content: ""; position: absolute; left: 0; right: 0;
+  height: 3px; background: var(--accent); }
+.item-row[data-drop-edge="top"]::after { top: -2px; }
+.item-row[data-drop-edge="bottom"]::after { bottom: -2px; }
+.list > ol[data-drop-over] { outline: 2px dashed var(--accent); outline-offset: 2px; }
+.item-body { flex: 1; min-width: 0; }
+.item-tools { display: flex; align-items: center; gap: 0.25rem; padding-top: 0.6rem; }
 .menu { position: relative; }
 .menu [role="menu"] { position: absolute; right: 0; z-index: 2; list-style: none; margin: 0.25rem 0 0; padding: 0.25rem; min-width: 15rem;
   background: Canvas; border: 1px solid var(--line); border-radius: 0.4rem; box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); }
 .menu [role="menuitem"] { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 0.4rem 0.6rem; }
 .menu [role="menuitem"]:focus { background: color-mix(in srgb, var(--accent) 18%, transparent); }
 @media (max-width: 40rem) {
-  .studio { grid-template-columns: 1fr; grid-template-areas: "bar" "nav" "main"; }
+  .studio { grid-template-columns: 1fr; grid-template-areas: "bar" "nav" "main"; grid-template-rows: auto auto 1fr; }
   nav { border-right: 0; border-bottom: 1px solid var(--line); }
   nav ul { display: flex; flex-wrap: wrap; gap: 0.25rem; }
   nav button { width: auto; }

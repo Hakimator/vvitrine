@@ -160,6 +160,8 @@ export default function markdownSource(options: MarkdownSourceOptions = {}): Sou
     name: `@vvitrine/source-markdown:${key}`,
     kind: 'source',
     apiVersion: 1,
+    // Items are read by file name: the Studio does not offer to move them.
+    fixedOrder: true,
     async load(ctx: SourceContext): Promise<RawContent> {
       const entries = await scan(ctx);
       if (!entries) {

@@ -165,6 +165,7 @@ describe('@vvitrine/source-markdown', () => {
     });
 
     it('explains the changes a folder of files cannot hold', async () => {
+      expect(markdownSource().fixedOrder).toBe(true);
       await expect(save(project(), [{ op: 'move', path: ['projects'], from: 0, to: 1 }])).rejects.toThrow(
         '"projects" items are ordered by their file names in content/projects/: they cannot be moved.',
       );

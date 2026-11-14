@@ -2,7 +2,7 @@
 import type { PageConfig, SectionModel, WrittenLayout } from '@vvitrine/core';
 import { humanise, pageChanges, placement, type EditSession, type PageAction } from '@vvitrine/studio-core';
 import { useEffect, useRef } from 'preact/hooks';
-import { dragSection, dropOnPage, onSectionDrop, type Slot } from './drag.ts';
+import { dragItem, droppedAt, dropOnList, onDrop, type Slot } from './drag.ts';
 import { Menu, type MenuItem } from './Menu.tsx';
 import type { BuilderTexts } from './messages.ts';
 
@@ -76,17 +76,17 @@ export function Pages({ session, written, sections, language, texts, announce }:
   // A drop is the same move as the menu's, counted the same way.
   useEffect(
     () =>
-      onSectionDrop((from: Slot, to: Slot) => {
+      onDrop(SECTION, (from: Slot, to: Slot) => {
         if (readOnly) return;
-        if (from.page !== to.page) {
-          const already = pages[to.page]!.sections.some(
-            (ref) => placement(ref).id === placement(pages[from.page]!.sections[from.index]!).id,
-          );
-          if (!already) moveToPage(from.page, from.index, to.page, to.index);
+        const [page, target] = [Number(from.list), Number(to.list)];
+        if (page !== target) {
+          const id = placement(pages[page]!.sections[from.index]!).id;
+          const already = pages[target]!.sections.some((ref) => placement(ref).id === id);
+          if (!already) moveToPage(page, from.index, target, to.index);
           return;
         }
-        const final = to.index > from.index ? to.index - 1 : to.index;
-        if (final !== from.index) move(from.page, from.index, final);
+        const final = droppedAt(from.index, to.index);
+        if (final !== undefined) move(page, from.index, final);
       }),
     [layout, readOnly],
   );
@@ -135,6 +135,8 @@ export function Pages({ session, written, sections, language, texts, announce }:
 }
 
 const menuId = (page: number, id: string) => `section-${page}-${id}`;
+/** What the page builder drags: sections, dropped on any page (each page is a list, named by its position). */
+const SECTION = 'section';
 
 interface PageCardProps {
   readonly page: PageConfig;
@@ -157,7 +159,10 @@ interface PageCardProps {
 function PageCard({ page, index: p, pages, name, names, installed, texts, readOnly, session, actions }: PageCardProps) {
   const list = useRef<HTMLOListElement>(null);
   const count = page.sections.length;
-  useEffect(() => (readOnly || !list.current ? undefined : dropOnPage(list.current, p, count)), [p, count, readOnly]);
+  useEffect(
+    () => (readOnly || !list.current ? undefined : dropOnList(SECTION, list.current, String(p), count)),
+    [p, count, readOnly],
+  );
   const placed = new Set(page.sections.map((ref) => placement(ref).id));
   const headingId = `page-${p}`;
   const addable: MenuItem[] = installed
@@ -238,7 +243,7 @@ function Placed({
     () =>
       readOnly || !row.current || !handle.current
         ? undefined
-        : dragSection(row.current, handle.current, { page: p, index: s }),
+        : dragItem(SECTION, row.current, handle.current, { list: String(p), index: s }),
     [p, s, readOnly],
   );
 

@@ -39,17 +39,15 @@ export class SaveBlockedError extends Error {
   }
 }
 
-/** One step to undo: the changes made together, and their inverses (in the order that undoes them). */
+/** One step to undo: the changes made together (in one document or several), and their inverses, in undo order. */
 interface Step {
-  readonly document: DocumentId;
-  readonly changes: readonly ContentChange[];
-  readonly inverses: readonly ContentChange[];
+  readonly changes: readonly DocumentChange[];
+  readonly inverses: readonly DocumentChange[];
 }
 
 /** What `undo` and `redo` did: the changes of the step, as made (to tell the person what was undone). */
 export interface UndoneStep {
-  readonly document: DocumentId;
-  readonly changes: readonly ContentChange[];
+  readonly changes: readonly DocumentChange[];
 }
 
 /**
@@ -57,11 +55,13 @@ export interface UndoneStep {
  * them, one undo history for all, the changes not saved yet, and the problems found. Plain TypeScript: the Studio's
  * user interface shows it and calls it; each document comes with its own store and checker.
  *
- * - Every edit is a `ContentChange`, or a few made together (moving a section to another page); their inverses are
- *   recorded, so undo gives back the exact data before them.
+ * - Every edit is a `ContentChange`, or a few made together, in one document (moving a section to another page) or
+ *   several (moving a job in every language); their inverses are recorded, so undo gives back the exact data.
  * - Undo and redo are changes too: they join the changes to save, so saving after an undo saves the undone data.
  * - Typing in a field gives one change per key stroke: `{ merge: true }` makes them one step to undo.
  * - A document back to its saved data (every change undone) has nothing to save, and no problem left to show.
+ * - After saving, `rebase` takes the data as the files hold it, when a source put things elsewhere (new files are
+ *   read by name): the document's steps are dropped, since their positions no longer match.
  */
 export class EditSession {
   readonly #documents = new Map<DocumentId, SessionDocument>();
@@ -100,22 +100,33 @@ export class EditSession {
     options: { merge?: boolean } = {},
   ): void {
     const changes: readonly ContentChange[] = isList(change) ? change : [change];
+    this.applyTogether(
+      changes.map((each) => ({ document, change: each })),
+      options,
+    );
+  }
+
+  /** Apply changes to several documents as one step (the same move in every language), as `apply` does. */
+  applyTogether(changes: readonly DocumentChange[], options: { merge?: boolean } = {}): void {
     if (changes.length === 0) return;
-    let data = this.data(document);
-    const inverses: ContentChange[] = [];
-    for (const each of changes) {
-      inverses.unshift(invert(data, each));
-      data = applyChange(data, each);
-    }
+    const inverses: DocumentChange[] = [];
+    const changed = this.#run(changes, (data, item) =>
+      inverses.unshift({ ...item, change: invert(data, item.change) }),
+    );
     const previous = this.#undo.at(-1);
     const [first] = changes;
-    if (options.merge && changes.length === 1 && previous && sameField(previous, document, first!)) {
+    if (
+      options.merge &&
+      changes.length === 1 &&
+      previous?.changes.length === 1 &&
+      sameField(previous.changes[0]!, first!)
+    ) {
       this.#undo[this.#undo.length - 1] = { ...previous, changes };
     } else {
-      this.#undo.push({ document, changes, inverses });
+      this.#undo.push({ changes, inverses });
     }
     this.#redo.length = 0;
-    this.#commit(document, data, changes);
+    this.#commit(changed, changes);
   }
 
   get canUndo(): boolean {
@@ -131,8 +142,8 @@ export class EditSession {
     const step = this.#undo.pop();
     if (!step) return undefined;
     this.#redo.push(step);
-    this.#commit(step.document, step.inverses.reduce(applyChange, this.data(step.document)), step.inverses);
-    return { document: step.document, changes: step.changes };
+    this.#commit(this.#run(step.inverses), step.inverses);
+    return { changes: step.changes };
   }
 
   /** Redo the last undone step. */
@@ -140,8 +151,25 @@ export class EditSession {
     const step = this.#redo.pop();
     if (!step) return undefined;
     this.#undo.push(step);
-    this.#commit(step.document, step.changes.reduce(applyChange, this.data(step.document)), step.changes);
-    return { document: step.document, changes: step.changes };
+    this.#commit(this.#run(step.changes), step.changes);
+    return { changes: step.changes };
+  }
+
+  /**
+   * Take a document's data as its files hold it now, after a save (US-136): a source may put a new item elsewhere
+   * than where it was inserted. When it differs, the document's steps are dropped (their positions no longer
+   * match) and true is returned. Nothing happens while the document has changes not saved yet.
+   */
+  rebase(document: DocumentId, data: Readonly<Record<string, unknown>>): boolean {
+    if (equal(data, this.data(document)) || this.#pending.some((item) => item.document === document)) return false;
+    this.#data.set(document, { ...data });
+    this.#saved.set(document, data);
+    const others = (step: Step) => step.changes.every((item) => item.document !== document);
+    this.#undo.splice(0, this.#undo.length, ...this.#undo.filter(others));
+    this.#redo.splice(0, this.#redo.length, ...this.#redo.filter(others));
+    this.#issues = this.#issues.filter((issue) => issue.document !== document);
+    this.#notify();
+    return true;
   }
 
   /** The changes not saved yet, in order. */
@@ -209,22 +237,62 @@ export class EditSession {
     return document;
   }
 
-  #commit(document: DocumentId, data: Record<string, unknown>, changes: readonly ContentChange[]): void {
-    this.#data.set(document, data);
-    for (const change of changes) {
-      // A `set` of the same field as the last change waiting to be saved replaces it: only the last value is saved.
-      const last = this.#pending.at(-1);
-      if (last && sameField({ document: last.document, changes: [last.change] }, document, change)) {
-        this.#pending[this.#pending.length - 1] = { document, change };
-      } else {
-        this.#pending.push({ document, change });
-      }
+  /** Apply changes in order, without keeping them: the new data of each document they touch. */
+  #run(
+    changes: readonly DocumentChange[],
+    before?: (data: Readonly<Record<string, unknown>>, item: DocumentChange) => void,
+  ): Map<DocumentId, Record<string, unknown>> {
+    const changed = new Map<DocumentId, Record<string, unknown>>();
+    for (const item of changes) {
+      const data = changed.get(item.document) ?? this.data(item.document);
+      before?.(data, item);
+      changed.set(item.document, applyChange(data, item.change));
     }
-    if (equal(data, this.#saved.get(document))) {
+    return changed;
+  }
+
+  #commit(changed: ReadonlyMap<DocumentId, Record<string, unknown>>, changes: readonly DocumentChange[]): void {
+    for (const [document, data] of changed) this.#data.set(document, data);
+    for (const item of changes) this.#wait(item);
+    for (const [document, data] of changed) {
+      if (!equal(data, this.#saved.get(document))) continue;
       this.#pending = this.#pending.filter((item) => item.document !== document);
       this.#issues = this.#issues.filter((issue) => issue.document !== document);
     }
     this.#notify();
+  }
+
+  /**
+   * Add a change to those waiting to be saved, as few as they can be: a `set` of the same field as the last one
+   * replaces it (only the last value is saved), and a `set` inside an item inserted just before goes into that item
+   * (a new item is saved whole: a source that makes a file per item names it after what was typed, not after an
+   * empty item).
+   */
+  #wait(item: DocumentChange): void {
+    let at = this.#pending.length - 1;
+    while (at >= 0 && this.#pending[at]!.document !== item.document) at -= 1;
+    const inserted = at === -1 ? undefined : this.#pending[at]!;
+    if (inserted?.change.op === 'insert' && item.change.op === 'set') {
+      const { path, index, value } = inserted.change;
+      const inside =
+        path.length + 1 < item.change.path.length && [...path, index].every((s, i) => s === item.change.path[i]);
+      if (inside) {
+        try {
+          const rest = item.change.path.slice(path.length + 1);
+          const filled = applyChange(
+            { item: value },
+            { op: 'set', path: ['item', ...rest], value: item.change.value },
+          ).item;
+          this.#pending[at] = { document: item.document, change: { ...inserted.change, value: filled } };
+          return;
+        } catch {
+          // Not a place inside the item (a list position it does not have): kept as its own change.
+        }
+      }
+    }
+    const last = this.#pending.at(-1);
+    if (last && sameField(last, item)) this.#pending[this.#pending.length - 1] = item;
+    else this.#pending.push(item);
   }
 
   #changed(): DocumentId[] {
@@ -239,20 +307,14 @@ export class EditSession {
 const isList = (change: ContentChange | readonly ContentChange[]): change is readonly ContentChange[] =>
   Array.isArray(change);
 
-/** Whether a step of one change and a change both set the same field of the same document. */
-function sameField(
-  step: { readonly document: DocumentId; readonly changes: readonly ContentChange[] },
-  document: DocumentId,
-  change: ContentChange,
-): boolean {
-  const [previous] = step.changes;
+/** Whether two changes both set the same field of the same document. */
+function sameField(a: DocumentChange, b: DocumentChange): boolean {
   return (
-    step.changes.length === 1 &&
-    step.document === document &&
-    previous!.op === 'set' &&
-    change.op === 'set' &&
-    previous!.path.length === change.path.length &&
-    previous!.path.every((segment, index) => segment === change.path[index])
+    a.document === b.document &&
+    a.change.op === 'set' &&
+    b.change.op === 'set' &&
+    a.change.path.length === b.change.path.length &&
+    a.change.path.every((segment, index) => segment === b.change.path[index])
   );
 }
 

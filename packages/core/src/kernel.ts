@@ -427,8 +427,14 @@ export class Kernel implements DevSite {
       logger: this.logger,
       files: this.options.files ?? noFiles,
     });
-    const readOnly = [...providers].filter(([, source]) => !source.save).map(([key]) => key);
-    return { content: raw, origin, readOnly };
+    const keys = (keep: (source: SourcePlugin) => boolean) =>
+      [...providers].filter(([, source]) => keep(source)).map(([key]) => key);
+    return {
+      content: raw,
+      origin,
+      readOnly: keys((source) => !source.save),
+      fixedOrder: keys((source) => source.fixedOrder === true),
+    };
   }
 
   /**

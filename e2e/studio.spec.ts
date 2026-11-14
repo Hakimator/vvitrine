@@ -74,19 +74,38 @@ test('shows a field that is filled in one language and missing in the other', as
   await expect(page.locator('#field-en-basics-label-missing')).toHaveCount(0);
 });
 
-test('adds an item to a list and removes it', async ({ page }) => {
+test('adds an item in every language, duplicates and removes it with a single pointer', async ({ page }) => {
   await open(page, 'Certificates');
   const english = page.getByRole('region', { name: /^EN/ });
   await english.getByRole('button', { name: 'Add to Certificates' }).click();
+  await expect(status(page)).toHaveText('New item added to Certificates, at position 2, in every language.');
   await page.locator('#field-en-certificates-1-name').fill('E2E Testing Basics');
+  await page.locator('#field-fr-certificates-1-name').fill('Bases des tests de bout en bout');
   await save(page);
   await expect(status(page)).toHaveText(/^Saved: /);
   expect(content('resume.en.yaml')).toContain('E2E Testing Basics');
+  expect(content('resume.fr.yaml')).toContain('Bases des tests de bout en bout');
 
-  await english.getByRole('button', { name: 'Remove E2E Testing Basics' }).click();
+  await page.getByRole('button', { name: 'Move or change E2E Testing Basics (EN)' }).click();
+  await page.getByRole('menuitem', { name: 'Duplicate' }).click();
+  await expect(status(page)).toHaveText(
+    'E2E Testing Basics duplicated, in every language: the copy is at position 3 of 3.',
+  );
+  await expect(page.locator('#field-fr-certificates-2-name')).toHaveValue('Bases des tests de bout en bout');
+  await expect(page.getByRole('button', { name: 'Move or change E2E Testing Basics (EN)' }).last()).toBeFocused();
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(page.locator('#field-en-certificates-2-name')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Move or change E2E Testing Basics (EN)' }).click();
+  await page.getByRole('menuitem', { name: 'Remove' }).click();
+  await expect(status(page)).toHaveText(
+    'E2E Testing Basics removed from Certificates, in every language. Undo brings it back.',
+  );
+  await expect(english.getByRole('button', { name: 'Add to Certificates' })).toBeFocused();
   await save(page);
   await expect(status(page)).toHaveText(/^Saved: /);
   expect(content('resume.en.yaml')).not.toContain('E2E Testing Basics');
+  expect(content('resume.fr.yaml')).not.toContain('Bases des tests de bout en bout');
 });
 
 test('saves a project into its Markdown file, keeping the write-up', async ({ page }) => {
@@ -186,11 +205,15 @@ test('hides, adds and removes sections with a single pointer, and the site follo
   const file = content('site.yaml');
   expect(file).toContain('      - { id: awards, nav: false, hidden: true }\n');
   expect(file).toContain('      - interests\n      - awards\n');
-  // The site itself: hidden on the home page, shown on the resume.
-  await page.goto('/en/');
-  await expect(page.locator('#awards')).toHaveCount(0);
-  await page.goto('/en/resume/');
-  await expect(page.locator('#awards')).toHaveCount(1);
+  // The site itself: hidden on the home page, shown on the resume. The dev server sees the saved file a moment
+  // later (its file watcher), so the page is loaded again until it does.
+  const shows = async (path: string, count: number) =>
+    expect(async () => {
+      await page.goto(path);
+      await expect(page.locator('#awards')).toHaveCount(count, { timeout: 500 });
+    }).toPass({ timeout: 15_000 });
+  await shows('/en/', 0);
+  await shows('/en/resume/', 1);
 });
 
 test('moves a section by dragging it by its handle, the same move as the menu', async ({ page }) => {
@@ -206,4 +229,74 @@ test('moves a section by dragging it by its handle, the same move as the menu', 
   expect((await names(page, /^Home page/))[0]).toBe('Contact');
   await page.getByRole('button', { name: 'Undo' }).click();
   expect((await names(page, /^Home page/))[0]).toBe('Hero');
+});
+
+// ---------- List items (US-136) ----------
+
+test('reorders list items in every language with the keyboard only, and saves both files', async ({ page }) => {
+  await open(page, 'Skills');
+  const menu = page.getByRole('button', { name: 'Move or change Tools (EN)' });
+  await menu.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('menuitem', { name: 'Move up' })).toBeFocused();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.keyboard.press('Enter');
+  await expect(status(page)).toHaveText('Tools moved to position 1 of 2 in Skills, in every language.');
+  await expect(menu).toBeFocused();
+  await expect(page.locator('#field-fr-skills-0-name')).toHaveValue('Outils');
+  await page.keyboard.press('Control+s');
+  await expect(status(page)).toHaveText(/^Saved: /);
+  const before = (file: string, first: string, second: string) =>
+    content(file).indexOf(`name: ${first}`) < content(file).indexOf(`name: ${second}`);
+  expect(before('resume.en.yaml', 'Tools', 'Languages')).toBe(true);
+  expect(before('resume.fr.yaml', 'Outils', 'Langages')).toBe(true);
+});
+
+test('reorders the items of a nested list by dragging one by its handle', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1600 });
+  await open(page, 'Skills');
+  const keywords = page.locator('section[lang="en"] [id="field-en-skills-0-keywords-item-0"]');
+  await expect(keywords).toBeVisible();
+  const rows = page.locator('section[lang="en"] .list .list').first().locator(':scope > ol > li');
+  const second = await page.locator('#field-en-skills-0-keywords-1').inputValue();
+  await rows
+    .nth(1)
+    .locator(':scope > .grip')
+    .dragTo(rows.nth(0), { targetPosition: { x: 30, y: 3 } });
+  await expect(status(page)).toHaveText(
+    new RegExp(`^${second} moved to position 1 of \\d+ in Keywords, in every language\\.$`),
+  );
+  await expect(page.locator('#field-en-skills-0-keywords-0')).toHaveValue(second);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(page.locator('#field-en-skills-0-keywords-1')).toHaveValue(second);
+});
+
+test('takes the order of the files after adding a project, so later edits reach its file', async ({ page }) => {
+  await open(page, 'Projects');
+  const english = page.getByRole('region', { name: /^EN/ });
+  await expect(english.getByText(/^Each item is a file of its own/)).toBeVisible();
+  const before = await page.locator('section[lang="fr"] input[id$="-name"]').count();
+  // A project is a file per language: adding one in English adds no French file.
+  await english.getByRole('button', { name: 'Add to Projects' }).click();
+  await expect(status(page)).toHaveText('New item added to Projects, at position 3, in EN only.');
+  expect(await page.locator('section[lang="fr"] input[id$="-name"]').count()).toBe(before);
+  await page.locator('#field-en-projects-2-name').fill('Atlas');
+  await save(page);
+  // Atlas comes first in the folder (files are read by name): the Studio now shows it first too.
+  await expect(status(page)).toHaveText(/^Saved: \S*atlas\.en\.md\. Items are now in the order of their files\.$/);
+  await expect(page.locator('#field-en-projects-0-name')).toHaveValue('Atlas');
+  const library = content('projects/bibliotheque.en.md');
+  await page.locator('#field-en-projects-0-name').fill('Atlas map');
+  await save(page);
+  await expect(status(page)).toHaveText(/^Saved: \S*atlas\.en\.md\.$/);
+  expect(content('projects/atlas.en.md')).toContain('name: Atlas map\n');
+  expect(content('projects/bibliotheque.en.md')).toBe(library);
+
+  await page.getByRole('button', { name: 'Move or change Atlas map (EN)' }).click();
+  expect(await page.getByRole('menuitem').allTextContents()).toEqual(['Duplicate', 'Remove']);
+  await page.getByRole('menuitem', { name: 'Remove' }).click();
+  await expect(status(page)).toHaveText('Atlas map removed from Projects, in EN only. Undo brings it back.');
+  await save(page);
+  await expect(status(page)).toHaveText(/^Saved: /);
+  expect(() => content('projects/atlas.en.md')).toThrow();
 });
